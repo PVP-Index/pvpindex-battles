@@ -8,17 +8,17 @@ Every duel is recorded, cryptographically signed, and submitted to the API. Play
 
 ## Features
 
-- **10 built-in game modes** — Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
-- **Matchmaking queue** — fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
-- **Cross-server challenges** — `/battle challenge <player> [mode]` works standalone or routes through a Velocity proxy
-- **Network-wide tab completion** — Velocity broadcasts online players across all backends, so `/battle challenge <TAB>` always shows the full network
-- **Replay system** — frame-by-frame battle recording, playable in-game with `/pvpmod replay <id>`
-- **Arena pool** — procedural, schematic, and world-copy generation; four schematics included out of the box
-- **Moderation suite** — player reports, local bans, federated network-wide bans, and real-time spectating
-- **PlaceholderAPI support** — ELO, rank, win/loss, queue state, and active mode placeholders
-- **Configurable messages** — full control over all player-facing text via `messages.yml`
-- **HMAC-signed payloads** — battles are signed before submission; the API rejects anything that doesn't match
-- **Open ELO formula** — K=32 trust-weighted implementation, published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **10 built-in game modes**  Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
+- **Matchmaking queue**  fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
+- **Cross-server challenges**  `/battle challenge <player> [mode]` works standalone or routes through a Velocity proxy
+- **Network-wide tab completion**  Velocity broadcasts online players across all backends, so `/battle challenge <TAB>` always shows the full network
+- **Replay system**  frame-by-frame battle recording, playable in-game with `/pvpmod replay <id>`
+- **Arena pool**  procedural, schematic, and world-copy generation; four schematics included out of the box
+- **Moderation suite**  player reports, local bans, federated network-wide bans, and real-time spectating
+- **PlaceholderAPI support**  ELO, rank, win/loss, queue state, and active mode placeholders
+- **Configurable messages**  full control over all player-facing text via `messages.yml`
+- **HMAC-signed payloads**  battles are signed before submission; the API rejects anything that doesn't match
+- **Open ELO formula**  K=32 trust-weighted implementation, published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
 
 ---
 
@@ -39,7 +39,7 @@ Every duel is recorded, cryptographically signed, and submitted to the API. Play
 ### Paper
 
 1. Drop `PvPIndexBattles-<version>.jar` into `plugins/`.
-2. Start the server — configs are generated automatically.
+2. Start the server, configs are generated automatically.
 3. Stop the server, then add your API key to `plugins/PvPIndexBattles/config.yml`:
 
 ```yaml
@@ -137,10 +137,10 @@ queue:
 
 ## Links
 
-- **Website & leaderboards** — [pvpindex.com](https://pvpindex.com)
-- **Source (plugin)** — [github.com/PVP-Index/plugin](https://github.com/PVP-Index/plugin)
-- **Source (ELO validator)** — [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
-- **Issue tracker** — [github.com/PVP-Index/plugin/issues](https://github.com/PVP-Index/plugin/issues)
+- **Website & leaderboards**  [pvpindex.com](https://pvpindex.com)
+- **Source (plugin)**  [github.com/PVP-Index/plugin](https://github.com/PVP-Index/plugin)
+- **Source (ELO validator)**  [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Issue tracker**  [github.com/PVP-Index/plugin/issues](https://github.com/PVP-Index/plugin/issues)
 
 ---
 
