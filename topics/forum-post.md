@@ -131,19 +131,21 @@ queue:
   max_wait_seconds: 120
 ```
 
-→ Full reference: [CONFIGURATION.md](../docs/CONFIGURATION.md)
+→ Full reference: [docs.pvpindex.com/server_owner/configuration](https://docs.pvpindex.com/server_owner/configuration)
 
 ---
 
 ## Links
 
 - **Website & leaderboards**  [pvpindex.com](https://pvpindex.com)
-- **Source (plugin)**  [github.com/PVP-Index/plugin](https://github.com/PVP-Index/plugin)
-- **Source (ELO validator)**  [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
-- **Issue tracker**  [github.com/PVP-Index/plugin/issues](https://github.com/PVP-Index/plugin/issues)
+- **Documentation**  [docs.pvpindex.com](https://docs.pvpindex.com)
+- **Modrinth**  [modrinth.com/project/pvpindex-battle](https://modrinth.com/project/pvpindex-battle)
+- **Source (plugin)**  [github.com/PVP-Index/pvpindex-battles](https://github.com/PVP-Index/pvpindex-battles)
+- **Source (ELO formula / anti-cheat)**  [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Issue tracker**  [github.com/PVP-Index/pvpindex-battles/issues](https://github.com/PVP-Index/pvpindex-battles/issues)
 
 ---
 
 ## License
 
-The ELO validator is published under [MIT](../LICENSE). See [LICENSE](../LICENSE) for the plugin itself.
+The ELO validator is published under [MIT](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE). See [LICENSE](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE) for the plugin itself.
