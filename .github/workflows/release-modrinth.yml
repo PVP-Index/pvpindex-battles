@@ -91,17 +91,6 @@ jobs:
             ${{ steps.jars.outputs.velocity }}
           fail_on_unmatched_files: true
 
-      # ── Resolve Modrinth project slug → base62 ID (Create Version requires the ID, not the slug) ──
-      - name: Resolve Modrinth project ID
-        id: modrinth_project
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-        run: |
-          PROJECT_ID=$(curl -sf -H "Authorization: $MODRINTH_TOKEN" \
-            https://api.modrinth.com/v2/project/pvpindex-battle \
-            | python3 -c "import json,sys; print(json.load(sys.stdin)['id'])")
-          echo "id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
-
       # ── Modrinth — Paper JAR ─────────────────────────────────────────────────
       - name: Upload Paper JAR to Modrinth
         env:
@@ -110,14 +99,13 @@ jobs:
           PAPER_JAR="${{ steps.jars.outputs.paper }}"
           PAPER_FILENAME=$(basename "$PAPER_JAR")
           VERSION="${{ steps.meta.outputs.version }}"
-          PROJECT_ID="${{ steps.modrinth_project.outputs.id }}"
           CHANGELOG=$(cat << 'ENDOFCHANGELOG'
           ${{ steps.changelog.outputs.notes }}
           ENDOFCHANGELOG
           )
 
           # Build the JSON payload in Python so shell quoting never corrupts it.
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" PROJECT_ID="$PROJECT_ID" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; p=os.environ['PROJECT_ID']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['paper','folia'],'featured':True,'project_id':p,'primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['paper','folia'],'featured':True,'project_id':'wOZtwr2V','primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_paper.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
@@ -137,14 +125,13 @@ jobs:
           VELOCITY_JAR="${{ steps.jars.outputs.velocity }}"
           VELOCITY_FILENAME=$(basename "$VELOCITY_JAR")
           VERSION="${{ steps.meta.outputs.version }}"
-          PROJECT_ID="${{ steps.modrinth_project.outputs.id }}"
           CHANGELOG=$(cat << 'ENDOFCHANGELOG'
           ${{ steps.changelog.outputs.notes }}
           ENDOFCHANGELOG
           )
 
           # Build the JSON payload in Python so shell quoting never corrupts it.
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" PROJECT_ID="$PROJECT_ID" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; p=os.environ['PROJECT_ID']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['velocity'],'featured':False,'project_id':p,'primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['velocity'],'featured':False,'project_id':'wOZtwr2V','primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_velocity.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
