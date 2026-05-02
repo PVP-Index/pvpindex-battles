@@ -10,17 +10,18 @@
 [SIZE=5][B]Features[/B][/SIZE]
 
 [LIST]
-[*][B]10 built-in game modes[/B] — Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
-[*][B]Matchmaking queue[/B] with a fully configurable 54-slot GUI ([ICODE]gui.yml[/ICODE]), per-mode ELO, countdowns, and arena teleportation
-[*][B]Cross-server challenges[/B] — [ICODE]/battle challenge <player> [mode][/ICODE] works standalone or routes through a connected Velocity proxy
-[*][B]Network-wide tab completion[/B] — Velocity broadcasts all online players so [ICODE]/battle challenge <TAB>[/ICODE] shows names from every backend server
-[*][B]Replay system[/B] — frame-by-frame battle recording with in-game [ICODE]/pvpmod replay <id>[/ICODE] playback
+[*][B]10 ranked game modes[/B] — Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC — each with independent ELO ladders and separate leaderboards
+[*][B]1v1 matchmaking queue[/B] — fully configurable 54-slot GUI ([ICODE]gui.yml[/ICODE]) with per-mode ELO, countdowns, and automatic arena teleportation
+[*][B]Cross-server duels[/B] — [ICODE]/battle challenge <player> [mode][/ICODE] works standalone or routes through a Velocity or BungeeCord proxy
+[*][B]Network-wide tab completion[/B] — proxy broadcasts all online players so [ICODE]/battle challenge <TAB>[/ICODE] shows names from every backend server
+[*][B]Battle replay system[/B] — frame-by-frame recording, reviewable in-game with [ICODE]/pvpmod replay <id>[/ICODE]
 [*][B]Arena pool[/B] — procedural, schematic, and world-copy generation strategies; four bundled schematics included
-[*][B]Moderation suite[/B] — reports, local bans, federated network-wide bans, real-time spectating
-[*][B]PlaceholderAPI support[/B] — ELO, rank, win/loss, battle state, and battle type placeholders
+[*][B]Moderation suite[/B] — player reports, local bans, federated network-wide bans, real-time spectating
+[*][B]PlaceholderAPI integration[/B] — ELO, rank, win/loss, queue state, and active mode placeholders for scoreboards and tab lists
 [*][B]Fully configurable messages[/B] via [ICODE]messages.yml[/ICODE]
-[*][B]HMAC-signed payloads[/B] — battles are cryptographically signed before transmission so the server cannot fake results
+[*][B]HMAC-signed payloads[/B] — battles are cryptographically signed before submission; the API rejects anything tampered with
 [*][B]Open ELO formula[/B] — K=32, trust-weighted implementation published under MIT at [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
+[*][B]Folia compatible[/B] — runs on Folia, Paper, Purpur, Spigot, and Bukkit (1.21+)
 [/LIST]
 
 [HR][/HR]
@@ -37,12 +38,12 @@
 [TD]21+ (25+ for Paper 26.1.x servers)[/TD]
 [/TR]
 [TR]
-[TD]Paper[/TD]
+[TD]Paper / Folia / Purpur / Spigot[/TD]
 [TD]1.21.x or 1.21.4+ (API 26.1.x)[/TD]
 [/TR]
 [TR]
-[TD]Velocity (optional)[/TD]
-[TD]3.x[/TD]
+[TD]Velocity or BungeeCord (optional)[/TD]
+[TD]Velocity 3.x / BungeeCord 1.21+[/TD]
 [/TR]
 [TR]
 [TD]PlaceholderAPI (optional)[/TD]
@@ -257,7 +258,6 @@ queue:
 [LIST]
 [*][B]Website & leaderboards[/B] — [URL='https://pvpindex.com']pvpindex.com[/URL]
 [*][B]Documentation[/B] — [URL='https://docs.pvpindex.com']docs.pvpindex.com[/URL]
-[*][B]Modrinth[/B] — [URL='https://modrinth.com/project/pvpindex-battle']modrinth.com/project/pvpindex-battle[/URL]
 [*][B]Source (plugin)[/B] — [URL='https://github.com/PVP-Index/pvpindex-battles']github.com/PVP-Index/pvpindex-battles[/URL]
 [*][B]Source (ELO formula / anti-cheat)[/B] — [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
 [*][B]Issue tracker[/B] — [URL='https://github.com/PVP-Index/pvpindex-battles/issues']github.com/PVP-Index/pvpindex-battles/issues[/URL]
