@@ -1,6 +1,6 @@
 # PvPIndex Battles Verified ELO Tracking for Competitive PvP
 
-**PvPIndex Battles** connects your Paper or Velocity server to [pvpindex.com](https://pvpindex.com) — an open, tamper-proof ELO ranking platform for competitive Minecraft PvP.
+**PvPIndex Battles** connects your Paper or Velocity server to [pvpindex.com](https://pvpindex.com) an open, tamper-proof ELO ranking platform for competitive Minecraft PvP.
 
 Every duel is recorded, cryptographically signed, and submitted to the API. Players earn verified ratings that persist across your network and stack up against the global leaderboard.
 
@@ -62,7 +62,7 @@ Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` fold
 
 ## Commands
 
-### `/battle` — Players
+### `/battle`  Players
 
 | Command | Description |
 |---|---|
@@ -72,7 +72,7 @@ Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` fold
 | `/battle decline <id>` | Decline a challenge |
 | `/battle leave` | Leave the queue or forfeit an active battle |
 
-### `/pvpindex` — Admins
+### `/pvpindex` Admins
 
 | Command | Permission | Description |
 |---|---|---|
@@ -81,7 +81,7 @@ Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` fold
 | `/pvpindex sync` | `pvpindex.admin` | Retry unsubmitted battles |
 | `/pvpindex retryfailed` | `pvpindex.admin` | Retry failed API submissions |
 
-### `/pvpmod` — Moderation
+### `/pvpmod`  Moderation
 
 | Command | Permission | Description |
 |---|---|---|
