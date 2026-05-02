@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g. v1.0.0)'
+        required: true
 
 permissions:
   contents: write   # Required to create GitHub Releases
@@ -38,7 +43,10 @@ jobs:
       # ── Extract version (strip leading 'v') ───────────────────────────────────
       - name: Extract version
         id: meta
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          REF="${{ github.event.inputs.tag || github.ref_name }}"
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
+          echo "version=${REF#v}" >> "$GITHUB_OUTPUT"
 
       # ── Extract changelog section for this tag from CHANGELOG.md ───────────
       - name: Extract changelog
@@ -62,7 +70,8 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "PvPIndex Battles ${{ github.ref_name }}"
+          tag_name: ${{ steps.meta.outputs.ref }}
+          name: "PvPIndex Battles ${{ steps.meta.outputs.ref }}"
           body: |
             ## What's Changed
 
@@ -99,6 +108,7 @@ jobs:
           VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['paper','folia'],'featured':True,'project_id':'pvpindex-battle','primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_paper.json -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors \
             -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data=</tmp/modrinth_paper_payload.json" \
@@ -124,6 +134,7 @@ jobs:
           VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['velocity'],'featured':False,'project_id':'pvpindex-battle','primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_velocity.json -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors \
             -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data=</tmp/modrinth_velocity_payload.json" \
