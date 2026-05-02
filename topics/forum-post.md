@@ -1,22 +1,24 @@
-# PvPIndex Battles — Verified ELO Tracking for Competitive PvP
+# PvPIndex Battles Verified ELO Tracking for Competitive PvP
 
-**PvPIndex Battles** connects your Paper or Velocity server to [pvpindex.com](https://pvpindex.com) — an open, tamper-proof ELO ranking platform for competitive Minecraft PvP. Every duel gets recorded, signed, and submitted to the API; your players earn verified ratings they can compare against the rest of the network.
+**PvPIndex Battles** connects your Paper or Velocity server to [pvpindex.com](https://pvpindex.com) — an open, tamper-proof ELO ranking platform for competitive Minecraft PvP.
+
+Every duel is recorded, cryptographically signed, and submitted to the API. Players earn verified ratings that persist across your network and stack up against the global leaderboard.
 
 ---
 
 ## Features
 
 - **10 built-in game modes** — Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
-- **Matchmaking queue** with a fully configurable 54-slot GUI (`gui.yml`), per-mode ELO, countdowns, and arena teleportation
-- **Cross-server challenges** — `/battle challenge <player> [mode]` works standalone or routes through a connected Velocity proxy
-- **Network-wide tab completion** — Velocity broadcasts all online players so `/battle challenge <TAB>` shows names from every backend server
-- **Replay system** — frame-by-frame battle recording with in-game `/pvpmod replay <id>` playback
-- **Arena pool** — procedural, schematic, and world-copy generation strategies; four bundled schematics included
-- **Moderation suite** — reports, local bans, federated network-wide bans, real-time spectating
-- **PlaceholderAPI support** — ELO, rank, win/loss, battle state, and battle type placeholders
-- **Fully configurable messages** via `messages.yml`
-- **HMAC-signed payloads** — battles are cryptographically signed before transmission so the server can't fake results
-- **Open ELO formula** — K=32, trust-weighted implementation published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Matchmaking queue** — fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
+- **Cross-server challenges** — `/battle challenge <player> [mode]` works standalone or routes through a Velocity proxy
+- **Network-wide tab completion** — Velocity broadcasts online players across all backends, so `/battle challenge <TAB>` always shows the full network
+- **Replay system** — frame-by-frame battle recording, playable in-game with `/pvpmod replay <id>`
+- **Arena pool** — procedural, schematic, and world-copy generation; four schematics included out of the box
+- **Moderation suite** — player reports, local bans, federated network-wide bans, and real-time spectating
+- **PlaceholderAPI support** — ELO, rank, win/loss, queue state, and active mode placeholders
+- **Configurable messages** — full control over all player-facing text via `messages.yml`
+- **HMAC-signed payloads** — battles are signed before submission; the API rejects anything that doesn't match
+- **Open ELO formula** — K=32 trust-weighted implementation, published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
 
 ---
 
@@ -24,8 +26,8 @@
 
 | Requirement | Version |
 |---|---|
-| Java | 21+ (25+ for Paper 26.1.x servers) |
-| Paper | 1.21.x **or** 1.21.4+ (API 26.1.x) |
+| Java | 21+ (25+ for Paper API 26.1.x) |
+| Paper | 1.21.x or 1.21.4+ (API 26.1.x) |
 | Velocity *(optional)* | 3.x |
 | PlaceholderAPI *(optional)* | 2.11+ |
 | PvPIndex API key | Free at [pvpindex.com](https://pvpindex.com) |
@@ -36,9 +38,9 @@
 
 ### Paper
 
-1. Drop `PvPIndexBattles-<version>.jar` into your server's `plugins/` folder.
-2. Start the server — config files are generated automatically.
-3. Stop the server and set your API key in `plugins/PvPIndexBattles/config.yml`:
+1. Drop `PvPIndexBattles-<version>.jar` into `plugins/`.
+2. Start the server — configs are generated automatically.
+3. Stop the server, then add your API key to `plugins/PvPIndexBattles/config.yml`:
 
 ```yaml
 api:
@@ -48,64 +50,67 @@ server:
   id: "my-server"
 ```
 
-4. Restart and run `/pvpindex` to confirm the plugin loaded correctly.
+4. Restart and run `/pvpindex` to confirm everything loaded correctly.
 
-### Velocity (optional)
+### Velocity *(optional)*
 
-Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` folder and configure `plugins/pvpindex-battles/config.properties` with the same API key and shared secret used on your Paper backends.
+Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` folder and configure `plugins/pvpindex-battles/config.properties` with the same API key and shared secret as your Paper backends.
 
-See [SETUP-VELOCITY.md](../docs/SETUP-VELOCITY.md) for the full proxy setup guide.
+→ See [SETUP-VELOCITY.md](../docs/SETUP-VELOCITY.md) for the full proxy setup guide.
 
 ---
 
 ## Commands
 
-### `/battle` — Player commands
+### `/battle` — Players
+
 | Command | Description |
 |---|---|
 | `/battle` | Open the matchmaking mode selection GUI |
-| `/battle challenge <player> [mode]` | Challenge another player to a duel |
-| `/battle accept <id>` | Accept an incoming challenge |
-| `/battle decline <id>` | Decline an incoming challenge |
+| `/battle challenge <player> [mode]` | Send a duel challenge |
+| `/battle accept <id>` | Accept a challenge |
+| `/battle decline <id>` | Decline a challenge |
 | `/battle leave` | Leave the queue or forfeit an active battle |
 
-### `/pvpindex` — Admin commands
+### `/pvpindex` — Admins
+
 | Command | Permission | Description |
 |---|---|---|
-| `/pvpindex reload` | `pvpindex.reload` | Reload plugin configuration |
-| `/pvpindex submissions` | `pvpindex.admin` | List pending battle submissions |
+| `/pvpindex reload` | `pvpindex.reload` | Reload plugin config |
+| `/pvpindex submissions` | `pvpindex.admin` | View pending battle submissions |
 | `/pvpindex sync` | `pvpindex.admin` | Retry unsubmitted battles |
 | `/pvpindex retryfailed` | `pvpindex.admin` | Retry failed API submissions |
 
-### `/pvpmod` — Moderation commands
+### `/pvpmod` — Moderation
+
 | Command | Permission | Description |
 |---|---|---|
 | `/pvpmod watch <player>` | `pvpindex.mod` | Spectate a live battle |
 | `/pvpmod replay <id>` | `pvpindex.mod` | Play back a recorded battle |
 | `/pvpmod report <player> <reason>` | `pvpindex.mod.report` | Report a player |
-| `/pvpmod ban <player> <duration> <reason>` | `pvpindex.mod.ban` | Ban a player from PvPIndex battles |
+| `/pvpmod ban <player> <duration> <reason>` | `pvpindex.mod.ban` | Ban a player from battles |
 | `/pvpmod unban <player>` | `pvpindex.mod.ban` | Unban a player |
 
 ---
 
-## PlaceholderAPI Placeholders
+## PlaceholderAPI
 
-| Placeholder | Description |
+| Placeholder | Returns |
 |---|---|
 | `%pvpindex_elo%` | Overall ELO rating |
-| `%pvpindex_elo_<mode>%` | ELO for a specific game mode |
-| `%pvpindex_rank%` | Overall ladder rank position |
-| `%pvpindex_wins%` | Session win count |
-| `%pvpindex_losses%` | Session loss count |
+| `%pvpindex_elo_<mode>%` | ELO for a specific mode |
+| `%pvpindex_rank%` | Global ladder position |
+| `%pvpindex_wins%` | Session wins |
+| `%pvpindex_losses%` | Session losses |
 | `%pvpindex_kd%` | Win/loss ratio |
 | `%pvpindex_in_battle%` | `true` / `false` |
 | `%pvpindex_queued%` | `true` / `false` |
-| `%pvpindex_queued_mode%` | Mode ID or `none` |
-| `%pvpindex_battle_type%` | Display name of active game mode |
+| `%pvpindex_queued_mode%` | Current queue mode or `none` |
+| `%pvpindex_battle_type%` | Display name of the active mode |
 
 ---
 
-## Configuration Snapshot
+## Configuration
 
 ```yaml
 # plugins/PvPIndexBattles/config.yml
@@ -115,7 +120,7 @@ api:
 
 server:
   id: "my-server"
-  require_signature: false      # Set true to enforce HMAC signing (recommended)
+  require_signature: false   # Recommended: set to true in production
   debug: false
 
 arena:
@@ -126,21 +131,19 @@ queue:
   max_wait_seconds: 120
 ```
 
-Full reference: [CONFIGURATION.md](../docs/CONFIGURATION.md)
+→ Full reference: [CONFIGURATION.md](../docs/CONFIGURATION.md)
 
 ---
 
 ## Links
 
 - **Website & leaderboards** — [pvpindex.com](https://pvpindex.com)
-- **Modrinth** — [modrinth.com/project/pvpindex-battle](https://modrinth.com/project/pvpindex-battle)
 - **Source (plugin)** — [github.com/PVP-Index/plugin](https://github.com/PVP-Index/plugin)
-- **Source (ELO formula / anti-cheat)** — [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Source (ELO validator)** — [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
 - **Issue tracker** — [github.com/PVP-Index/plugin/issues](https://github.com/PVP-Index/plugin/issues)
 
 ---
 
-## Licence
+## License
 
-[MIT](../LICENSE) for the open-source validator package.  
-See [LICENSE](../LICENSE) for the plugin itself.
+The ELO validator is published under [MIT](../LICENSE). See [LICENSE](../LICENSE) for the plugin itself.
