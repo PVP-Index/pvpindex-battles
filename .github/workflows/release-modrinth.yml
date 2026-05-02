@@ -95,12 +95,15 @@ jobs:
           ENDOFCHANGELOG
           )
 
-          curl -sf -X POST https://api.modrinth.com/v2/version \
+          CHANGELOG_JSON=$(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+
+          HTTP_CODE=$(curl -s -o /tmp/modrinth_paper.json -w '%{http_code}' \
+            -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data={
               \"name\": \"PvPIndex Battles ${VERSION} (Paper)\",
               \"version_number\": \"${VERSION}-paper\",
-              \"changelog\": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+              \"changelog\": ${CHANGELOG_JSON},
               \"dependencies\": [],
               \"game_versions\": [\"1.21\", \"1.21.1\", \"1.21.2\", \"1.21.3\", \"1.21.4\"],
               \"version_type\": \"release\",
@@ -110,7 +113,10 @@ jobs:
               \"primary_file\": \"paper_jar\",
               \"file_parts\": [\"paper_jar\"]
             }" \
-            -F "paper_jar=@${PAPER_JAR};filename=${PAPER_FILENAME}"
+            -F "paper_jar=@${PAPER_JAR};filename=${PAPER_FILENAME}")
+          echo "Modrinth response (HTTP $HTTP_CODE):"
+          cat /tmp/modrinth_paper.json
+          [[ "$HTTP_CODE" =~ ^2 ]] || exit 1
 
       # ── Modrinth — Velocity JAR ──────────────────────────────────────────────
       - name: Upload Velocity JAR to Modrinth
@@ -125,12 +131,15 @@ jobs:
           ENDOFCHANGELOG
           )
 
-          curl -sf -X POST https://api.modrinth.com/v2/version \
+          CHANGELOG_JSON=$(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')
+
+          HTTP_CODE=$(curl -s -o /tmp/modrinth_velocity.json -w '%{http_code}' \
+            -X POST https://api.modrinth.com/v2/version \
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data={
               \"name\": \"PvPIndex Battles ${VERSION} (Velocity)\",
               \"version_number\": \"${VERSION}-velocity\",
-              \"changelog\": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+              \"changelog\": ${CHANGELOG_JSON},
               \"dependencies\": [],
               \"game_versions\": [\"1.21\", \"1.21.1\", \"1.21.2\", \"1.21.3\", \"1.21.4\"],
               \"version_type\": \"release\",
@@ -140,4 +149,7 @@ jobs:
               \"primary_file\": \"velocity_jar\",
               \"file_parts\": [\"velocity_jar\"]
             }" \
-            -F "velocity_jar=@${VELOCITY_JAR};filename=${VELOCITY_FILENAME}"
+            -F "velocity_jar=@${VELOCITY_JAR};filename=${VELOCITY_FILENAME}")
+          echo "Modrinth response (HTTP $HTTP_CODE):"
+          cat /tmp/modrinth_velocity.json
+          [[ "$HTTP_CODE" =~ ^2 ]] || exit 1
