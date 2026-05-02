@@ -105,7 +105,7 @@ jobs:
           )
 
           # Build the JSON payload in Python so shell quoting never corrupts it.
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['paper','folia'],'featured':True,'project_id':'wOZtwr2V','primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11','26.1','26.1.1','26.1.2'],'version_type':'release','loaders':['paper','folia','purpur','spigot','bukkit'],'featured':True,'project_id':'wOZtwr2V','primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_paper.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
@@ -131,7 +131,7 @@ jobs:
           )
 
           # Build the JSON payload in Python so shell quoting never corrupts it.
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4'],'version_type':'release','loaders':['velocity'],'featured':False,'project_id':'wOZtwr2V','primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11','26.1','26.1.1','26.1.2'],'version_type':'release','loaders':['velocity','bungeecord'],'featured':False,'project_id':'wOZtwr2V','primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_velocity.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
