@@ -1,0 +1,79 @@
+# Per-battle arena templates consumed by WorldGeneratorService. Two
+# strategies are bundled:
+#
+#   strategy: copy       -> source_path is a directory under templates/
+#                           (a real Minecraft world: level.dat, region/, ...)
+#   strategy: schematic  -> source_path is a .json schematic file under
+#                           templates/, pasted into host_world at paste_origin
+#
+# Drop new entries here and reload with /pvpindex reload — no code changes.
+
+templates:
+  # Code-built sword-duel arena. Requires no template files on disk —
+  # ProceduralArenaStrategy spins up a fresh void world per battle and
+  # builds a 21x21 stone-brick floor with iron spawn pads + glass walls.
+  arena_duel:
+    display_name: "Duel Arena"
+    strategy: procedural
+    source_path: arena_duel
+    spawn_points:
+      - { x: -9, y: 65, z: 0, yaw: -90, pitch: 0 }
+      - { x:  9, y: 65, z: 0, yaw:  90, pitch: 0 }
+    spectator_spawn: { x: 0, y: 75, z: 0, yaw: 0, pitch: 30 }
+
+  # Code-built Crystal PvP arena. ProceduralCrystalArenaStrategy creates a
+  # 23x23 obsidian floor (required for end crystal placement) with taller
+  # glass walls to contain crystal explosions.
+  arena_crystal:
+    display_name: "Crystal Box"
+    strategy: procedural_crystal
+    source_path: arena_crystal
+    spawn_points:
+      - { x: -9, y: 65, z: 0, yaw: -90, pitch: 0 }
+      - { x:  9, y: 65, z: 0, yaw:  90, pitch: 0 }
+    spectator_spawn: { x: 0, y: 78, z: 0, yaw: 0, pitch: 30 }
+
+  # Code-built Sumo arena. ProceduralSumoArenaStrategy creates a raised 9x9
+  # platform surrounded by void — falling off = elimination.
+  arena_sumo:
+    display_name: "Sumo Platform"
+    strategy: procedural_sumo
+    source_path: arena_sumo
+    spawn_points:
+      - { x: -3, y: 81, z: 0, yaw: -90, pitch: 0 }
+      - { x:  3, y: 81, z: 0, yaw:  90, pitch: 0 }
+    spectator_spawn: { x: 0, y: 90, z: 0, yaw: 0, pitch: 45 }
+
+  # ---------------------------------------------------------------------------
+  # Optional examples (disabled by default — uncomment after providing assets).
+  # ---------------------------------------------------------------------------
+  #
+  # COPY-STRATEGY example: drop a real Minecraft world into
+  #   plugins/PvPIndexBattles/templates/arena_crystal/
+  # (must contain level.dat + region/), then uncomment:
+  #
+  # arena_crystal:
+  #   display_name: "Crystal Box"
+  #   strategy: copy
+  #   source_path: arena_crystal
+  #   spawn_points:
+  #     - { x: -8, y: 65, z: 0, yaw: 90,  pitch: 0 }
+  #     - { x: 8,  y: 65, z: 0, yaw: -90, pitch: 0 }
+  #   spectator_spawn: { x: 0, y: 80, z: 0, yaw: 0, pitch: 30 }
+  #
+  # SCHEMATIC-STRATEGY example: only PvPIndex-format JSON schematics are
+  # supported (palette + block list). Place the .json file in
+  #   plugins/PvPIndexBattles/templates/uhc_island.json
+  # then uncomment. WorldEdit .schem / .schematic files are NOT supported by
+  # the bundled reader.
+  #
+  # uhc_island:
+  #   display_name: "UHC Island"
+  #   strategy: schematic
+  #   source_path: uhc_island.json
+  #   host_world: world
+  #   paste_origin: { x: 0, y: 64, z: 0 }
+  #   spawn_points:
+  #     - { x: 5,  y: 70, z: 5  }
+  #     - { x: -5, y: 70, z: 5  }
+  #   spectator_spawn: { x: 0, y: 90, z: 0, yaw: 0, pitch: 60 }

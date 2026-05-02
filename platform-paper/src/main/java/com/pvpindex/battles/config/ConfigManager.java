@@ -1,0 +1,100 @@
+package com.pvpindex.battles.config;
+
+import com.pvpindex.battles.battle.type.BattleType;
+import com.pvpindex.battles.battle.type.GameModeType;
+import com.pvpindex.battles.moderation.ModerationSettings;
+import com.pvpindex.battles.replay.ReplayDetailLevel;
+import com.pvpindex.battles.replay.ReplaySettings;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class ConfigManager {
+    private final JavaPlugin plugin;
+    private PluginSettings settings;
+    private ReplaySettings replaySettings;
+    private ModerationSettings moderationSettings;
+
+    public ConfigManager(JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
+    public void reload() {
+        plugin.reloadConfig();
+        FileConfiguration cfg = plugin.getConfig();
+
+        Set<GameModeType> gameModes = parseEnums(cfg.getStringList("enabled_game_modes"), GameModeType.class);
+        Set<BattleType> battleTypes = parseEnums(cfg.getStringList("enabled_battle_types"), BattleType.class);
+
+        settings = new PluginSettings(
+                cfg.getString("api.base_url", "https://api.pvpindex.com"),
+                cfg.getString("api.api_key", ""),
+                cfg.getInt("api.timeout", 10),
+                cfg.getInt("api.retry_attempts", 3),
+                cfg.getInt("api.retry_initial_backoff_seconds", 5),
+                cfg.getDouble("api.retry_backoff_multiplier", 3.0),
+                cfg.getInt("api.retry_max_backoff_seconds", 300),
+                cfg.getInt("api.persistent_retry_interval_seconds", 300),
+                cfg.getBoolean("api.submit_confirmed_only", false),
+                cfg.getString("server.id", "default-server"),
+                gameModes,
+                battleTypes,
+                ReplayDetailLevel.valueOf(cfg.getString("recording.detail_level", "HIGH").toUpperCase()),
+                cfg.getBoolean("recording.write_local_file", true),
+                cfg.getBoolean("auto_submit.enabled", true),
+                cfg.getInt("auto_submit.delay_seconds", 5),
+                cfg.getLong("anti_abuse.minimum_battle_duration_seconds", 10),
+                cfg.getBoolean("anti_abuse.mark_disputed_on_early_disconnect", true),
+                cfg.getBoolean("debug", false),
+                // Velocity tracking
+                cfg.getBoolean("velocity.enabled", true),
+                cfg.getDouble("velocity.threshold", 0.1),
+                cfg.getInt("velocity.tracking_interval_ticks", 2),
+                // Batched heartbeat
+                cfg.getBoolean("battle_batch.enabled", true),
+                cfg.getInt("battle_batch.flush_interval_ticks", 40),
+                cfg.getInt("battle_batch.max_batch_size", 20),
+                // Stale-data cleanup
+                cfg.getInt("cleanup.interval_ticks", 100),
+                // Velocity proxy integration
+                cfg.getBoolean("proxy.enabled", false),
+                cfg.getString("proxy.secret", ""),
+                cfg.getInt("proxy.heartbeat_interval_ticks", 200)
+        );
+
+        replaySettings = new ReplaySettings(
+                ReplayDetailLevel.valueOf(cfg.getString("recording.detail_level", "HIGH").toUpperCase()),
+                cfg.getInt("recording.tick_rate", 20),
+                cfg.getInt("recording.max_frames", 144_000),
+                cfg.getBoolean("recording.compress", true),
+                cfg.getBoolean("recording.keep_event_log", true)
+        );
+
+        moderationSettings = new ModerationSettings(
+                cfg.getBoolean("moderation.federated_bans.enabled", false),
+                cfg.getBoolean("moderation.federated_bans.enforce_inbound", false),
+                cfg.getInt("moderation.federated_bans.sync_interval_seconds", 300),
+                cfg.getBoolean("moderation.spectator_on_report", true),
+                cfg.getString("moderation.ban_screen_message",
+                        "&cYou are banned from this server.\n&7Reason: %reason%")
+        );
+    }
+
+    private <E extends Enum<E>> Set<E> parseEnums(List<String> values, Class<E> type) {
+        Set<E> result = EnumSet.noneOf(type);
+        for (String value : values) {
+            try {
+                result.add(Enum.valueOf(type, value.toUpperCase()));
+            } catch (IllegalArgumentException ignored) {
+                plugin.getLogger().warning("Unknown enum value in config: " + value + " for " + type.getSimpleName());
+            }
+        }
+        return result;
+    }
+
+    public PluginSettings settings() { return settings; }
+    public ReplaySettings replaySettings() { return replaySettings == null ? ReplaySettings.defaults() : replaySettings; }
+    public ModerationSettings moderationSettings() { return moderationSettings == null ? ModerationSettings.defaults() : moderationSettings; }
+}

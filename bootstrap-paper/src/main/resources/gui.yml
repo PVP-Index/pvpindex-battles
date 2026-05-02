@@ -1,0 +1,133 @@
+# ─── PvPIndex GUI Configuration ────────────────────────────────────────────────
+# Customise every aspect of the in-game GUIs. Supports legacy '&' colour codes
+# and MiniMessage-style hex colours (e.g. &#FF5555 for red).
+#
+# Slot numbering: top-left = 0, row-major order. A 54-slot inventory has rows
+# 0-5, each with slots row*9 through row*9+8.
+
+# ── Battle Queue GUI (double chest) ───────────────────────────────────────────
+battle_gui:
+  # Title shown at the top of the inventory. Supports '&' colour codes.
+  title: "&8\u2694 &fBattle Queue"
+
+  # Number of rows (1-6). 6 = double chest (54 slots).
+  rows: 6
+
+  # ── Header / title item ────────────────────────────────────────────────────
+  title_item:
+    material: NETHER_STAR
+    queue_name: "&6&lBattle Queue"
+    challenge_name: "&6&lChallenge Mode"
+    slot: 4
+
+  # ── Game mode items ────────────────────────────────────────────────────────
+  # Modes from gamemodes.yml are placed sequentially in this slot range.
+  mode_slots:
+    start: 9
+    end: 35
+
+  # Formatting applied to every mode item.
+  mode_item:
+    # Prefix applied before the mode's display_name from gamemodes.yml.
+    name_prefix: "&e&l"
+    # Lore line showing current queue population. %count% is replaced at runtime.
+    queue_count_line: "&7In queue: %count%"
+    # Final lore line prompting the player to click.
+    click_line: "&aClick to select"
+
+  # ── Category tabs (row 4 by default) ───────────────────────────────────────
+  categories:
+    queue:
+      material: GOLD_BLOCK
+      name: "&a&lQueue"
+      inactive_name: "&7&lQueue"
+      slot: 36
+    challenge:
+      material: DIAMOND_SWORD
+      name: "&a&lChallenge"
+      inactive_name: "&7&lChallenge"
+      slot: 37
+    active_battles:
+      material: RED_WOOL
+      name: "&cActive Battles"
+      # %count% is replaced with the number of running battles.
+      lore: "&7%count% battle(s) running"
+      slot: 38
+
+  # ── Footer buttons ─────────────────────────────────────────────────────────
+  leave_button:
+    material: BARRIER
+    name: "&cLeave Queue"
+    lore:
+      - "&7Click to leave your current queue."
+    slot: 49
+
+  close_button:
+    material: BARRIER
+    name: "&8Close"
+    slot: 53
+
+  # ── Mode icon overrides ────────────────────────────────────────────────────
+  # Maps a mode ID (from gamemodes.yml) to a Bukkit Material used as the icon.
+  # Any mode not listed here falls back to 'default_icon'.
+  mode_icons:
+    crystal: END_CRYSTAL
+    crystal_pvp: END_CRYSTAL
+    uhc: GOLDEN_APPLE
+    sword: IRON_SWORD
+    sword_pvp: IRON_SWORD
+    axe: NETHERITE_AXE
+    axe_pvp: NETHERITE_AXE
+    mace: MACE
+    mace_pvp: MACE
+    pot: SPLASH_POTION
+    potion: SPLASH_POTION
+    pot_pvp: SPLASH_POTION
+    nodebuff: POTION
+    soup: MUSHROOM_STEW
+    soup_pvp: MUSHROOM_STEW
+    boxing: IRON_INGOT
+    sumo: PISTON
+    smp: GRASS_BLOCK
+    nethop: NETHERRACK
+    nether: NETHERRACK
+    vanilla: DIAMOND_SWORD
+    overall: NETHER_STAR
+
+  default_icon: COMPASS
+
+# ── Challenge Confirmation GUI (single row) ──────────────────────────────────
+challenge_gui:
+  title: "&6Challenge"
+  rows: 1
+
+  accept_item:
+    material: LIME_WOOL
+    name: "&a&lAccept"
+    # %challenger% and %mode% are replaced at runtime.
+    lore:
+      - "&7Challenger: %challenger%"
+      - "&7Mode: %mode%"
+      - ""
+      - "&aClick to accept"
+    slot: 2
+
+  info_item:
+    material: PAPER
+    name: "&6&lChallenge"
+    lore:
+      - "&7From: %challenger%"
+      - "&7Mode: %mode%"
+      - "&8Expires in %timeout%s"
+    slot: 4
+
+  decline_item:
+    material: RED_WOOL
+    name: "&c&lDecline"
+    lore:
+      - ""
+      - "&cClick to decline"
+    slot: 6
+
+  # Seconds before an unanswered challenge expires.
+  timeout_seconds: 30

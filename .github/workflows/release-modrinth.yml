@@ -1,0 +1,143 @@
+name: Release to Modrinth
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write   # Required to create GitHub Releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 25 is required to compile the Paper 26.1.x adapter module.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: maven
+
+      - name: Build (skip tests for release speed)
+        run: mvn clean package -B -DskipTests
+
+      # ── Locate artifacts ─────────────────────────────────────────────────────
+      - name: Locate JARs
+        id: jars
+        run: |
+          PAPER=$(ls bootstrap-paper/target/PvPIndexBattles-*.jar | grep -v 'original' | head -1)
+          VELOCITY=$(ls bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -v 'original' | head -1)
+          echo "paper=$PAPER"     >> "$GITHUB_OUTPUT"
+          echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
+
+      # ── Extract version (strip leading 'v') ───────────────────────────────────
+      - name: Extract version
+        id: meta
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # ── Extract changelog section for this tag from CHANGELOG.md ───────────
+      - name: Extract changelog
+        id: changelog
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          # Grab lines between the version header and the next '## [' header (exclusive).
+          NOTES=$(awk \
+            "/^## \[${VERSION}\]/{found=1; next} found && /^## \[/{exit} found{print}" \
+            CHANGELOG.md | sed '/^[[:space:]]*$/d' | sed '/^###/!b; s/^### /\n### /')
+          if [[ -z "$NOTES" ]]; then
+            NOTES="See [CHANGELOG.md](https://github.com/PVP-Index/plugin/blob/main/CHANGELOG.md) for details."
+          fi
+          {
+            echo "notes<<EOF"
+            echo "$NOTES"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      # ── GitHub Release ───────────────────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "PvPIndex Battles ${{ github.ref_name }}"
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.notes }}
+
+            ---
+
+            ### Downloads
+            | JAR | Target |
+            |-----|--------|
+            | `PvPIndexBattles-${{ steps.meta.outputs.version }}.jar` | Paper 1.21.x / 1.21.4+ |
+            | `PvPIndexBattles-velocity-${{ steps.meta.outputs.version }}.jar` | Velocity 3.x |
+
+            Full documentation: https://github.com/PVP-Index/plugin/tree/main/docs
+          files: |
+            ${{ steps.jars.outputs.paper }}
+            ${{ steps.jars.outputs.velocity }}
+          fail_on_unmatched_files: true
+
+      # ── Modrinth — Paper JAR ─────────────────────────────────────────────────
+      - name: Upload Paper JAR to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          PAPER_JAR="${{ steps.jars.outputs.paper }}"
+          PAPER_FILENAME=$(basename "$PAPER_JAR")
+          VERSION="${{ steps.meta.outputs.version }}"
+          CHANGELOG=$(cat << 'ENDOFCHANGELOG'
+          ${{ steps.changelog.outputs.notes }}
+          ENDOFCHANGELOG
+          )
+
+          curl -sf -X POST https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -F "data={
+              \"name\": \"PvPIndex Battles ${VERSION} (Paper)\",
+              \"version_number\": \"${VERSION}-paper\",
+              \"changelog\": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+              \"dependencies\": [],
+              \"game_versions\": [\"1.21\", \"1.21.1\", \"1.21.2\", \"1.21.3\", \"1.21.4\"],
+              \"version_type\": \"release\",
+              \"loaders\": [\"paper\", \"folia\"],
+              \"featured\": true,
+              \"project_id\": \"pvpindex-battle\",
+              \"primary_file\": \"paper_jar\",
+              \"file_parts\": [\"paper_jar\"]
+            }" \
+            -F "paper_jar=@${PAPER_JAR};filename=${PAPER_FILENAME}"
+
+      # ── Modrinth — Velocity JAR ──────────────────────────────────────────────
+      - name: Upload Velocity JAR to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          VELOCITY_JAR="${{ steps.jars.outputs.velocity }}"
+          VELOCITY_FILENAME=$(basename "$VELOCITY_JAR")
+          VERSION="${{ steps.meta.outputs.version }}"
+          CHANGELOG=$(cat << 'ENDOFCHANGELOG'
+          ${{ steps.changelog.outputs.notes }}
+          ENDOFCHANGELOG
+          )
+
+          curl -sf -X POST https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -F "data={
+              \"name\": \"PvPIndex Battles ${VERSION} (Velocity)\",
+              \"version_number\": \"${VERSION}-velocity\",
+              \"changelog\": $(echo "$CHANGELOG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'),
+              \"dependencies\": [],
+              \"game_versions\": [\"1.21\", \"1.21.1\", \"1.21.2\", \"1.21.3\", \"1.21.4\"],
+              \"version_type\": \"release\",
+              \"loaders\": [\"velocity\"],
+              \"featured\": false,
+              \"project_id\": \"pvpindex-battle\",
+              \"primary_file\": \"velocity_jar\",
+              \"file_parts\": [\"velocity_jar\"]
+            }" \
+            -F "velocity_jar=@${VELOCITY_JAR};filename=${VELOCITY_FILENAME}"

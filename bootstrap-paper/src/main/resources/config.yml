@@ -1,0 +1,164 @@
+# Language for player-facing messages. Loads lang/<code>.yml from the plugin folder.
+# Bundled: en, nl, de, pl, zh, es. Drop custom files into plugins/PvPIndexBattles/lang/.
+language: "en"
+
+api:
+  base_url: "https://api.pvpindex.com"
+
+  # ─── API Key ──────────────────────────────────────────────────────────────
+  # Paste the API key you received when your application was approved on
+  # pvpindex.com.  You can find or rotate it on your server's detail page:
+  #   https://pvpindex.com/servers/<your-server-slug>
+  #
+  # The key is a long string starting with "1|" or "2|".  It acts as a
+  # Bearer token on every request this plugin makes to the API.
+  #
+  # If you have not applied yet, go to https://pvpindex.com/apply and
+  # submit a server access application.  An admin will review it and you
+  # will receive this key by email and on the website.
+  api_key: "change-me"
+
+  timeout: 10
+  # Per-battle live retry. After a failed POST /api/battles, the plugin
+  # waits initial_backoff seconds, then multiplies the wait by
+  # backoff_multiplier each attempt (capped at max_backoff_seconds).
+  # Example with defaults: 5s, 15s, 45s.
+  retry_attempts: 3
+  retry_initial_backoff_seconds: 5
+  retry_backoff_multiplier: 3.0
+  retry_max_backoff_seconds: 300
+  # When all live retries are exhausted, the payload is persisted to
+  # plugins/PvPIndexBattles/failed-submissions/<uuid>.json. A background
+  # task re-tries every persistent_retry_interval_seconds (set to 0 to
+  # disable; admins can run /pvpindex retryfailed manually).
+  persistent_retry_interval_seconds: 300
+  submit_confirmed_only: false
+
+server:
+  id: "default-server"
+
+enabled_game_modes:
+  - OVERALL
+  - VANILLA
+  - UHC
+  - POT
+  - NETHOP
+  - SMP
+  - SWORD
+  - AXE
+  - MACE
+  - CRYSTAL
+  - NODEBUFF
+  - SOUP
+  - BOXING
+  - SUMO
+
+enabled_battle_types:
+  - DUEL
+  - TEAM_BATTLE
+  - FREE_FOR_ALL
+  - RANKED_ARENA
+  - PRACTICE_BATTLE
+  - TOURNAMENT_MATCH
+  - CLAN_GUILD_BATTLE
+
+recording:
+  # Snapshot/packet replay tuning. Capture rate is in samples per second; 20
+  # = vanilla tick rate (highest fidelity). Lower for very long battles.
+  detail_level: "HIGH"
+  tick_rate: 20
+  max_frames: 144000      # ~2 hours at 20 Hz per participant
+  compress: true
+  keep_event_log: true
+  write_local_file: true
+
+auto_submit:
+  enabled: true
+  delay_seconds: 5
+
+anti_abuse:
+  minimum_battle_duration_seconds: 10
+  mark_disputed_on_early_disconnect: true
+
+# Pre-generated arena pool — keeps N warm arenas per template ready so that
+# matchmaking can teleport players immediately when a duel is found.
+arena_pool:
+  enabled: true
+  warm_size_per_template: 2
+  refill_async: true
+
+# Player-state save/restore around battles. Snapshots are persisted to
+# plugins/PvPIndexBattles/state/ so a server crash mid-battle still leaves
+# a path back to the player's original inventory and location.
+player_state:
+  include_ender_chest: true
+
+moderation:
+  spectator_on_report: true
+  # Ban screen text. %reason% is interpolated.
+  ban_screen_message: "&cYou are banned from this server.\n&7Reason: %reason%"
+  federated_bans:
+    # Publish bans issued on this server (with -federated flag) to the
+    # PvPIndex network so other verified servers can honour them.
+    enabled: false
+    # OPT-IN: when true, bans published by other verified servers will block
+    # players from joining this server too. Off by default; bans stay LOCAL
+    # unless this is enabled.
+    enforce_inbound: false
+    sync_interval_seconds: 300
+
+debug: false
+
+# ─── Velocity tracking ────────────────────────────────────────────────────────
+# Records velocity_change events in the replay when a player's speed delta
+# exceeds the threshold in a single tick. Runs inside the existing packet
+# capture loop — no extra high-frequency event overhead.
+velocity:
+  enabled: true
+  # Minimum speed delta (blocks/tick) required to emit a velocity_change event.
+  threshold: 0.1
+  # How many ticks between velocity samples (1 = every tick). Values ≥ 2
+  # reduce event volume for long battles without losing meaningful data.
+  tracking_interval_ticks: 2
+
+# ─── Batched battle heartbeat ─────────────────────────────────────────────────
+# Sends a compact heartbeat payload to /api/battles/heartbeat on a fixed
+# interval so the backend can detect Minecraft server crashes mid-battle.
+# Fails gracefully if the endpoint is not yet available (404 → silent skip).
+battle_batch:
+  enabled: true
+  # Ticks between heartbeat flushes (40 = 2 s at 20 TPS).
+  flush_interval_ticks: 40
+  # Maximum number of active battles included per flush.
+  max_batch_size: 20
+
+# ─── Stale-data cleanup ───────────────────────────────────────────────────────
+# Periodically evicts entries for players who are no longer in active battles
+# from internal tracking maps (swing timers, velocity cache, etc.).
+cleanup:
+  # Ticks between cleanup passes (100 = 5 s at 20 TPS).
+  interval_ticks: 100
+
+# ─── Velocity proxy integration ───────────────────────────────────────────────
+# Only required when this Paper server runs behind a Velocity proxy that also
+# has the PvPIndex Velocity plugin installed.
+#
+# Setup:
+#   1. Set the same secret here and in the Velocity plugin's config.toml.
+#   2. Enable Velocity modern forwarding in paper-global.yml:
+#        proxies:
+#          velocity:
+#            enabled: true
+#            online-mode: true
+#            secret: "<your-velocity-forwarding-secret>"
+#   3. The proxy_secret below is separate from the forwarding secret — it
+#      authenticates plugin messages, not login packets.
+proxy:
+  # Set to true if this server is behind a Velocity proxy with the PvPIndex plugin.
+  enabled: false
+  # Shared secret used to authenticate plugin channel messages from the proxy.
+  # Must match 'paper_secret' in the Velocity plugin's config.toml.
+  # Leave empty to disable message authentication (not recommended).
+  secret: ""
+  # How often (in ticks) to send a heartbeat to the proxy (0 to disable).
+  heartbeat_interval_ticks: 200

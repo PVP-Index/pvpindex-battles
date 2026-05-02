@@ -1,0 +1,22 @@
+arenas:
+  default:
+    name: "Default Arena"
+    world: "world"
+    enabled: true
+    spawn_points:
+      - x: 0
+        y: 80
+        z: 0
+        yaw: 0
+        pitch: 0
+      - x: 10
+        y: 80
+        z: 10
+        yaw: 180
+        pitch: 0
+    spectator_spawn:
+      x: 5
+      y: 85
+      z: 5
+      yaw: 0
+      pitch: 0

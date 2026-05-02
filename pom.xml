@@ -1,0 +1,193 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.pvpindex</groupId>
+    <artifactId>pvpindex-parent</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <name>PvPIndex Parent</name>
+    <description>Parent POM for PvPIndex battle-tracking plugins (Paper backend + Velocity proxy)</description>
+
+    <modules>
+        <module>common</module>
+        <module>api</module>
+        <module>network</module>
+        <module>platform-paper</module>
+        <module>paper-versions/paper.1.21.x</module>
+        <module>paper-versions/paper.26.1.x</module>
+        <module>platform-velocity</module>
+        <module>platform-bungeecord</module>
+        <module>bootstrap-paper</module>
+        <module>bootstrap-velocity</module>
+        <module>bootstrap-bungeecord</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>5.11.4</junit.version>
+        <jackson.version>2.18.2</jackson.version>
+        <mockito.version>5.15.2</mockito.version>
+        <paper.api.121.version>1.21.1-R0.1-SNAPSHOT</paper.api.121.version>
+        <paper.api.261.version>26.1.2.build.52-beta</paper.api.261.version>
+        <velocity.api.version>3.5.0-SNAPSHOT</velocity.api.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>papermc-repo</id>
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
+        <repository>
+            <id>extendedclip-repo</id>
+            <url>https://repo.extendedclip.com/releases/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Inter-module -->
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-platform-paper</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-platform-paper-1_21</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-platform-paper-1_26_1</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-platform-velocity</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-network</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-platform-bungeecord</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Jackson (shared version, each module decides scope) -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
+            <!-- Server APIs -->
+            <dependency>
+                <groupId>io.papermc.paper</groupId>
+                <artifactId>paper-api</artifactId>
+                <version>${paper.api.121.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.velocitypowered</groupId>
+                <artifactId>velocity-api</artifactId>
+                <version>${velocity.api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+            <dependency>
+                <groupId>me.clip</groupId>
+                <artifactId>placeholderapi</artifactId>
+                <version>2.11.6</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Redis -->
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>5.2.0</version>
+            </dependency>
+
+            <!-- BungeeCord -->
+            <dependency>
+                <groupId>net.md-5</groupId>
+                <artifactId>bungeecord-api</artifactId>
+                <version>1.21-R0.4</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- Test -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-api</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter-engine</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.5.2</version>
+                    <configuration>
+                        <argLine>
+                            -XX:+EnableDynamicAgentLoading
+                            --add-opens java.base/java.lang=ALL-UNNAMED
+                            --add-opens java.base/java.lang.reflect=ALL-UNNAMED
+                            --add-opens java.base/java.util=ALL-UNNAMED
+                        </argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>3.6.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.15.0</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

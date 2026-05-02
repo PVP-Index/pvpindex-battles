@@ -1,0 +1,20 @@
+# Maven build output
+target/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+.zed/
+*.iml
+*.class
+
+# Test artifacts kept locally
+surefire-reports/
+
+# Secrets / local overrides
+*.key
+local.properties

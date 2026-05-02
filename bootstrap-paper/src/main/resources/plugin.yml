@@ -1,0 +1,49 @@
+name: PvPIndexBattles
+version: 1.0.0
+main: com.pvpindex.battles.PvPIndexBattlesPlugin
+api-version: '1.21'
+authors: [PvPIndex]
+softdepend: [PlaceholderAPI]
+commands:
+  pvpindex:
+    description: PvPIndex battle command root
+    usage: /pvpindex [reload|verify <code>|submissions|sync|retryfailed]
+  pvpmod:
+    description: PvPIndex moderator tools (watch, replay, report, ban)
+    usage: /pvpmod <watch|replay|report|reports|ban|unban> ...
+    permission: pvpindex.mod
+  battle:
+    description: Battle GUI, queue, challenges, and forfeit
+    usage: /battle [leave|challenge <player> [mode]|accept <id>|decline <id>]
+    permission: pvpindex.battle.queue
+permissions:
+  pvpindex.admin:
+    default: op
+  pvpindex.reload:
+    default: op
+  pvpindex.battle.create:
+    default: op
+  pvpindex.battle.start:
+    default: op
+  pvpindex.battle.cancel:
+    default: op
+  pvpindex.battle.finish:
+    default: op
+  pvpindex.battle.submit:
+    default: op
+  pvpindex.battle.dispute:
+    default: op
+  pvpindex.replay.export:
+    default: op
+  pvpindex.mod:
+    description: Access moderator commands (watch, replay, report, ban)
+    default: op
+  pvpindex.mod.ban:
+    default: op
+  pvpindex.mod.ban.federated:
+    default: op
+  pvpindex.mod.report:
+    default: true
+  pvpindex.battle.queue:
+    description: Allows players to use /battle to join matchmaking queues
+    default: true

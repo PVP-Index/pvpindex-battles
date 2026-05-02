@@ -1,0 +1,106 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [21, 25]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+          cache: maven
+
+      # JDK 21 can't read the 26.1.x Paper API (compiled for Java 25).
+      # bootstrap-paper depends on the 26.1.x adapter, so exclude both.
+      - name: Build & test (JDK 21)
+        if: matrix.java == 21
+        run: >
+          mvn clean verify -B
+          -pl '!paper-versions/paper.26.1.x,!bootstrap-paper'
+
+      # JDK 25: full reactor build + test in a single invocation.
+      - name: Build & test (JDK 25)
+        if: matrix.java == 25
+        run: mvn clean verify -B
+
+      # ── All verification steps below are JDK 25 only ──
+
+      - name: Verify Paper 1.21.x adapter JAR exists
+        if: matrix.java == 25
+        run: test -f paper-versions/paper.1.21.x/target/pvpindex-platform-paper-1_21-*.jar
+
+      - name: Verify Paper 26.1.x adapter JAR exists
+        if: matrix.java == 25
+        run: test -f paper-versions/paper.26.1.x/target/pvpindex-platform-paper-1_26_1-*.jar
+
+      - name: Verify Paper JAR contains 1.21.x adapter
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "com/pvpindex/paper/v1_21/Paper121VersionAdapter.class"
+
+      - name: Verify Paper JAR contains 26.1.x adapter
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "com/pvpindex/paper/v1_26_1/Paper2610VersionAdapter.class"
+
+      - name: Verify plugin.yml in Paper JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "plugin.yml"
+
+      - name: Verify config.yml in Paper JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "config.yml"
+
+      - name: Verify gamemodes.yml in Paper JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "gamemodes.yml"
+
+      - name: Verify lang/en.yml in Paper JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "lang/en.yml"
+
+      - name: Verify schematics in Paper JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "schematics/"
+
+      - name: Verify Velocity JAR contains plugin class
+        if: matrix.java == 25
+        run: jar tf bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -q "com/pvpindex/velocity/PvPIndexVelocityPlugin.class"
+
+      - name: Verify velocity-plugin.json in Velocity JAR
+        if: matrix.java == 25
+        run: jar tf bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -q "velocity-plugin.json"
+
+      - name: Verify Velocity JAR contains shaded Jackson
+        if: matrix.java == 25
+        run: jar tf bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -q "com/pvpindex/velocity/shade/jackson/"
+
+      - name: Verify Paper JAR contains shaded Jackson
+        if: matrix.java == 25
+        run: jar tf bootstrap-paper/target/PvPIndexBattles-*.jar | grep -q "com/pvpindex/shade/jackson/"
+
+      - name: Upload Paper JAR
+        if: matrix.java == 25
+        uses: actions/upload-artifact@v4
+        with:
+          name: PvPIndexBattles-paper
+          path: bootstrap-paper/target/PvPIndexBattles-*.jar
+          if-no-files-found: error
+
+      - name: Upload Velocity JAR
+        if: matrix.java == 25
+        uses: actions/upload-artifact@v4
+        with:
+          name: PvPIndexBattles-velocity
+          path: bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar
+          if-no-files-found: error

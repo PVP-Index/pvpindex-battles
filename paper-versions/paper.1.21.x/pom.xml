@@ -1,0 +1,34 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.pvpindex</groupId>
+        <artifactId>pvpindex-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>pvpindex-platform-paper-1_21</artifactId>
+    <packaging>jar</packaging>
+    <name>PvPIndex Paper 1.21.x Adapter</name>
+    <description>Version-specific adapter for Paper 1.21.x (Attribute enum, Registry, Bukkit commands)</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-platform-paper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+            <version>${paper.api.121.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

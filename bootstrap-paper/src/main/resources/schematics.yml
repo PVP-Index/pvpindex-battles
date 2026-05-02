@@ -1,0 +1,47 @@
+# =============================================================================
+# schematics.yml — PvPIndex Battles schematic spawn configuration
+# =============================================================================
+#
+# This file is empty by default. The bundled "Sword Duel" mode uses the
+# `procedural` strategy and needs no schematics.
+#
+# To add your own schematic-based arena:
+#
+#   1. Convert your schematic to PvPIndex JSON format and drop it into:
+#         plugins/PvPIndexBattles/schematics/<name>.json
+#      The bundled SchematicStrategy reads ONLY this format
+#      (a `palette` array + `blocks` list with x/y/z/p indices). WorldEdit
+#      `.schem` / `.schematic` binary files are NOT supported — convert them
+#      first or use the `procedural` strategy instead.
+#   2. Add an entry below using the same filename.
+#   3. Run /pvpindex reload — no server restart needed.
+#
+# Each entry is automatically registered as an arena template. The template
+# id (the key, e.g. `colosseum`) can be referenced from gamemodes.yml under
+# the `arenas:` list of any mode.
+#
+# FIELDS
+#   display_name    Human-readable label shown in logs and future GUIs.
+#   file            Filename inside the schematics/ directory.
+#   host_world      The existing world the schematic is pasted into.
+#   paste_origin    Absolute world coordinates for the schematic's (0,0,0)
+#                   anchor. Space entries apart so pasted regions never overlap.
+#   spawn_points    Where players spawn. Coordinates are RELATIVE to
+#                   paste_origin (dx, dy, dz from that corner).
+#   spectator_spawn Observer position, also RELATIVE to paste_origin.
+# =============================================================================
+
+schematics: {}
+
+# Example entry — uncomment after dropping a JSON schematic into
+# plugins/PvPIndexBattles/schematics/ :
+#
+# arena:
+#   display_name: "Classic Arena"
+#   file: arena.json
+#   host_world: world
+#   paste_origin: { x: 1000, y: 64, z: 1000 }
+#   spawn_points:
+#     - { x: 4,  y: 2, z: 16, yaw: 90.0,  pitch: 0.0 }
+#     - { x: 28, y: 2, z: 16, yaw: -90.0, pitch: 0.0 }
+#   spectator_spawn: { x: 16, y: 12, z: 16, yaw: 0.0, pitch: 35.0 }

@@ -1,0 +1,259 @@
+[CENTER][IMG]https://pvpindex.com/og-default.png[/IMG]
+
+[SIZE=6][B]PvPIndex Battles[/B][/SIZE]
+[SIZE=4]Verified ELO Tracking for Competitive PvP[/SIZE][/CENTER]
+
+[B]PvPIndex Battles[/B] connects your Paper or Velocity server to [URL='https://pvpindex.com']pvpindex.com[/URL] — an open, tamper-proof ELO ranking platform for competitive Minecraft PvP. Every duel gets recorded, cryptographically signed, and submitted to the API; your players earn verified ratings they can compare against the rest of the network.
+
+[HR][/HR]
+
+[SIZE=5][B]Features[/B][/SIZE]
+
+[LIST]
+[*][B]10 built-in game modes[/B] — Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
+[*][B]Matchmaking queue[/B] with a fully configurable 54-slot GUI ([ICODE]gui.yml[/ICODE]), per-mode ELO, countdowns, and arena teleportation
+[*][B]Cross-server challenges[/B] — [ICODE]/battle challenge <player> [mode][/ICODE] works standalone or routes through a connected Velocity proxy
+[*][B]Network-wide tab completion[/B] — Velocity broadcasts all online players so [ICODE]/battle challenge <TAB>[/ICODE] shows names from every backend server
+[*][B]Replay system[/B] — frame-by-frame battle recording with in-game [ICODE]/pvpmod replay <id>[/ICODE] playback
+[*][B]Arena pool[/B] — procedural, schematic, and world-copy generation strategies; four bundled schematics included
+[*][B]Moderation suite[/B] — reports, local bans, federated network-wide bans, real-time spectating
+[*][B]PlaceholderAPI support[/B] — ELO, rank, win/loss, battle state, and battle type placeholders
+[*][B]Fully configurable messages[/B] via [ICODE]messages.yml[/ICODE]
+[*][B]HMAC-signed payloads[/B] — battles are cryptographically signed before transmission so the server cannot fake results
+[*][B]Open ELO formula[/B] — K=32, trust-weighted implementation published under MIT at [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
+[/LIST]
+
+[HR][/HR]
+
+[SIZE=5][B]Requirements[/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Requirement[/TH]
+[TH]Version[/TH]
+[/TR]
+[TR]
+[TD]Java[/TD]
+[TD]21+ (25+ for Paper 26.1.x servers)[/TD]
+[/TR]
+[TR]
+[TD]Paper[/TD]
+[TD]1.21.x or 1.21.4+ (API 26.1.x)[/TD]
+[/TR]
+[TR]
+[TD]Velocity (optional)[/TD]
+[TD]3.x[/TD]
+[/TR]
+[TR]
+[TD]PlaceholderAPI (optional)[/TD]
+[TD]2.11+[/TD]
+[/TR]
+[TR]
+[TD]PvPIndex API key[/TD]
+[TD]Free at [URL='https://pvpindex.com']pvpindex.com[/URL][/TD]
+[/TR]
+[/TABLE]
+
+[HR][/HR]
+
+[SIZE=5][B]Installation[/B][/SIZE]
+
+[SIZE=4][B]Paper[/B][/SIZE]
+
+[LIST=1]
+[*]Drop [ICODE]PvPIndexBattles-<version>.jar[/ICODE] into your server's [ICODE]plugins/[/ICODE] folder.
+[*]Start the server — config files are generated automatically.
+[*]Stop the server and set your API key in [ICODE]plugins/PvPIndexBattles/config.yml[/ICODE]:
+[CODE=yaml]api:
+  api_key: "your-api-key-here"
+
+server:
+  id: "my-server"[/CODE]
+[*]Restart and run [ICODE]/pvpindex[/ICODE] to confirm the plugin loaded correctly.
+[/LIST]
+
+[SIZE=4][B]Velocity (optional)[/B][/SIZE]
+
+Drop [ICODE]PvPIndexBattles-velocity-<version>.jar[/ICODE] into your Velocity [ICODE]plugins/[/ICODE] folder and configure [ICODE]plugins/pvpindex-battles/config.properties[/ICODE] with the same API key and shared secret used on your Paper backends.
+
+[HR][/HR]
+
+[SIZE=5][B]Commands[/B][/SIZE]
+
+[SIZE=4][B]/battle — Player commands[/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Command[/TH]
+[TH]Description[/TH]
+[/TR]
+[TR]
+[TD][ICODE]/battle[/ICODE][/TD]
+[TD]Open the matchmaking mode selection GUI[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/battle challenge <player> [mode][/ICODE][/TD]
+[TD]Challenge another player to a duel[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/battle accept <id>[/ICODE][/TD]
+[TD]Accept an incoming challenge[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/battle decline <id>[/ICODE][/TD]
+[TD]Decline an incoming challenge[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/battle leave[/ICODE][/TD]
+[TD]Leave the queue or forfeit an active battle[/TD]
+[/TR]
+[/TABLE]
+
+[SIZE=4][B]/pvpindex — Admin commands[/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Command[/TH]
+[TH]Permission[/TH]
+[TH]Description[/TH]
+[/TR]
+[TR]
+[TD][ICODE]/pvpindex reload[/ICODE][/TD]
+[TD][ICODE]pvpindex.reload[/ICODE][/TD]
+[TD]Reload plugin configuration[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpindex submissions[/ICODE][/TD]
+[TD][ICODE]pvpindex.admin[/ICODE][/TD]
+[TD]List pending battle submissions[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpindex sync[/ICODE][/TD]
+[TD][ICODE]pvpindex.admin[/ICODE][/TD]
+[TD]Retry unsubmitted battles[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpindex retryfailed[/ICODE][/TD]
+[TD][ICODE]pvpindex.admin[/ICODE][/TD]
+[TD]Retry failed API submissions[/TD]
+[/TR]
+[/TABLE]
+
+[SIZE=4][B]/pvpmod — Moderation commands[/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Command[/TH]
+[TH]Permission[/TH]
+[TH]Description[/TH]
+[/TR]
+[TR]
+[TD][ICODE]/pvpmod watch <player>[/ICODE][/TD]
+[TD][ICODE]pvpindex.mod[/ICODE][/TD]
+[TD]Spectate a live battle[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpmod replay <id>[/ICODE][/TD]
+[TD][ICODE]pvpindex.mod[/ICODE][/TD]
+[TD]Play back a recorded battle[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpmod report <player> <reason>[/ICODE][/TD]
+[TD][ICODE]pvpindex.mod.report[/ICODE][/TD]
+[TD]Report a player[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpmod ban <player> <duration> <reason>[/ICODE][/TD]
+[TD][ICODE]pvpindex.mod.ban[/ICODE][/TD]
+[TD]Ban a player from PvPIndex battles[/TD]
+[/TR]
+[TR]
+[TD][ICODE]/pvpmod unban <player>[/ICODE][/TD]
+[TD][ICODE]pvpindex.mod.ban[/ICODE][/TD]
+[TD]Unban a player[/TD]
+[/TR]
+[/TABLE]
+
+[HR][/HR]
+
+[SIZE=5][B]PlaceholderAPI Placeholders[/B][/SIZE]
+
+[TABLE]
+[TR]
+[TH]Placeholder[/TH]
+[TH]Description[/TH]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_elo%[/ICODE][/TD]
+[TD]Overall ELO rating[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_elo_<mode>%[/ICODE][/TD]
+[TD]ELO for a specific game mode[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_rank%[/ICODE][/TD]
+[TD]Overall ladder rank position[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_wins%[/ICODE][/TD]
+[TD]Session win count[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_losses%[/ICODE][/TD]
+[TD]Session loss count[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_kd%[/ICODE][/TD]
+[TD]Win/loss ratio[/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_in_battle%[/ICODE][/TD]
+[TD][ICODE]true[/ICODE] / [ICODE]false[/ICODE][/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_queued%[/ICODE][/TD]
+[TD][ICODE]true[/ICODE] / [ICODE]false[/ICODE][/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_queued_mode%[/ICODE][/TD]
+[TD]Mode ID or [ICODE]none[/ICODE][/TD]
+[/TR]
+[TR]
+[TD][ICODE]%pvpindex_battle_type%[/ICODE][/TD]
+[TD]Display name of the active game mode[/TD]
+[/TR]
+[/TABLE]
+
+[HR][/HR]
+
+[SIZE=5][B]Configuration Snapshot[/B][/SIZE]
+
+[CODE=yaml]# plugins/PvPIndexBattles/config.yml
+api:
+  api_key: ""
+  base_url: "https://api.pvpindex.com/api"
+
+server:
+  id: "my-server"
+  require_signature: false      # Set true to enforce HMAC signing (recommended)
+  debug: false
+
+arena:
+  world_prefix: "pvpindex_arena"
+  cleanup_delay_ticks: 100
+
+queue:
+  max_wait_seconds: 120[/CODE]
+
+[HR][/HR]
+
+[SIZE=5][B]Links[/B][/SIZE]
+
+[LIST]
+[*][B]Website & leaderboards[/B] — [URL='https://pvpindex.com']pvpindex.com[/URL]
+[*][B]Modrinth[/B] — [URL='https://modrinth.com/project/pvpindex-battle']modrinth.com/project/pvpindex-battle[/URL]
+[*][B]Source (plugin)[/B] — [URL='https://github.com/PVP-Index/plugin']github.com/PVP-Index/plugin[/URL]
+[*][B]Source (ELO formula / anti-cheat)[/B] — [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
+[*][B]Issue tracker[/B] — [URL='https://github.com/PVP-Index/plugin/issues']github.com/PVP-Index/plugin/issues[/URL]
+[/LIST]

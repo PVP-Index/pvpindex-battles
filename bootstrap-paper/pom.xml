@@ -1,0 +1,93 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.pvpindex</groupId>
+        <artifactId>pvpindex-parent</artifactId>
+        <version>1.0.0</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>PvPIndexBattles</artifactId>
+    <packaging>jar</packaging>
+    <name>PvPIndex Battles (Paper)</name>
+    <description>Paper plugin entrypoint with version detection and module loading</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-platform-paper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-platform-paper-1_21</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.pvpindex</groupId>
+            <artifactId>pvpindex-platform-paper-1_26_1</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.papermc.paper</groupId>
+            <artifactId>paper-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>me.clip</groupId>
+            <artifactId>placeholderapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <relocations>
+                                <relocation>
+                                    <pattern>com.fasterxml.jackson</pattern>
+                                    <shadedPattern>com.pvpindex.shade.jackson</shadedPattern>
+                                </relocation>
+                            </relocations>
+                            <artifactSet>
+                                <includes>
+                                    <include>com.pvpindex:pvpindex-common</include>
+                                    <include>com.pvpindex:pvpindex-api</include>
+                                    <include>com.pvpindex:pvpindex-platform-paper</include>
+                                    <include>com.pvpindex:pvpindex-platform-paper-1_21</include>
+                                    <include>com.pvpindex:pvpindex-platform-paper-1_26_1</include>
+                                    <include>com.fasterxml.jackson.core:jackson-databind</include>
+                                    <include>com.fasterxml.jackson.core:jackson-core</include>
+                                    <include>com.fasterxml.jackson.core:jackson-annotations</include>
+                                    <include>com.fasterxml.jackson.datatype:jackson-datatype-jsr310</include>
+                                </includes>
+                            </artifactSet>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

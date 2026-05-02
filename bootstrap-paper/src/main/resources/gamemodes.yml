@@ -1,0 +1,406 @@
+# All-in-one game mode and kit definitions. Each entry under `modes` is a
+# fully self-contained PvP ruleset; `kits` are reusable loadouts referenced
+# by `kit:` from a mode. The plugin ships with all modes playable out of the
+# box — procedural arenas need no extra files on disk.
+
+kits:
+  # Classic 1v1 sword-duel loadout: enchanted iron sword + golden apples
+  # for clutch heals + golden carrots / steak for sustained sat, full
+  # protected iron armour. Tuned to give a ~30s decisive fight on the
+  # bundled procedural arena.
+  sword_starter:
+    display_name: "&aSword Starter"
+    items:
+      - { slot: 0, material: IRON_SWORD,    enchantments: { sharpness: 2, unbreaking: 3, fire_aspect: 1 } }
+      - { slot: 1, material: GOLDEN_APPLE,  amount: 8 }
+      - { slot: 2, material: COOKED_BEEF,   amount: 32 }
+      - { slot: helmet, material: IRON_HELMET,     enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: chest,  material: IRON_CHESTPLATE, enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: legs,   material: IRON_LEGGINGS,   enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: feet,   material: IRON_BOOTS,      enchantments: { protection: 2, feather_falling: 4, unbreaking: 3 } }
+    potion_effects: []
+
+  # Splash-potion PvP (Pot) loadout: netherite sword, splash strength/speed
+  # pots, and healing/regeneration splash pots for sustain.
+  pot_starter:
+    display_name: "&bPot PvP"
+    items:
+      - { slot: 0, material: NETHERITE_SWORD, enchantments: { sharpness: 4, unbreaking: 3 } }
+      - { slot: 1, material: SPLASH_POTION,   amount: 8,  display_name: "&aHealing II" }
+      - { slot: 2, material: SPLASH_POTION,   amount: 8,  display_name: "&eStrength II" }
+      - { slot: 3, material: SPLASH_POTION,   amount: 8,  display_name: "&9Speed II" }
+      - { slot: 4, material: ENDER_PEARL,     amount: 4 }
+      - { slot: helmet, material: NETHERITE_HELMET,     enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: chest,  material: NETHERITE_CHESTPLATE, enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: legs,   material: NETHERITE_LEGGINGS,   enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: feet,   material: NETHERITE_BOOTS,      enchantments: { protection: 4, feather_falling: 4, unbreaking: 3 } }
+    potion_effects: []
+
+  # NoDebuff: same healing tools as Pot but no negative (debuff) potions.
+  # Permanent speed II and strength II baked in as base effects.
+  nodebuff_starter:
+    display_name: "&6NoDebuff"
+    items:
+      - { slot: 0, material: IRON_SWORD,   enchantments: { sharpness: 3, unbreaking: 3 } }
+      - { slot: 1, material: SPLASH_POTION, amount: 16, display_name: "&aHealing II" }
+      - { slot: 2, material: SPLASH_POTION, amount: 8,  display_name: "&eRegeneration II" }
+      - { slot: 3, material: GOLDEN_APPLE,  amount: 4 }
+      - { slot: helmet, material: IRON_HELMET,     enchantments: { protection: 3, unbreaking: 3 } }
+      - { slot: chest,  material: IRON_CHESTPLATE, enchantments: { protection: 3, unbreaking: 3 } }
+      - { slot: legs,   material: IRON_LEGGINGS,   enchantments: { protection: 3, unbreaking: 3 } }
+      - { slot: feet,   material: IRON_BOOTS,      enchantments: { protection: 3, feather_falling: 4, unbreaking: 3 } }
+    potion_effects:
+      - { effect: SPEED,    amplifier: 1, duration: -1 }
+      - { effect: STRENGTH, amplifier: 1, duration: -1 }
+
+  # Soup PvP: iron sword, mushroom-stew stack for healing,
+  # minimal armour (traditional soup-pvp style).
+  soup_starter:
+    display_name: "&dSoup PvP"
+    items:
+      - { slot: 0, material: IRON_SWORD,    enchantments: { sharpness: 2, unbreaking: 3 } }
+      - { slot: 1, material: MUSHROOM_STEW, amount: 64 }
+      - { slot: 2, material: MUSHROOM_STEW, amount: 64 }
+      - { slot: helmet, material: IRON_HELMET,     enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: chest,  material: IRON_CHESTPLATE, enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: legs,   material: IRON_LEGGINGS,   enchantments: { protection: 2, unbreaking: 3 } }
+      - { slot: feet,   material: IRON_BOOTS,      enchantments: { protection: 2, feather_falling: 4, unbreaking: 3 } }
+    potion_effects: []
+
+  # Axe PvP (1.9+ combat): netherite axe + shield. The axe's shield-disable
+  # mechanic makes timing crucial; ender pearls for repositioning.
+  axe_starter:
+    display_name: "&cAxe PvP"
+    items:
+      - { slot: 0, material: NETHERITE_AXE,   enchantments: { sharpness: 5, efficiency: 4, unbreaking: 3 } }
+      - { slot: 1, material: SHIELD }
+      - { slot: 2, material: GOLDEN_APPLE, amount: 8 }
+      - { slot: 3, material: ENDER_PEARL,  amount: 4 }
+      - { slot: offhand, material: SHIELD }
+      - { slot: helmet, material: NETHERITE_HELMET,     enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: chest,  material: NETHERITE_CHESTPLATE, enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: legs,   material: NETHERITE_LEGGINGS,   enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: feet,   material: NETHERITE_BOOTS,      enchantments: { protection: 4, feather_falling: 4, unbreaking: 3 } }
+    potion_effects: []
+
+  # Mace PvP (1.21+ Breeze/Heavy Core): heavy mace with density + breach,
+  # wind charges for vertical positioning and mace combo setups.
+  mace_starter:
+    display_name: "&5Mace PvP"
+    items:
+      - { slot: 0, material: MACE, enchantments: { density: 5, breach: 4, unbreaking: 3, mending: 1 } }
+      - { slot: 1, material: WIND_CHARGE, amount: 16 }
+      - { slot: 2, material: GOLDEN_APPLE, amount: 8 }
+      - { slot: 3, material: ENDER_PEARL,  amount: 4 }
+      - { slot: helmet, material: NETHERITE_HELMET,     enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: chest,  material: NETHERITE_CHESTPLATE, enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: legs,   material: NETHERITE_LEGGINGS,   enchantments: { protection: 4, unbreaking: 3 } }
+      - { slot: feet,   material: NETHERITE_BOOTS,      enchantments: { protection: 4, feather_falling: 4, unbreaking: 3 } }
+    potion_effects: []
+
+  # Boxing: bare fists only.
+  boxing_starter:
+    display_name: "&eBoxing"
+    items: []
+    potion_effects: []
+
+  # Sumo: knockback stick, no armour, no healing.
+  sumo_starter:
+    display_name: "&aSumo"
+    items:
+      - { slot: 0, material: STICK, enchantments: { knockback: 2 }, display_name: "&eSumo Stick" }
+    potion_effects: []
+
+  crystal_pvp:
+    display_name: "&dCrystal PvP"
+    items:
+      - { slot: 0, material: NETHERITE_SWORD, enchantments: { sharpness: 5, unbreaking: 3 } }
+      - { slot: 1, material: END_CRYSTAL, amount: 64 }
+      - { slot: 2, material: OBSIDIAN, amount: 64 }
+      - { slot: 3, material: TOTEM_OF_UNDYING, amount: 4 }
+      - { slot: helmet, material: NETHERITE_HELMET, enchantments: { protection: 4 } }
+      - { slot: chest, material: ELYTRA, enchantments: { unbreaking: 3 } }
+      - { slot: legs, material: NETHERITE_LEGGINGS, enchantments: { protection: 4 } }
+      - { slot: feet, material: NETHERITE_BOOTS, enchantments: { protection: 4, feather_falling: 4 } }
+      - { slot: offhand, material: TOTEM_OF_UNDYING }
+    potion_effects: []
+
+  uhc_starter:
+    display_name: "&6UHC Starter"
+    items:
+      - { slot: 0, material: WOODEN_SWORD }
+      - { slot: 1, material: WOODEN_PICKAXE }
+      - { slot: 2, material: WOODEN_AXE }
+      - { slot: 8, material: APPLE, amount: 8 }
+    potion_effects: []
+
+modes:
+  sword:
+    display_name: "Sword Duel"
+    description:
+      - "&7Classic iron sword 1v1."
+      - "&7Golden apples & steak for sustain."
+    legacy_type: SWORD
+    kit: sword_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: true
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  pot:
+    display_name: "Pot PvP"
+    description:
+      - "&7Throw splash potions to heal and buff."
+      - "&7No natural regen - every pot counts."
+    legacy_type: POT
+    kit: pot_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: false
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  nodebuff:
+    display_name: "NoDebuff"
+    description:
+      - "&7Healing pots only - no debuffs allowed."
+      - "&7Permanent Speed II &7& Strength II."
+    legacy_type: NODEBUFF
+    kit: nodebuff_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: false
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  soup:
+    display_name: "Soup PvP"
+    description:
+      - "&7Eat mushroom stew to heal instantly."
+      - "&7Fast-paced - refill speed wins fights."
+    legacy_type: SOUP
+    kit: soup_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  axe:
+    display_name: "Axe PvP"
+    description:
+      - "&71.9+ combat with shield mechanics."
+      - "&7Axes disable shields - timing is key."
+    legacy_type: AXE
+    kit: axe_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: true
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  mace:
+    display_name: "Mace PvP"
+    description:
+      - "&71.21 mace with wind charges."
+      - "&7Aerial combos amplify fall damage."
+    legacy_type: MACE
+    kit: mace_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: true
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  boxing:
+    display_name: "Boxing"
+    description:
+      - "&7No weapons, no armour - bare fists."
+      - "&7Pure movement and raw skill."
+    legacy_type: BOXING
+    kit: boxing_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 300
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: false
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  sumo:
+    display_name: "Sumo"
+    description:
+      - "&7Knockback stick on an elevated platform."
+      - "&7First player to fall off loses."
+    legacy_type: SUMO
+    kit: sumo_starter
+    world:
+      strategy: procedural_sumo
+      template: arena_sumo
+    arenas: [arena_sumo]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 300
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: true
+      keep_inventory_on_death: false
+      allow_item_drops: false
+      allow_food_loss: false
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  crystal:
+    display_name: "Crystal PvP"
+    description:
+      - "&7End crystals, obsidian & elytra."
+      - "&7High-stakes explosive PvP."
+    legacy_type: CRYSTAL
+    kit: crystal_pvp
+    world:
+      strategy: procedural_crystal
+      template: arena_crystal
+    arenas: [arena_crystal]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 900
+      countdown_seconds: 10
+      allow_block_break: true
+      allow_block_place: true
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: true
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+
+  uhc:
+    display_name: "UHC Duel"
+    description:
+      - "&7Ultra Hardcore - no natural regen."
+      - "&7Mine and craft to survive."
+    legacy_type: UHC
+    kit: uhc_starter
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 1800
+      countdown_seconds: 10
+      allow_block_break: true
+      allow_block_place: true
+      natural_regeneration: false
+      keep_inventory_on_death: false
+      allow_item_drops: true
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
