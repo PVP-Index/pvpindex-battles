@@ -1,24 +1,23 @@
-# PvPIndex Battles Verified ELO Tracking for Competitive PvP
+**PvPIndex Battles** is a competitive PvP plugin for Paper, Folia, Purpur, Spigot, BungeeCord, and Velocity servers. It adds a full **1v1 duel and ranked matchmaking system** with per-mode **ELO ratings**, persistent global leaderboards, battle replays, and a moderation suite - all synced to [pvpindex.com](https://pvpindex.com) so your players' rankings persist across the entire network.
 
-**PvPIndex Battles** connects your Paper or Velocity server to [pvpindex.com](https://pvpindex.com) an open, tamper-proof ELO ranking platform for competitive Minecraft PvP.
-
-Every duel is recorded, cryptographically signed, and submitted to the API. Players earn verified ratings that persist across your network and stack up against the global leaderboard.
+> **Supported game modes:** Crystal PvP · Sword PvP · Pot PvP · NoDebuff · Soup PvP · Axe PvP · Mace PvP · Boxing · Sumo · UHC
 
 ---
 
 ## Features
 
-- **10 built-in game modes**  Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
-- **Matchmaking queue**  fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
-- **Cross-server challenges**  `/battle challenge <player> [mode]` works standalone or routes through a Velocity proxy
-- **Network-wide tab completion**  Velocity broadcasts online players across all backends, so `/battle challenge <TAB>` always shows the full network
-- **Replay system**  frame-by-frame battle recording, playable in-game with `/pvpmod replay <id>`
-- **Arena pool**  procedural, schematic, and world-copy generation; four schematics included out of the box
-- **Moderation suite**  player reports, local bans, federated network-wide bans, and real-time spectating
-- **PlaceholderAPI support**  ELO, rank, win/loss, queue state, and active mode placeholders
-- **Configurable messages**  full control over all player-facing text via `messages.yml`
-- **HMAC-signed payloads**  battles are signed before submission; the API rejects anything that doesn't match
-- **Open ELO formula**  K=32 trust-weighted implementation, published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **10 ranked game modes** - Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC - each with independent ELO ladders and separate leaderboards
+- **1v1 matchmaking queue** - fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
+- **Cross-server duels** - `/battle challenge <player> [mode]` works standalone or routes through a Velocity or BungeeCord proxy
+- **Network-wide tab completion** - proxy broadcasts all online players so `/battle challenge <TAB>` shows names from every backend server
+- **Battle replay system** - frame-by-frame recording, reviewable in-game with `/pvpmod replay <id>`
+- **Arena pool** - procedural, schematic, and world-copy generation strategies; four bundled schematics included
+- **Moderation suite** - player reports, local bans, federated network-wide bans, real-time spectating
+- **PlaceholderAPI integration** - ELO, rank, win/loss, queue state, and active mode placeholders for scoreboards and tab lists
+- **Fully configurable messages** via `messages.yml`
+- **HMAC-signed payloads** - battles are cryptographically signed before submission; the API rejects anything tampered with
+- **Open ELO formula** - K=32 trust-weighted implementation published under MIT at [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Folia compatible** - runs on Folia, Paper, Purpur, Spigot, and Bukkit (1.21+)
 
 ---
 
@@ -27,8 +26,8 @@ Every duel is recorded, cryptographically signed, and submitted to the API. Play
 | Requirement | Version |
 |---|---|
 | Java | 21+ (25+ for Paper API 26.1.x) |
-| Paper | 1.21.x or 1.21.4+ (API 26.1.x) |
-| Velocity *(optional)* | 3.x |
+| Paper / Folia / Purpur / Spigot | 1.21.x or 1.21.4+ (API 26.1.x) |
+| Velocity or BungeeCord *(optional)* | Velocity 3.x / BungeeCord 1.21+ |
 | PlaceholderAPI *(optional)* | 2.11+ |
 | PvPIndex API key | Free at [pvpindex.com](https://pvpindex.com) |
 
@@ -36,7 +35,7 @@ Every duel is recorded, cryptographically signed, and submitted to the API. Play
 
 ## Installation
 
-### Paper
+### Paper / Folia / Purpur / Spigot
 
 1. Drop `PvPIndexBattles-<version>.jar` into `plugins/`.
 2. Start the server, configs are generated automatically.
@@ -52,11 +51,11 @@ server:
 
 4. Restart and run `/pvpindex` to confirm everything loaded correctly.
 
-### Velocity *(optional)*
+### Velocity / BungeeCord *(optional)*
 
-Drop `PvPIndexBattles-velocity-<version>.jar` into your Velocity `plugins/` folder and configure `plugins/pvpindex-battles/config.properties` with the same API key and shared secret as your Paper backends.
+Drop `PvPIndexBattles-velocity-<version>.jar` into your proxy `plugins/` folder and configure `plugins/pvpindex-battles/config.properties` with the same API key and shared secret as your backend servers.
 
-→ See [SETUP-VELOCITY.md](../docs/SETUP-VELOCITY.md) for the full proxy setup guide.
+→ Full proxy setup guide: [docs.pvpindex.com/server_owner/proxy-setup](https://docs.pvpindex.com/server_owner/proxy-setup)
 
 ---
 
@@ -131,19 +130,20 @@ queue:
   max_wait_seconds: 120
 ```
 
-→ Full reference: [CONFIGURATION.md](../docs/CONFIGURATION.md)
+→ Full reference: [docs.pvpindex.com/server_owner/configuration](https://docs.pvpindex.com/server_owner/configuration)
 
 ---
 
 ## Links
 
-- **Website & leaderboards**  [pvpindex.com](https://pvpindex.com)
-- **Source (plugin)**  [github.com/PVP-Index/plugin](https://github.com/PVP-Index/plugin)
-- **Source (ELO validator)**  [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
-- **Issue tracker**  [github.com/PVP-Index/plugin/issues](https://github.com/PVP-Index/plugin/issues)
+- **Website & leaderboards** - [pvpindex.com](https://pvpindex.com)
+- **Documentation** - [docs.pvpindex.com](https://docs.pvpindex.com)
+- **Source (plugin)** - [github.com/PVP-Index/pvpindex-battles](https://github.com/PVP-Index/pvpindex-battles)
+- **Source (ELO formula / anti-cheat)** - [github.com/PVP-Index/battle-validator](https://github.com/PVP-Index/battle-validator)
+- **Issue tracker** - [github.com/PVP-Index/pvpindex-battles/issues](https://github.com/PVP-Index/pvpindex-battles/issues)
 
 ---
 
 ## License
 
-The ELO validator is published under [MIT](../LICENSE). See [LICENSE](../LICENSE) for the plugin itself.
+The ELO validator is published under [MIT](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE). See [LICENSE](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE) for the plugin itself.
