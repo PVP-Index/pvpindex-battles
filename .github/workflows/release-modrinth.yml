@@ -17,10 +17,10 @@ permissions:
 #  RELEASE PIPELINE
 #
 #  1. Build          – compile all modules with JDK 25
-#  2. Locate JARs    – find the shaded Paper & Velocity artifacts
+#  2. Locate JARs    – find the shaded Paper, Velocity & BungeeCord artifacts
 #  3. Extract info   – version string + changelog from CHANGELOG.md
-#  4. GitHub Release – create the GH release with both JARs attached
-#  5. Modrinth       – upload Paper JAR then Velocity JAR (skips duplicates)
+#  4. GitHub Release – create the GH release with all JARs attached
+#  5. Modrinth       – upload Paper, Velocity & BungeeCord JARs (skips duplicates)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 jobs:
@@ -55,8 +55,10 @@ jobs:
         run: |
           PAPER=$(ls bootstrap-paper/target/PvPIndexBattles-*.jar | grep -v 'original' | head -1)
           VELOCITY=$(ls bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -v 'original' | head -1)
-          echo "paper=$PAPER"       >> "$GITHUB_OUTPUT"
-          echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
+          BUNGEECORD=$(ls bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-*.jar | grep -v 'original' | head -1)
+          echo "paper=$PAPER"           >> "$GITHUB_OUTPUT"
+          echo "velocity=$VELOCITY"     >> "$GITHUB_OUTPUT"
+          echo "bungeecord=$BUNGEECORD" >> "$GITHUB_OUTPUT"
 
       # ────────────────────────────────────────────────────────────────────────
       #  3. EXTRACT VERSION & CHANGELOG
@@ -106,11 +108,13 @@ jobs:
             |-----|--------|
             | `PvPIndexBattles-${{ steps.meta.outputs.version }}.jar` | Paper 1.21.x / 1.21.4+ |
             | `PvPIndexBattles-velocity-${{ steps.meta.outputs.version }}.jar` | Velocity 3.x |
+            | `PvPIndexBattles-bungeecord-${{ steps.meta.outputs.version }}.jar` | BungeeCord / Waterfall |
 
             Full documentation: https://github.com/PVP-Index/plugin/tree/main/docs
           files: |
             ${{ steps.jars.outputs.paper }}
             ${{ steps.jars.outputs.velocity }}
+            ${{ steps.jars.outputs.bungeecord }}
           fail_on_unmatched_files: true
 
       # ────────────────────────────────────────────────────────────────────────
@@ -235,5 +239,67 @@ jobs:
             echo "Velocity version already exists on Modrinth — skipping."
           else
             echo "Velocity upload failed!"
+            exit 1
+          fi
+
+      # ────────────────────────────────────────────────────────────────────────
+      #  5c. MODRINTH — BUNGEECORD JAR
+      #
+      #  Loaders : bungeecord, waterfall
+      #  Skips   : if this version was already uploaded
+      # ────────────────────────────────────────────────────────────────────────
+
+      - name: Upload BungeeCord JAR to Modrinth
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: |
+          BUNGEE_JAR="${{ steps.jars.outputs.bungeecord }}"
+          BUNGEE_FILENAME=$(basename "$BUNGEE_JAR")
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          CHANGELOG=$(cat << 'ENDOFCHANGELOG'
+          ${{ steps.changelog.outputs.notes }}
+          ENDOFCHANGELOG
+          )
+
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "
+          import json, os
+          v = os.environ['VERSION']
+          c = os.environ['CHANGELOG']
+          print(json.dumps({
+              'name':          f'PvPIndex Battles {v} (BungeeCord)',
+              'version_number': f'{v}-bungeecord',
+              'changelog':     c,
+              'dependencies':  [],
+              'game_versions': [
+                  '1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5',
+                  '1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11',
+                  '26.1','26.1.1','26.1.2'
+              ],
+              'version_type':  'release',
+              'loaders':       ['bungeecord','waterfall'],
+              'featured':      False,
+              'project_id':    'wOZtwr2V',
+              'primary_file':  'bungee_jar',
+              'file_parts':    ['bungee_jar']
+          }))" > /tmp/modrinth_bungee_payload.json
+
+          HTTP_CODE=$(curl -s -o /tmp/modrinth_bungee.json -w '%{http_code}' \
+            --retry 3 --retry-delay 10 --retry-all-errors \
+            -X POST https://api.modrinth.com/v2/version \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -F "data=</tmp/modrinth_bungee_payload.json" \
+            -F "bungee_jar=@${BUNGEE_JAR};filename=${BUNGEE_FILENAME}")
+
+          echo "Modrinth response (HTTP $HTTP_CODE):"
+          cat /tmp/modrinth_bungee.json
+          echo ""
+
+          if [[ "$HTTP_CODE" =~ ^2 ]]; then
+            echo "BungeeCord JAR uploaded successfully."
+          elif grep -q 'already exists' /tmp/modrinth_bungee.json 2>/dev/null; then
+            echo "BungeeCord version already exists on Modrinth — skipping."
+          else
+            echo "BungeeCord upload failed!"
             exit 1
           fi
