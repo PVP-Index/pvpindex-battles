@@ -18,9 +18,9 @@ PvPIndex supports BungeeCord as an alternative to Velocity. The BungeeCord plugi
 mvn clean package
 ```
 
-2. Copy `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.0.jar` into your BungeeCord `plugins/` folder.
+2. Copy `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.1.jar` into your BungeeCord `plugins/` folder.
 
-3. Copy `bootstrap-paper/target/PvPIndexBattles-1.0.0.jar` into each Paper backend's `plugins/` folder.
+3. Copy `bootstrap-paper/target/PvPIndexBattles-1.0.1.jar` into each Paper backend's `plugins/` folder.
 
 4. Start BungeeCord once to generate the default config at `plugins/PvPIndex-Proxy/config.properties`.
 

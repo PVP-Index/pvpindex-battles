@@ -15,9 +15,9 @@ mvn clean package
 ```
 
 Output JARs:
-- `bootstrap-paper/target/PvPIndexBattles-1.0.0.jar`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.0.jar`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.0.jar`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.1.jar`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.1.jar`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.1.jar`
 
 ## Running Tests
 

@@ -20,7 +20,7 @@ public final class BungeeCommandExecutor extends Command {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(text("&6PvPIndex BungeeCord Proxy &7v1.0.0"));
+            sender.sendMessage(text("&6PvPIndex BungeeCord Proxy &7v1.0.1"));
             sender.sendMessage(text("&7Use /pvpindex network to view network status."));
             return;
         }

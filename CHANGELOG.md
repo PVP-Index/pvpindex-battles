@@ -5,7 +5,7 @@ All notable changes to PvPIndex Battles are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Release tags use the `v` prefix (e.g. `v1.0.0`).
+Release tags use the `v` prefix (e.g. `v1.0.1`).
 
 ---
 
@@ -15,6 +15,27 @@ Release tags use the `v` prefix (e.g. `v1.0.0`).
 ### Changed
 ### Fixed
 ### Removed
+
+---
+
+## [1.0.1] - 2026-05-04
+
+### Added
+- SMP battle item-risk confirmation GUI for challengers before sending a challenge.
+- Warning message shown to challenge targets when receiving an SMP battle challenge.
+- `challenge.smp_warning` language key added to all 6 locales (en, de, es, nl, pl, zh).
+- Immediate "Defeated" / "Victory!" title and sound feedback for SMP battles on death.
+- `allPlayers()` method on `PlayerRegistry` for cross-proxy player aggregation.
+
+### Fixed
+- Cross-proxy player visibility: network player list now merges local and remote players from all proxies.
+- Proxy registration loop in `DefaultNetworkRouter` — only publishes registration for new proxies.
+- Velocity plugin initialisation order: network layer now initialises before message handlers.
+- SMP loot pickup cooldown reduced from 180s to 15s (configurable in `gamemodes.yml`).
+
+### Changed
+- `BackendMessenger.broadcastNetworkPlayerList()` now accepts remote player entries from other proxies.
+- `PvPIndexVelocityPlugin` scheduled task uses `broadcastCombinedPlayerList()` for merged lists.
 
 ---
 
@@ -41,5 +62,6 @@ Release tags use the `v` prefix (e.g. `v1.0.0`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/plugin/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/PVP-Index/plugin/releases/tag/v1.0.0
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/PVP-Index/pvpindex-battles/releases/tag/v1.0.0

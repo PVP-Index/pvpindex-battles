@@ -63,7 +63,7 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
 
     @Override public @NotNull String getIdentifier() { return "pvpindex"; }
     @Override public @NotNull String getAuthor()     { return "PvPIndex"; }
-    @Override public @NotNull String getVersion()    { return "1.0.0"; }
+    @Override public @NotNull String getVersion()    { return "1.0.1"; }
     /** Keep the expansion registered across PlaceholderAPI reloads. */
     @Override public boolean persist() { return true; }
 

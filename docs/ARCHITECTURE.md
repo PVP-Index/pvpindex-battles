@@ -85,9 +85,9 @@ Produces three fat JARs:
 
 | Artefact | Location |
 |----------|----------|
-| `PvPIndexBattles-1.0.0.jar` | `bootstrap-paper/target/` |
-| `PvPIndexBattles-velocity-1.0.0.jar` | `bootstrap-velocity/target/` |
-| `PvPIndexBattles-bungeecord-1.0.0.jar` | `bootstrap-bungeecord/target/` |
+| `PvPIndexBattles-1.0.1.jar` | `bootstrap-paper/target/` |
+| `PvPIndexBattles-velocity-1.0.1.jar` | `bootstrap-velocity/target/` |
+| `PvPIndexBattles-bungeecord-1.0.1.jar` | `bootstrap-bungeecord/target/` |
 
 Jackson is relocated per-platform (`com.pvpindex.shade.jackson`, `com.pvpindex.velocity.shade.jackson`, `com.pvpindex.bungee.shade.jackson`). Jedis is relocated similarly to avoid classpath conflicts with other plugins.
 

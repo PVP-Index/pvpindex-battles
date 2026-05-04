@@ -7,7 +7,7 @@
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-1.0.0.jar`.
+1. Download or build `PvPIndexBattles-1.0.1.jar`.
 2. Place it in your server's `plugins/` folder.
 
 ## Step 2: First Run

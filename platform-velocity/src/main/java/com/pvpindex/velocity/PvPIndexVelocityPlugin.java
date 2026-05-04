@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 @Plugin(
         id           = "pvpindex-proxy",
         name         = "PvPIndex Proxy",
-        version      = "1.0.0",
+        version      = "1.0.1",
         description  = "Cross-server battle tracking and coordination for PvPIndex",
         url          = "https://pvpindex.com",
         authors      = {"PvPIndex Team"}
