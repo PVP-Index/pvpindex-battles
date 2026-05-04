@@ -1,11 +1,18 @@
 package com.pvpindex.battles.event;
 
+import com.pvpindex.battles.battle.BattleParticipant;
 import com.pvpindex.battles.battle.BattleSession;
+import com.pvpindex.battles.battle.type.GameModeType;
+import java.util.List;
+import java.util.UUID;
 import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 
+/**
+ * Base class for all PvPIndex battle events. Subclasses must declare their
+ * own {@code HandlerList} — Bukkit requires one per concrete event type for
+ * {@code @EventHandler} filtering to work correctly.
+ */
 public abstract class AbstractPvPIndexBattleEvent extends Event {
-    private static final HandlerList HANDLERS = new HandlerList();
     private final BattleSession session;
 
     protected AbstractPvPIndexBattleEvent(BattleSession session) {
@@ -16,12 +23,15 @@ public abstract class AbstractPvPIndexBattleEvent extends Event {
         return session;
     }
 
-    @Override
-    public HandlerList getHandlers() {
-        return HANDLERS;
+    public UUID getBattleUuid() {
+        return session.getUuid();
     }
 
-    public static HandlerList getHandlerList() {
-        return HANDLERS;
+    public List<BattleParticipant> getParticipants() {
+        return session.getParticipants();
+    }
+
+    public GameModeType getGameMode() {
+        return session.getGameMode();
     }
 }

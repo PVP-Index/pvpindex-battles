@@ -58,11 +58,11 @@ When `network.enabled=true`, each proxy connects to Redis and communicates with 
 ```
 
 Key components in the `network/` module:
-- **MessageBus** — Pub/Sub interface (Redis implementation: `RedisMessageBus`)
-- **NetworkRouter** — Handles proxy registration, heartbeats, timeouts, message routing
-- **PlayerRegistry** — Tracks every player's location across all proxies
-- **ServerRegistry** — Tracks which servers are on which proxy
-- **MessageDeduplicator** — Bounded LRU set with TTL to prevent duplicate message processing
+- **MessageBus** - Pub/Sub interface (Redis implementation: `RedisMessageBus`)
+- **NetworkRouter** - Handles proxy registration, heartbeats, timeouts, message routing
+- **PlayerRegistry** - Tracks every player's location across all proxies
+- **ServerRegistry** - Tracks which servers are on which proxy
+- **MessageDeduplicator** - Bounded LRU set with TTL to prevent duplicate message processing
 
 ## Version Detection
 

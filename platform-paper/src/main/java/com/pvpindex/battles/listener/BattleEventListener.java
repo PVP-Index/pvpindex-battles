@@ -49,8 +49,9 @@ public class BattleEventListener implements Listener {
     private final BattleService battleService;
     private final BattleReplayRecorder replayRecorder;
     private final GameModeRegistry gameModeRegistry;
-    // Wired after construction (set by plugin bootstrap once queueService is ready).
+    // Wired after construction (set by plugin bootstrap once services are ready).
     private BattleQueueService queueService;
+    private com.pvpindex.battles.battle.SmpLootPhaseService smpLootPhaseService;
 
     // Last arm-swing timestamp per player (for swing-interval / autoclicker detection).
     private final Map<UUID, Long> lastSwingMs = new ConcurrentHashMap<>();
@@ -71,6 +72,10 @@ public class BattleEventListener implements Listener {
 
     public void setQueueService(BattleQueueService queueService) {
         this.queueService = queueService;
+    }
+
+    public void setSmpLootPhaseService(com.pvpindex.battles.battle.SmpLootPhaseService smpLootPhaseService) {
+        this.smpLootPhaseService = smpLootPhaseService;
     }
 
     // -------------------------------------------------------------------------
@@ -185,12 +190,21 @@ public class BattleEventListener implements Listener {
             replayRecorder.record(session, "player_death", dead, null,
                     withPos(player, Map.of("world", player.getWorld().getName())));
 
-            // First-death wins for 1v1: prevent vanilla drops/loss; PlayerStateService
-            // will restore the original inventory on cleanup.
-            event.setKeepInventory(true);
-            event.getDrops().clear();
-            event.setKeepLevel(true);
-            event.setDroppedExp(0);
+            GameModeRules rules = resolveRules(session);
+            boolean isSmpLoot = rules.usePlayerInventory() && rules.lootCooldownSeconds() > 0;
+
+            if (isSmpLoot) {
+                // SMP mode: let items drop naturally so the winner can loot them.
+                event.setKeepInventory(false);
+                event.setKeepLevel(false);
+            } else {
+                // Standard mode: prevent vanilla drops/loss; PlayerStateService
+                // will restore the original inventory on cleanup.
+                event.setKeepInventory(true);
+                event.getDrops().clear();
+                event.setKeepLevel(true);
+                event.setDroppedExp(0);
+            }
 
             // Survivors = everyone else still in the battle.
             List<UUID> winners = new ArrayList<>();
@@ -198,14 +212,27 @@ public class BattleEventListener implements Listener {
                 if (!p.getUuid().equals(dead)) winners.add(p.getUuid());
             }
 
-            // Run cleanup on the next tick so the death event can finalise.
             UUID battleUuid = session.getUuid();
-            Runnable end = () -> battleService.endAndCleanup(battleUuid, winners);
-            if (Bukkit.getServer() != null) {
-                Bukkit.getScheduler().runTask(
-                        Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), end);
+
+            if (isSmpLoot && smpLootPhaseService != null && !winners.isEmpty()) {
+                // SMP: start the loot cooldown phase instead of immediate cleanup.
+                Runnable startLoot = () -> smpLootPhaseService.startLootPhase(
+                        battleUuid, winners.get(0), dead, rules.lootCooldownSeconds());
+                if (Bukkit.getServer() != null) {
+                    Bukkit.getScheduler().runTask(
+                            Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), startLoot);
+                } else {
+                    startLoot.run();
+                }
             } else {
-                end.run();
+                // Standard: run cleanup on the next tick so the death event can finalise.
+                Runnable end = () -> battleService.endAndCleanup(battleUuid, winners);
+                if (Bukkit.getServer() != null) {
+                    Bukkit.getScheduler().runTask(
+                            Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), end);
+                } else {
+                    end.run();
+                }
             }
             // A player can be in at most one active battle.
             return;

@@ -154,13 +154,38 @@ public class BattleService {
         }
         sessions.put(session.getUuid(), session);
         if (Bukkit.getServer() != null) {
-            Bukkit.getPluginManager().callEvent(new PvPIndexBattleCreateEvent(session));
+            PvPIndexBattleCreateEvent createEvent = new PvPIndexBattleCreateEvent(session);
+            Bukkit.getPluginManager().callEvent(createEvent);
+            if (createEvent.isCancelled()) {
+                sessions.remove(session.getUuid());
+                return null;
+            }
         }
         return session;
     }
 
-    public void startBattle(UUID uuid) {
+    /**
+     * Activates a battle that has been created and is in the WAITING state.
+     *
+     * @return {@code true} if the battle was started. {@code false} if a
+     *         {@link PvPIndexBattleStartEvent} listener cancelled it (the
+     *         battle is automatically cancelled via {@link #cancelBattle}).
+     */
+    public boolean startBattle(UUID uuid) {
         BattleSession session = require(uuid);
+
+        if (Bukkit.getServer() != null) {
+            PvPIndexBattleStartEvent startEvent = new PvPIndexBattleStartEvent(session);
+            Bukkit.getPluginManager().callEvent(startEvent);
+            if (startEvent.isCancelled()) {
+                cancelBattle(uuid);
+                return false;
+            }
+            if (startEvent.getStartMessage() != null) {
+                session.getMetadata().put("custom_start_message", startEvent.getStartMessage());
+            }
+        }
+
         session.setStatus(BattleStatus.COUNTDOWN);
         session.markStarted();
 
@@ -189,9 +214,7 @@ public class BattleService {
         if (paperMessenger != null) {
             try { paperMessenger.sendBattleStart(session); } catch (RuntimeException ignored) {}
         }
-        if (Bukkit.getServer() != null) {
-            Bukkit.getPluginManager().callEvent(new PvPIndexBattleStartEvent(session));
-        }
+        return true;
     }
 
     public void finishBattle(UUID uuid, Collection<UUID> winners) {

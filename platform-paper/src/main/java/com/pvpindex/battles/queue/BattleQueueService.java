@@ -289,6 +289,14 @@ public class BattleQueueService {
                 arenaId,
                 Map.of("queued", true, "mode_id", mode.id())
         );
+        if (session == null) {
+            // Creation was cancelled by a PvPIndexBattleCreateEvent listener.
+            if (playerStateService != null) {
+                playerStateService.restore(p1);
+                playerStateService.restore(p2);
+            }
+            return;
+        }
         if (instance != null) battleService.attachArena(session.getUuid(), instance);
 
         // 3) Teleport to arena spawn points.
@@ -400,6 +408,16 @@ public class BattleQueueService {
         for (Player p : List.of(p1, p2)) {
             if (slowness != null) p.removePotionEffect(slowness);
             if (jumpBoost != null) p.removePotionEffect(jumpBoost);
+        }
+        if (!battleService.startBattle(battleUuid)) {
+            // Start was cancelled by a PvPIndexBattleStartEvent listener.
+            return;
+        }
+        BattleSession session = battleService.find(battleUuid).orElse(null);
+        Component customMsg = session != null
+                ? (Component) session.getMetadata().get("custom_start_message")
+                : null;
+        for (Player p : List.of(p1, p2)) {
             if (p.isOnline()) {
                 p.showTitle(Title.title(
                         messageService.component("queue.go_title"),
@@ -407,10 +425,13 @@ public class BattleQueueService {
                         Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(800), Duration.ofMillis(400))));
                 p.playSound(Sound.sound(org.bukkit.Sound.ENTITY_ENDER_DRAGON_GROWL,
                         Sound.Source.MASTER, 0.4f, 1.8f));
-                messageService.send(p, "battle.started_good_luck");
+                if (customMsg != null) {
+                    p.sendMessage(customMsg);
+                } else {
+                    messageService.send(p, "battle.started_good_luck");
+                }
             }
         }
-        battleService.startBattle(battleUuid);
         battleService.scheduleTimeLimit(battleUuid, rules.timeLimitSeconds());
     }
 

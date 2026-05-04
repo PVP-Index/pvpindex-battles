@@ -64,6 +64,19 @@ public record PlayerStateSnapshot(
 
     /** Apply this snapshot back onto the (possibly newly-rejoined) player. */
     public void restore(Player player, org.bukkit.attribute.Attribute maxHealthAttr) {
+        restoreInternal(player, maxHealthAttr, true);
+    }
+
+    /**
+     * Restore location, game mode, health, food, potions, and flight but
+     * keep the player's current inventory as-is. Used after SMP battles
+     * where the winner retains looted items.
+     */
+    public void restoreWithoutInventory(Player player, org.bukkit.attribute.Attribute maxHealthAttr) {
+        restoreInternal(player, maxHealthAttr, false);
+    }
+
+    private void restoreInternal(Player player, org.bukkit.attribute.Attribute maxHealthAttr, boolean includeInventory) {
         // Clear hostile state first
         player.getActivePotionEffects().forEach(e -> player.removePotionEffect(e.getType()));
         player.setFireTicks(0);
@@ -84,14 +97,15 @@ public record PlayerStateSnapshot(
         player.setFlying(isFlying);
         player.setGameMode(gameMode);
 
-        // Inventory
-        PlayerInventory inv = player.getInventory();
-        inv.clear();
-        inv.setStorageContents(cloneArray(inventory));
-        inv.setArmorContents(cloneArray(armor));
-        if (offhand != null) inv.setItemInOffHand(offhand.clone());
-        if (enderChest != null) {
-            player.getEnderChest().setContents(cloneArray(enderChest));
+        if (includeInventory) {
+            PlayerInventory inv = player.getInventory();
+            inv.clear();
+            inv.setStorageContents(cloneArray(inventory));
+            inv.setArmorContents(cloneArray(armor));
+            if (offhand != null) inv.setItemInOffHand(offhand.clone());
+            if (enderChest != null) {
+                player.getEnderChest().setContents(cloneArray(enderChest));
+            }
         }
 
         // Potion effects

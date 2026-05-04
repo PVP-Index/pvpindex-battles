@@ -1,6 +1,6 @@
-# PvPIndex Common — Shared Messaging Protocol
+# PvPIndex Common - Shared Messaging Protocol
 
-Platform-independent module containing the messaging protocol used between the Paper backend plugin and the Velocity proxy plugin. No Bukkit or Velocity dependencies — just Jackson for JSON encoding.
+Platform-independent module containing the messaging protocol used between the Paper backend plugin and the Velocity proxy plugin. No Bukkit or Velocity dependencies - just Jackson for JSON encoding.
 
 This module is shaded (embedded) into both the Paper and Velocity JARs at build time. It is never deployed as a standalone plugin.
 
@@ -60,7 +60,7 @@ Every message is a single UTF-8 JSON object:
 
 | Type | Data Fields | Description |
 |------|-------------|-------------|
-| `PLAYER_SWITCHED_SERVER` | `playerUuid: String`<br>`fromServer: String`<br>`toServer: String`<br>`battleUuid: String` | A battling player switched servers — cancel their battle |
+| `PLAYER_SWITCHED_SERVER` | `playerUuid: String`<br>`fromServer: String`<br>`toServer: String`<br>`battleUuid: String` | A battling player switched servers - cancel their battle |
 | `CANCEL_BATTLE` | `battleUuid: String`<br>`reason: String` | Proxy instructs backend to cancel a specific battle |
 | `PLAYER_SERVER_INFO` | `playerUuid: String`<br>`serverName: String` | Tells backend which server a player is currently on |
 | `SERVER_LIST` | `servers: [name...]` | All registered backend server names |
@@ -131,7 +131,7 @@ byte[] bytes = msg.encode(mapper);
 BattleMessage msg = BattleMessage.decode(mapper, rawBytes);
 
 if (!msg.isValid("mysecret")) {
-    // reject — invalid secret
+    // reject - invalid secret
     return;
 }
 
@@ -158,14 +158,14 @@ boolean valid = msg.isValid("expected-secret");
 ## Usage in Paper
 
 The Paper plugin uses:
-- `PaperMessenger` — encodes and sends messages to the proxy via any online player as a conduit.
-- `ProxyMessageListener` — decodes incoming messages from the proxy and acts on them (cancel battles, log info).
+- `PaperMessenger` - encodes and sends messages to the proxy via any online player as a conduit.
+- `ProxyMessageListener` - decodes incoming messages from the proxy and acts on them (cancel battles, log info).
 
 ## Usage in Velocity
 
 The Velocity plugin uses:
-- `BackendMessenger` — encodes and sends messages to specific backend servers via connected players.
-- `ProxyMessageHandler` — decodes incoming messages from backends and updates registries.
+- `BackendMessenger` - encodes and sends messages to specific backend servers via connected players.
+- `ProxyMessageHandler` - decodes incoming messages from backends and updates registries.
 
 ---
 

@@ -87,6 +87,28 @@ public final class PlayerStateService {
         return true;
     }
 
+    /**
+     * Restore everything <em>except</em> inventory (armor, offhand, ender chest).
+     * The player keeps whatever items they currently have. Used by SMP battles
+     * so the winner retains looted items. Consumes the snapshot like
+     * {@link #restore}.
+     */
+    public boolean restoreWithoutInventory(Player player) {
+        UUID id = player.getUniqueId();
+        PlayerStateSnapshot snap = snapshots.remove(id);
+        if (snap == null) {
+            try {
+                snap = readPersisted(id);
+            } catch (IOException e) {
+                plugin.getLogger().warning("Failed to read persisted state for " + id + ": " + e.getMessage());
+            }
+        }
+        if (snap == null) return false;
+        snap.restoreWithoutInventory(player, versionAdapter.getMaxHealthAttribute());
+        discard(id);
+        return true;
+    }
+
     /** Drop both in-memory and on-disk snapshot without restoring. */
     public void discard(UUID playerUuid) {
         snapshots.remove(playerUuid);

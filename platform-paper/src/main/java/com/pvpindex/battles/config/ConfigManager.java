@@ -28,41 +28,49 @@ public class ConfigManager {
         Set<GameModeType> gameModes = parseEnums(cfg.getStringList("enabled_game_modes"), GameModeType.class);
         Set<BattleType> battleTypes = parseEnums(cfg.getStringList("enabled_battle_types"), BattleType.class);
 
-        settings = new PluginSettings(
-                cfg.getString("api.base_url", "https://api.pvpindex.com"),
-                cfg.getString("api.api_key", ""),
-                cfg.getInt("api.timeout", 10),
-                cfg.getInt("api.retry_attempts", 3),
-                cfg.getInt("api.retry_initial_backoff_seconds", 5),
-                cfg.getDouble("api.retry_backoff_multiplier", 3.0),
-                cfg.getInt("api.retry_max_backoff_seconds", 300),
-                cfg.getInt("api.persistent_retry_interval_seconds", 300),
-                cfg.getBoolean("api.submit_confirmed_only", false),
-                cfg.getString("server.id", "default-server"),
-                gameModes,
-                battleTypes,
-                ReplayDetailLevel.valueOf(cfg.getString("recording.detail_level", "HIGH").toUpperCase()),
-                cfg.getBoolean("recording.write_local_file", true),
-                cfg.getBoolean("auto_submit.enabled", true),
-                cfg.getInt("auto_submit.delay_seconds", 5),
-                cfg.getLong("anti_abuse.minimum_battle_duration_seconds", 10),
-                cfg.getBoolean("anti_abuse.mark_disputed_on_early_disconnect", true),
-                cfg.getBoolean("debug", false),
-                // Velocity tracking
-                cfg.getBoolean("velocity.enabled", true),
-                cfg.getDouble("velocity.threshold", 0.1),
-                cfg.getInt("velocity.tracking_interval_ticks", 2),
-                // Batched heartbeat
-                cfg.getBoolean("battle_batch.enabled", true),
-                cfg.getInt("battle_batch.flush_interval_ticks", 40),
-                cfg.getInt("battle_batch.max_batch_size", 20),
-                // Stale-data cleanup
-                cfg.getInt("cleanup.interval_ticks", 100),
-                // Velocity proxy integration
-                cfg.getBoolean("proxy.enabled", false),
-                cfg.getString("proxy.secret", ""),
-                cfg.getInt("proxy.heartbeat_interval_ticks", 200)
-        );
+		ReplayDetailLevel detailLevel;
+		try {
+			detailLevel = ReplayDetailLevel.valueOf(cfg.getString("recording.detail_level", "HIGH").toUpperCase());
+		} catch (IllegalArgumentException e) {
+			plugin.getLogger().warning("Invalid recording.detail_level in config, falling back to HIGH.");
+			detailLevel = ReplayDetailLevel.HIGH;
+		}
+
+		settings = new PluginSettings(
+				cfg.getString("api.base_url", "https://api.pvpindex.com"),
+				cfg.getString("api.api_key", ""),
+				Math.max(1, cfg.getInt("api.timeout", 10)),
+				Math.max(0, cfg.getInt("api.retry_attempts", 3)),
+				Math.max(1, cfg.getInt("api.retry_initial_backoff_seconds", 5)),
+				Math.max(1.0, cfg.getDouble("api.retry_backoff_multiplier", 3.0)),
+				Math.max(1, cfg.getInt("api.retry_max_backoff_seconds", 300)),
+				Math.max(0, cfg.getInt("api.persistent_retry_interval_seconds", 300)),
+				cfg.getBoolean("api.submit_confirmed_only", false),
+				cfg.getString("server.id", "default-server"),
+				gameModes,
+				battleTypes,
+				detailLevel,
+				cfg.getBoolean("recording.write_local_file", true),
+				cfg.getBoolean("auto_submit.enabled", true),
+				Math.max(0, cfg.getInt("auto_submit.delay_seconds", 5)),
+				Math.max(0, cfg.getLong("anti_abuse.minimum_battle_duration_seconds", 10)),
+				cfg.getBoolean("anti_abuse.mark_disputed_on_early_disconnect", true),
+				cfg.getBoolean("debug", false),
+				// Velocity tracking
+				cfg.getBoolean("velocity.enabled", true),
+				Math.max(0.0, cfg.getDouble("velocity.threshold", 0.1)),
+				Math.max(1, cfg.getInt("velocity.tracking_interval_ticks", 2)),
+				// Batched heartbeat
+				cfg.getBoolean("battle_batch.enabled", true),
+				Math.max(1, cfg.getInt("battle_batch.flush_interval_ticks", 40)),
+				Math.max(1, cfg.getInt("battle_batch.max_batch_size", 20)),
+				// Stale-data cleanup
+				Math.max(1, cfg.getInt("cleanup.interval_ticks", 100)),
+				// Velocity proxy integration
+				cfg.getBoolean("proxy.enabled", false),
+				cfg.getString("proxy.secret", ""),
+				Math.max(1, cfg.getInt("proxy.heartbeat_interval_ticks", 200))
+		);
 
         replaySettings = new ReplaySettings(
                 ReplayDetailLevel.valueOf(cfg.getString("recording.detail_level", "HIGH").toUpperCase()),

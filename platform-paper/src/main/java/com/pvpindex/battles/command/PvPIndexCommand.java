@@ -81,112 +81,137 @@ public class PvPIndexCommand implements CommandExecutor {
         };
     }
 
-    private boolean createBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.create")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 4) {
-            return false;
-        }
-        BattleType type = BattleType.valueOf(args[1].toUpperCase());
-        GameModeType mode = GameModeType.valueOf(args[2].toUpperCase());
+	private boolean createBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.create")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 4) {
+			return false;
+		}
+		BattleType type;
+		GameModeType mode;
+		try {
+			type = BattleType.valueOf(args[1].toUpperCase());
+			mode = GameModeType.valueOf(args[2].toUpperCase());
+		} catch (IllegalArgumentException e) {
+			messageService.sendRaw(sender, "general.invalid_argument");
+			return true;
+		}
         List<BattleParticipant> participants = Arrays.stream(Arrays.copyOfRange(args, 3, args.length))
                 .map(Bukkit::getOfflinePlayer)
                 .map(p -> new BattleParticipant(p.getUniqueId(), p.getName() == null ? "unknown" : p.getName(), null))
                 .toList();
-        BattleSession session = battleService.createBattle(type, mode, participants, null, Map.of());
-        messageService.send(sender, "battle.created", "%uuid%", session.getUuid().toString());
-        return true;
+		BattleSession session = battleService.createBattle(type, mode, participants, null, Map.of());
+		if (session == null) {
+			messageService.send(sender, "general.cancelled");
+			return true;
+		}
+		messageService.send(sender, "battle.created", "%uuid%", session.getUuid().toString());
+		return true;
     }
 
-    private boolean startBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.start")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 2) return false;
-        UUID uuid = UUID.fromString(args[1]);
-        battleService.startBattle(uuid);
-        messageService.send(sender, "battle.started", "%uuid%", uuid.toString());
-        return true;
-    }
+	private boolean startBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.start")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 2) return false;
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		battleService.startBattle(uuid);
+		messageService.send(sender, "battle.started", "%uuid%", uuid.toString());
+		return true;
+	}
 
-    private boolean cancelBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.cancel")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 2) return false;
-        UUID uuid = UUID.fromString(args[1]);
-        battleService.cancelBattle(uuid, "manual");
-        messageService.send(sender, "battle.cancelled", "%uuid%", uuid.toString());
-        return true;
-    }
+	private boolean cancelBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.cancel")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 2) return false;
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		battleService.cancelBattle(uuid);
+		messageService.send(sender, "battle.cancelled", "%uuid%", uuid.toString());
+		return true;
+	}
 
-    private boolean finishBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.finish")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 2) return false;
-        UUID uuid = UUID.fromString(args[1]);
-        BattleSession session = battleService.find(uuid).orElseThrow();
-        UUID winner = session.getParticipants().getFirst().getUuid();
-        battleService.finishBattle(uuid, List.of(winner));
-        messageService.send(sender, "battle.finished", "%uuid%", uuid.toString());
-        return true;
-    }
+	private boolean finishBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.finish")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 2) return false;
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		var session = battleService.find(uuid);
+		if (session.isEmpty()) {
+			messageService.sendRaw(sender, "general.not_found");
+			return true;
+		}
+		UUID winner = session.get().getParticipants().getFirst().getUuid();
+		battleService.finishBattle(uuid, List.of(winner));
+		messageService.send(sender, "battle.finished", "%uuid%", uuid.toString());
+		return true;
+	}
 
-    private boolean submitBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.submit")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 2) return false;
-        UUID uuid = UUID.fromString(args[1]);
-        battleService.submitBattle(uuid);
-        messageService.send(sender, "battle.submitted", "%uuid%", uuid.toString());
-        return true;
-    }
+	private boolean submitBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.submit")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 2) return false;
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		battleService.submitBattle(uuid);
+		messageService.send(sender, "battle.submitted", "%uuid%", uuid.toString());
+		return true;
+	}
 
-    private boolean disputeBattle(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.battle.dispute")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 3) return false;
-        UUID uuid = UUID.fromString(args[1]);
-        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-        battleService.disputeBattle(uuid, reason);
-        messageService.send(sender, "battle.disputed", "%uuid%", uuid.toString());
-        return true;
-    }
+	private boolean disputeBattle(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.battle.dispute")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 3) return false;
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
+		battleService.disputeBattle(uuid, reason);
+		messageService.send(sender, "battle.disputed", "%uuid%", uuid.toString());
+		return true;
+	}
 
     private boolean handleBattles(CommandSender sender) {
         messageService.send(sender, "admin.active_battles", "%ids%", String.join(", ", battleService.activeBattleIds()));
         return true;
     }
 
-    private boolean handleReplay(CommandSender sender, String[] args) {
-        if (!hasPermissionOrAdmin(sender, "pvpindex.replay.export")) {
-            messageService.send(sender, "general.no_permission");
-            return true;
-        }
-        if (args.length < 2 || !"export".equalsIgnoreCase(args[0])) {
-            return false;
-        }
-        UUID uuid = UUID.fromString(args[1]);
-        try {
-            var session = battleService.find(uuid).orElseThrow();
-            var file = fileStorageService.replaysDir().resolve(uuid + ".json");
-            messageService.send(sender, "replay.exported", "%file%", file.toString());
-            return true;
-        } catch (Exception e) {
-            messageService.send(sender, "admin.replay_export_failed", "%error%", e.getMessage());
-            return true;
-        }
-    }
+	private boolean handleReplay(CommandSender sender, String[] args) {
+		if (!hasPermissionOrAdmin(sender, "pvpindex.replay.export")) {
+			messageService.send(sender, "general.no_permission");
+			return true;
+		}
+		if (args.length < 2 || !"export".equalsIgnoreCase(args[0])) {
+			return false;
+		}
+		UUID uuid = parseUuid(sender, args[1]);
+		if (uuid == null) return true;
+		try {
+			var session = battleService.find(uuid);
+			if (session.isEmpty()) {
+				messageService.sendRaw(sender, "general.not_found");
+				return true;
+			}
+			var file = fileStorageService.replaysDir().resolve(uuid + ".json");
+			messageService.send(sender, "replay.exported", "%file%", file.toString());
+			return true;
+		} catch (Exception e) {
+			messageService.send(sender, "admin.replay_export_failed", "%error%", e.getMessage());
+			return true;
+		}
+	}
 
     private boolean handleRetry(CommandSender sender) {
         if (!hasPermissionOrAdmin(sender, "pvpindex.admin")) {
@@ -256,29 +281,45 @@ public class PvPIndexCommand implements CommandExecutor {
         String code = args[0].toUpperCase();
         messageService.sendRaw(player, "admin.verify_in_progress", "%code%", code);
 
-        apiClient.verifyMinecraft(player.getUniqueId(), player.getName(), code)
-                .thenAccept(result -> {
-                    if (result.ok()) {
-                        messageService.sendRaw(player, "admin.verify_success");
-                        messageService.sendRaw(player, "admin.verify_claim_url");
-                    } else if (result.statusCode() == 404) {
-                        messageService.sendRaw(player, "admin.verify_invalid_code");
-                    } else if (result.statusCode() == 409) {
-                        messageService.sendRaw(player, "admin.verify_already_linked");
-                    } else {
-                        messageService.sendRaw(player, "admin.verify_failed", "%detail%", String.valueOf(result.statusCode()));
-                    }
-                })
-                .exceptionally(ex -> {
-                    messageService.sendRaw(player, "admin.verify_failed", "%detail%", ex.getMessage());
-                    return null;
-                });
+		apiClient.verifyMinecraft(player.getUniqueId(), player.getName(), code)
+				.thenAccept(result ->
+					Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), () -> {
+						if (!player.isOnline()) return;
+						if (result.ok()) {
+							messageService.sendRaw(player, "admin.verify_success");
+							messageService.sendRaw(player, "admin.verify_claim_url");
+						} else if (result.statusCode() == 404) {
+							messageService.sendRaw(player, "admin.verify_invalid_code");
+						} else if (result.statusCode() == 409) {
+							messageService.sendRaw(player, "admin.verify_already_linked");
+						} else {
+							messageService.sendRaw(player, "admin.verify_failed", "%detail%", String.valueOf(result.statusCode()));
+						}
+					})
+				)
+				.exceptionally(ex -> {
+					Bukkit.getScheduler().runTask(Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), () -> {
+						if (player.isOnline()) {
+							messageService.sendRaw(player, "admin.verify_failed", "%detail%", ex.getMessage());
+						}
+					});
+					return null;
+				});
         return true;
     }
 
-    private boolean hasPermissionOrAdmin(CommandSender sender, String permission) {
-        return sender.hasPermission(permission) || sender.hasPermission("pvpindex.admin");
-    }
+	private UUID parseUuid(CommandSender sender, String input) {
+		try {
+			return UUID.fromString(input);
+		} catch (IllegalArgumentException e) {
+			messageService.sendRaw(sender, "general.invalid_argument");
+			return null;
+		}
+	}
+
+	private boolean hasPermissionOrAdmin(CommandSender sender, String permission) {
+		return sender.hasPermission(permission) || sender.hasPermission("pvpindex.admin");
+	}
 
     private boolean handleSync(CommandSender sender) {
         if (!hasPermissionOrAdmin(sender, "pvpindex.admin")) {

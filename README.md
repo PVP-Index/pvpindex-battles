@@ -1,6 +1,6 @@
 # PvPIndex Battles
 
-Competitive PvP battle tracking, replay recording, Elo rating, moderation, and cross-server coordination for Minecraft. Ships as three JARs: one for **Paper** servers, one for **Velocity** proxies, and one for **BungeeCord** proxies.
+Competitive PvP battle tracking, replay recording, Elo rating, moderation, and cross-server coordination for Minecraft. Ships as three separate JARs: one for **Paper** servers, one for **Velocity** proxies, and one for **BungeeCord** proxies. Each proxy JAR is independent - install only the one matching your proxy platform.
 
 ## Requirements
 
@@ -23,9 +23,9 @@ mvn clean package
 
 Output:
 
-- `bootstrap-paper/target/PvPIndexBattles-1.0.0.jar` — drop into Paper `plugins/`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.0.jar` — drop into Velocity `plugins/`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.0.jar` — drop into BungeeCord `plugins/`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.0.jar` - drop into Paper `plugins/`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.0.jar` - drop into Velocity `plugins/`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.0.jar` - drop into BungeeCord `plugins/`
 
 The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No manual configuration needed for version selection.
 
@@ -63,7 +63,7 @@ pvpindex-parent
 
 ## Features
 
-- **10 game modes** out of the box: Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC
+- **11 game modes** out of the box: Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC, SMP
 - **Matchmaking queue** with configurable GUI (`gui.yml`), per-mode Elo, countdowns, and arena teleportation
 - **Cross-server challenges**: `/battle challenge <player> [mode]` routes through Velocity or works standalone
 - **Network-wide tab completion**: Velocity broadcasts all online players so `/battle challenge <TAB>` shows players on every server

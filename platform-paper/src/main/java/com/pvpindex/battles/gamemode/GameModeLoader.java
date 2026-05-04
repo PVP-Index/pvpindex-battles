@@ -71,7 +71,9 @@ public final class GameModeLoader {
                         r.getInt("max_participants", 2),
                         r.getInt("teams_count", 2),
                         r.getDouble("start_health", 20.0d),
-                        r.getInt("start_food_level", 20)
+                        r.getInt("start_food_level", 20),
+                        r.getBoolean("use_player_inventory", false),
+                        r.getInt("loot_cooldown_seconds", 0)
                 );
                 GameModeType legacy = parseLegacy(m.getString("legacy_type", "VANILLA"));
                 modes.add(new GameModeDefinition(

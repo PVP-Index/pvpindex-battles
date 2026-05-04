@@ -14,6 +14,7 @@ public final class PlayerGuiState {
 	private Mode mode;
 	private String challengeTarget;
 	private int page;
+	private String pendingConfirmationModeId;
 
 	public PlayerGuiState(Mode mode, String challengeTarget, int page) {
 		this.mode = mode;
@@ -29,4 +30,8 @@ public final class PlayerGuiState {
 
 	public int page() { return page; }
 	public void setPage(int page) { this.page = page; }
+
+	/** The mode ID awaiting SMP risk confirmation, or {@code null} if none. */
+	public String pendingConfirmationModeId() { return pendingConfirmationModeId; }
+	public void setPendingConfirmationModeId(String modeId) { this.pendingConfirmationModeId = modeId; }
 }

@@ -86,6 +86,25 @@ public final class GuiConfig {
 
 	private int challengeTimeoutSeconds;
 
+	// ── Confirmation GUI (SMP risk warning) ─────────────────────────────────
+	private Component confirmationTitle;
+	private int confirmationRows;
+
+	private Material confirmInfoMaterial;
+	private Component confirmInfoName;
+	private List<Component> confirmInfoLore;
+	private int confirmInfoSlot;
+
+	private Material confirmYesMaterial;
+	private Component confirmYesName;
+	private List<Component> confirmYesLore;
+	private int confirmYesSlot;
+
+	private Material confirmCancelMaterial;
+	private Component confirmCancelName;
+	private List<Component> confirmCancelLore;
+	private int confirmCancelSlot;
+
 	private GuiConfig() {}
 
 	// ── Factory ─────────────────────────────────────────────────────────────
@@ -100,6 +119,7 @@ public final class GuiConfig {
 		GuiConfig cfg = new GuiConfig();
 		cfg.loadBattleGui(yaml.getConfigurationSection("battle_gui"), logger);
 		cfg.loadChallengeGui(yaml.getConfigurationSection("challenge_gui"), logger);
+		cfg.loadConfirmationGui(yaml.getConfigurationSection("confirmation_gui"), logger);
 		return cfg;
 	}
 
@@ -161,6 +181,25 @@ public final class GuiConfig {
 		cfg.declineLoreFormat = List.of("", "&cClick to decline");
 		cfg.declineSlot = 6;
 		cfg.challengeTimeoutSeconds = 30;
+
+		cfg.confirmationTitle = Component.text("Risk Warning", NamedTextColor.RED, TextDecoration.BOLD);
+		cfg.confirmationRows = 3;
+		cfg.confirmInfoMaterial = Material.BARRIER;
+		cfg.confirmInfoName = Component.text("Warning: Item Risk", NamedTextColor.RED, TextDecoration.BOLD);
+		cfg.confirmInfoLore = List.of(
+				Component.text("You are about to enter an SMP battle.", NamedTextColor.GRAY),
+				Component.text("If you lose, the winner can take your items.", NamedTextColor.GRAY),
+				Component.empty(),
+				Component.text("Are you sure you want to proceed?", NamedTextColor.YELLOW));
+		cfg.confirmInfoSlot = 4;
+		cfg.confirmYesMaterial = Material.LIME_WOOL;
+		cfg.confirmYesName = Component.text("Yes, I am sure", NamedTextColor.GREEN, TextDecoration.BOLD);
+		cfg.confirmYesLore = List.of(Component.text("Click to join the queue.", NamedTextColor.GRAY));
+		cfg.confirmYesSlot = 11;
+		cfg.confirmCancelMaterial = Material.RED_WOOL;
+		cfg.confirmCancelName = Component.text("Cancel", NamedTextColor.RED, TextDecoration.BOLD);
+		cfg.confirmCancelLore = List.of(Component.text("Click to go back.", NamedTextColor.GRAY));
+		cfg.confirmCancelSlot = 15;
 
 		return cfg;
 	}
@@ -278,6 +317,41 @@ public final class GuiConfig {
 		challengeTimeoutSeconds = sec.getInt("timeout_seconds", 30);
 	}
 
+	private void loadConfirmationGui(ConfigurationSection sec, Logger logger) {
+		if (sec == null) {
+			GuiConfig d = defaults();
+			copyConfirmationFrom(d);
+			return;
+		}
+
+		confirmationTitle = parse(sec.getString("title", "&c&lRisk Warning"));
+		confirmationRows = clampRows(sec.getInt("rows", 3));
+
+		ConfigurationSection ii = sec.getConfigurationSection("info_item");
+		confirmInfoMaterial = mat(ii, "material", Material.BARRIER, logger);
+		confirmInfoName = parse(strOr(ii, "name", "&c&lWarning: Item Risk"));
+		confirmInfoLore = ii != null
+				? ii.getStringList("lore").stream().map(GuiConfig::parse).collect(Collectors.toList())
+				: defaults().confirmInfoLore;
+		confirmInfoSlot = intOr(ii, "slot", 4);
+
+		ConfigurationSection ci = sec.getConfigurationSection("confirm_item");
+		confirmYesMaterial = mat(ci, "material", Material.LIME_WOOL, logger);
+		confirmYesName = parse(strOr(ci, "name", "&a&lYes, I am sure"));
+		confirmYesLore = ci != null
+				? ci.getStringList("lore").stream().map(GuiConfig::parse).collect(Collectors.toList())
+				: defaults().confirmYesLore;
+		confirmYesSlot = intOr(ci, "slot", 11);
+
+		ConfigurationSection ca = sec.getConfigurationSection("cancel_item");
+		confirmCancelMaterial = mat(ca, "material", Material.RED_WOOL, logger);
+		confirmCancelName = parse(strOr(ca, "name", "&c&lCancel"));
+		confirmCancelLore = ca != null
+				? ca.getStringList("lore").stream().map(GuiConfig::parse).collect(Collectors.toList())
+				: defaults().confirmCancelLore;
+		confirmCancelSlot = intOr(ca, "slot", 15);
+	}
+
 	// ── Copy helpers (for partial fallback) ─────────────────────────────────
 
 	private void copyBattleFrom(GuiConfig d) {
@@ -308,6 +382,16 @@ public final class GuiConfig {
 		declineMaterial = d.declineMaterial; declineNameFormat = d.declineNameFormat;
 		declineLoreFormat = d.declineLoreFormat; declineSlot = d.declineSlot;
 		challengeTimeoutSeconds = d.challengeTimeoutSeconds;
+	}
+
+	private void copyConfirmationFrom(GuiConfig d) {
+		confirmationTitle = d.confirmationTitle; confirmationRows = d.confirmationRows;
+		confirmInfoMaterial = d.confirmInfoMaterial; confirmInfoName = d.confirmInfoName;
+		confirmInfoLore = d.confirmInfoLore; confirmInfoSlot = d.confirmInfoSlot;
+		confirmYesMaterial = d.confirmYesMaterial; confirmYesName = d.confirmYesName;
+		confirmYesLore = d.confirmYesLore; confirmYesSlot = d.confirmYesSlot;
+		confirmCancelMaterial = d.confirmCancelMaterial; confirmCancelName = d.confirmCancelName;
+		confirmCancelLore = d.confirmCancelLore; confirmCancelSlot = d.confirmCancelSlot;
 	}
 
 	// ── Utility ─────────────────────────────────────────────────────────────
@@ -444,6 +528,27 @@ public final class GuiConfig {
 	public int declineSlot()                { return declineSlot; }
 
 	public int challengeTimeoutSeconds()    { return challengeTimeoutSeconds; }
+
+	// ── Public getters: Confirmation GUI ────────────────────────────────────
+
+	public Component confirmationTitle()        { return confirmationTitle; }
+	public int confirmationRows()               { return confirmationRows; }
+	public int confirmationSize()               { return confirmationRows * 9; }
+
+	public Material confirmInfoMaterial()        { return confirmInfoMaterial; }
+	public Component confirmInfoName()           { return confirmInfoName; }
+	public List<Component> confirmInfoLore()     { return confirmInfoLore; }
+	public int confirmInfoSlot()                 { return confirmInfoSlot; }
+
+	public Material confirmYesMaterial()         { return confirmYesMaterial; }
+	public Component confirmYesName()            { return confirmYesName; }
+	public List<Component> confirmYesLore()      { return confirmYesLore; }
+	public int confirmYesSlot()                  { return confirmYesSlot; }
+
+	public Material confirmCancelMaterial()      { return confirmCancelMaterial; }
+	public Component confirmCancelName()         { return confirmCancelName; }
+	public List<Component> confirmCancelLore()   { return confirmCancelLore; }
+	public int confirmCancelSlot()               { return confirmCancelSlot; }
 
 	/** Convenience: parses a raw format string with '&' codes into a Component. */
 	public static Component parseColour(String raw) {

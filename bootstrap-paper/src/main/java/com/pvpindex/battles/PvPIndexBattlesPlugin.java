@@ -91,9 +91,12 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 	private BattleManager battleManager;
 	private GuiConfig guiConfig;
 	private NetworkPlayerCache networkPlayerCache;
+	private com.pvpindex.battles.battle.SmpLootPhaseService smpLootPhaseService;
 
 	@Override
 	public void onEnable() {
+		printBanner();
+
 		// Detect Minecraft version and load the correct adapter
 		com.pvpindex.battles.version.VersionAdapter versionAdapter = resolveVersionAdapter();
 		if (versionAdapter == null) {
@@ -267,6 +270,10 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		}
 		debugLogger = new DebugLogger(getLogger(), configManager.settings().debug());
 
+		// SMP loot phase service — handles post-death item collection cooldown.
+		smpLootPhaseService = new com.pvpindex.battles.battle.SmpLootPhaseService(this, battleService, playerStateService);
+		battleEventListener.setSmpLootPhaseService(smpLootPhaseService);
+
 		// Queue service + GUI listener (must be after gameModeRegistry is populated)
 		battleQueueService = new BattleQueueService(this, battleService, worldGeneratorService,
 				arenaPoolService, playerStateService, gameModeRegistry, new KitApplier(versionAdapter), versionAdapter, messageService);
@@ -372,21 +379,24 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			battleCmd.setTabCompleter(battleTabCompleter);
 		}
 
-		// PlaceholderAPI expansion — registered only when PAPI is present
+		// PlaceholderAPI expansion - registered only when PAPI is present
+		boolean papiEnabled = false;
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
 			PlayerStatCache statCache = new PlayerStatCache(this, apiClient);
 			getServer().getPluginManager().registerEvents(new PlaceholderUpdateListener(statCache), this);
 			PvPIndexExpansion expansion = new PvPIndexExpansion(statCache, battleService, battleQueueService);
 			expansion.setWorldNormalizer(worldNormalizer);
 			expansion.register();
-			getLogger().info("PlaceholderAPI expansion registered.");
+			papiEnabled = true;
 		}
-		getLogger().info("PvPIndexBattles enabled with " + gameModeRegistry.allModes().size()
-				+ " game modes and " + gameModeRegistry.allKits().size() + " kits");
+
+		printStartupSummary(versionAdapter, papiEnabled);
+		printSecurityWarnings();
 	}
 
 	@Override
 	public void onDisable() {
+		if (smpLootPhaseService != null) smpLootPhaseService.cancelAll();
 		if (battleBatchScheduler != null) battleBatchScheduler.stop();
 		if (proxyMessageListener != null) proxyMessageListener.unregister();
 		if (paperMessenger != null) paperMessenger.unregister();
@@ -398,7 +408,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			try { arenaPoolService.shutdown(); }
 			catch (RuntimeException e) { getLogger().warning("Arena pool shutdown failed: " + e.getMessage()); }
 		}
-		getLogger().info("PvPIndexBattles disabled");
+		getLogger().info("\u001B[33mPvPIndexBattles disabled.\u001B[0m");
 	}
 
 	public BattleService battleService() { return battleService; }
@@ -410,6 +420,83 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 	/** Allow downstream extensions to swap in an NMS / PacketEvents bridge. */
 	public void setReplayBridge(PacketReplayBridge bridge) {
 		this.replayBridge = bridge;
+	}
+
+	private void printBanner() {
+		String CYAN = "\u001B[36m";
+		String BOLD = "\u001B[1m";
+		String RESET = "\u001B[0m";
+		String GREY = "\u001B[90m";
+		String WHITE = "\u001B[97m";
+		String version = getDescription().getVersion();
+
+		getServer().getConsoleSender().sendMessage("");
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ╔═══════════════════════════════════════════╗" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "   ____        ____  ___           __       " + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "  / __ \\__  __/ __ \\/   |  ___  __/ /__  __ " + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + " / /_/ / / / / /_/ / /| | / _ \\/ _  / _ \\/ _/" + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "/ ____/\\/ /\\/ ____/ ___ |/  __/ /_/ /  __/ /  " + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "\\/ \\___/  \\/   /_/  |_|\\___/\\__,_/\\___/_/   " + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + GREY + "           Battles v" + version + "                      " + CYAN + BOLD + "║" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ╚═══════════════════════════════════════════╝" + RESET);
+		getServer().getConsoleSender().sendMessage("");
+	}
+
+	private void printStartupSummary(com.pvpindex.battles.version.VersionAdapter adapter, boolean papiEnabled) {
+		String GREEN = "\u001B[32m";
+		String CYAN = "\u001B[36m";
+		String YELLOW = "\u001B[33m";
+		String GREY = "\u001B[90m";
+		String WHITE = "\u001B[97m";
+		String BOLD = "\u001B[1m";
+		String RESET = "\u001B[0m";
+		String TICK = GREEN + "✓" + RESET;
+		String CROSS = GREY + "✗" + RESET;
+
+		var console = getServer().getConsoleSender();
+		console.sendMessage(CYAN + BOLD + "  ─── Startup Summary ───" + RESET);
+		console.sendMessage("  " + WHITE + "Adapter     " + GREY + "│ " + GREEN + adapter.getClass().getSimpleName() + RESET);
+		console.sendMessage("  " + WHITE + "MC Version  " + GREY + "│ " + GREEN + getServer().getMinecraftVersion() + RESET);
+		console.sendMessage("  " + WHITE + "Server      " + GREY + "│ " + GREEN + configManager.settings().serverId() + RESET);
+		console.sendMessage("  " + WHITE + "Game Modes  " + GREY + "│ " + GREEN + gameModeRegistry.allModes().size() + RESET);
+		console.sendMessage("  " + WHITE + "Kits        " + GREY + "│ " + GREEN + gameModeRegistry.allKits().size() + RESET);
+		console.sendMessage("  " + WHITE + "Proxy       " + GREY + "│ " + (configManager.settings().proxyEnabled() ? TICK + " Enabled" : CROSS + GREY + " Disabled") + RESET);
+		console.sendMessage("  " + WHITE + "PAPI        " + GREY + "│ " + (papiEnabled ? TICK + " Registered" : CROSS + GREY + " Not found") + RESET);
+		console.sendMessage("  " + WHITE + "Debug       " + GREY + "│ " + (configManager.settings().debug() ? YELLOW + "ON" : GREY + "OFF") + RESET);
+		console.sendMessage("");
+	}
+
+	private void printSecurityWarnings() {
+		String YELLOW = "\u001B[33m";
+		String RED = "\u001B[31m";
+		String BOLD = "\u001B[1m";
+		String RESET = "\u001B[0m";
+
+		boolean warned = false;
+
+		String apiKey = configManager.settings().apiKey();
+		if (apiKey == null || apiKey.isBlank() || "change-me".equalsIgnoreCase(apiKey)) {
+			getLogger().warning(YELLOW + "API key is not configured. Set 'api.api_key' in config.yml to enable battle submissions." + RESET);
+			warned = true;
+		}
+
+		if (configManager.settings().proxyEnabled()) {
+			String secret = configManager.settings().proxySecret();
+			if (secret == null || secret.isBlank()) {
+				getLogger().warning(RED + BOLD + "Proxy messaging is enabled with NO shared secret! " + RESET
+						+ YELLOW + "Any plugin on the channel can inject messages. Set 'proxy.secret' in config.yml." + RESET);
+				warned = true;
+			}
+		}
+
+		if (configManager.settings().debug()) {
+			getLogger().warning(YELLOW + "Debug mode is ON. This produces verbose logging and should be disabled in production." + RESET);
+			warned = true;
+		}
+
+		if (!warned) {
+			getLogger().info("\u001B[32mAll safety checks passed.\u001B[0m");
+		}
 	}
 
 	private void saveResourceIfAbsent(String resourcePath) {

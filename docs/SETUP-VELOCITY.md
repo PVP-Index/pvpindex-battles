@@ -181,8 +181,8 @@ Look for:
 ### In-game (connected via the proxy)
 
 ```
-/vpvpindex status    — lists connected backends and active battle counts
-/vpvpindex list      — lists all tracked players and their current servers
+/vpvpindex status    - lists connected backends and active battle counts
+/vpvpindex list      - lists all tracked players and their current servers
 ```
 
 If `status` shows your backends with heartbeat timestamps, the link is working.

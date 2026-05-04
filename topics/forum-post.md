@@ -144,6 +144,6 @@ queue:
 
 ---
 
-## License
+## Licence
 
 The ELO validator is published under [MIT](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE). See [LICENSE](https://github.com/PVP-Index/pvpindex-battles/blob/main/LICENSE) for the plugin itself.

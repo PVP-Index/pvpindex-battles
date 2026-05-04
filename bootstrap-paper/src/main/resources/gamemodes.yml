@@ -404,3 +404,33 @@ modes:
       teams_count: 2
       start_health: 20.0
       start_food_level: 20
+
+  # SMP Battle: players fight with their own inventory. The winner gets a
+  # configurable cooldown period to loot the loser's dropped items.
+  smp:
+    display_name: "SMP Battle"
+    description:
+      - "&7Fight with your own inventory."
+      - "&7Winner takes the loser's items."
+    legacy_type: SMP
+    world:
+      strategy: procedural
+      template: arena_duel
+    arenas: [arena_duel]
+    win_conditions: [last_player_alive]
+    rules:
+      time_limit_seconds: 600
+      countdown_seconds: 5
+      allow_block_break: false
+      allow_block_place: false
+      natural_regeneration: true
+      keep_inventory_on_death: false
+      allow_item_drops: true
+      allow_food_loss: true
+      friendly_fire: false
+      max_participants: 2
+      teams_count: 2
+      start_health: 20.0
+      start_food_level: 20
+      use_player_inventory: true
+      loot_cooldown_seconds: 180

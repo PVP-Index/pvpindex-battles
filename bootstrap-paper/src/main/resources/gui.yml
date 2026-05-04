@@ -131,3 +131,34 @@ challenge_gui:
 
   # Seconds before an unanswered challenge expires.
   timeout_seconds: 30
+
+# ── SMP Confirmation GUI (3-row chest) ───────────────────────────────────────
+# Shown before a player joins the queue for game modes with use_player_inventory
+# enabled. Warns the player that they may lose their items on death.
+confirmation_gui:
+  title: "&c&lRisk Warning"
+  rows: 3
+
+  info_item:
+    material: BARRIER
+    name: "&c&lWarning: Item Risk"
+    lore:
+      - "&7You are about to enter an SMP battle."
+      - "&7If you lose, the winner can take your items."
+      - ""
+      - "&eAre you sure you want to proceed?"
+    slot: 4
+
+  confirm_item:
+    material: LIME_WOOL
+    name: "&a&lYes, I am sure"
+    lore:
+      - "&7Click to join the queue."
+    slot: 11
+
+  cancel_item:
+    material: RED_WOOL
+    name: "&c&lCancel"
+    lore:
+      - "&7Click to go back."
+    slot: 15
