@@ -9,9 +9,12 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -96,17 +99,37 @@ public final class BackendMessenger {
      * that currently has at least one connected player.
      */
     public void broadcastNetworkPlayerList() {
-        List<Map<String, String>> playerEntries = server.getAllPlayers().stream()
-                .map(p -> {
-                    String srv = p.getCurrentServer()
-                            .map(c -> c.getServerInfo().getName())
-                            .orElse("unknown");
-                    return Map.of(
-                            "name", p.getUsername(),
-                            "uuid", p.getUniqueId().toString(),
-                            "server", srv);
-                })
-                .collect(Collectors.toList());
+        broadcastNetworkPlayerList(List.of());
+    }
+
+    /**
+     * Broadcast the combined list of local + remote online players to every
+     * backend server that currently has at least one connected player.
+     *
+     * @param remoteEntries additional player entries from other proxies
+     *                      (obtained via the cross-proxy network layer)
+     */
+    public void broadcastNetworkPlayerList(List<Map<String, String>> remoteEntries) {
+        Set<String> seen = new HashSet<>();
+        List<Map<String, String>> playerEntries = new ArrayList<>();
+
+        for (Player p : server.getAllPlayers()) {
+            String uuid = p.getUniqueId().toString();
+            seen.add(uuid);
+            String srv = p.getCurrentServer()
+                    .map(c -> c.getServerInfo().getName())
+                    .orElse("unknown");
+            playerEntries.add(Map.of(
+                    "name", p.getUsername(),
+                    "uuid", uuid,
+                    "server", srv));
+        }
+
+        for (Map<String, String> remote : remoteEntries) {
+            if (seen.add(remote.get("uuid"))) {
+                playerEntries.add(remote);
+            }
+        }
 
         Map<String, Object> data = Map.of("players", playerEntries);
 

@@ -31,6 +31,9 @@ import com.velocitypowered.api.proxy.ProxyServer;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -82,6 +85,8 @@ public final class PvPIndexVelocityPlugin {
         MinecraftChannelIdentifier channelId = MinecraftChannelIdentifier.from(PluginChannel.PROXY);
         server.getChannelRegistrar().register(channelId);
 
+        initNetworkLayer();
+
         server.getEventManager().register(this, new PlayerConnectionListener(this));
         server.getEventManager().register(this, new ServerSwitchListener(this));
         server.getEventManager().register(this, new ProxyMessageHandler(this, objectMapper));
@@ -94,11 +99,9 @@ public final class PvPIndexVelocityPlugin {
         cmdManager.register(meta, new VelocityPvPIndexCommand(this));
 
         server.getScheduler()
-                .buildTask(this, () -> backendMessenger.broadcastNetworkPlayerList())
+                .buildTask(this, this::broadcastCombinedPlayerList)
                 .repeat(10, TimeUnit.SECONDS)
                 .schedule();
-
-        initNetworkLayer();
 
         logger.info("PvPIndex Proxy plugin enabled — monitoring "
                 + (config.monitoredServers().isEmpty()
@@ -173,6 +176,32 @@ public final class PvPIndexVelocityPlugin {
                 logger.warning("[PvPIndex Network] Error during message bus disconnect: " + e.getMessage());
             }
         }
+    }
+
+    /**
+     * Builds a combined player list from local Velocity players plus remote
+     * players tracked via the cross-proxy network layer, then broadcasts
+     * it to all backend Paper servers.
+     */
+    private void broadcastCombinedPlayerList() {
+        List<Map<String, String>> remoteEntries = List.of();
+
+        if (isNetworkEnabled()) {
+            var registry = networkRouter.playerRegistry();
+            String localProxyId = config.networkConfig().proxyId();
+            List<Map<String, String>> remote = new ArrayList<>();
+            for (var loc : registry.allPlayers()) {
+                if (!loc.proxyId().equals(localProxyId)) {
+                    remote.add(Map.of(
+                            "name", loc.playerName(),
+                            "uuid", loc.playerId().toString(),
+                            "server", loc.serverName()));
+                }
+            }
+            remoteEntries = remote;
+        }
+
+        backendMessenger.broadcastNetworkPlayerList(remoteEntries);
     }
 
     // -------------------------------------------------------------------------

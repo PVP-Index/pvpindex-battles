@@ -1,5 +1,6 @@
 package com.pvpindex.network;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -23,6 +24,9 @@ public interface PlayerRegistry {
     int globalPlayerCount();
 
     int proxyPlayerCount(String proxyId);
+
+    /** Returns all tracked player locations across all proxies. */
+    Collection<PlayerLocation> allPlayers();
 
     record PlayerLocation(UUID playerId, String playerName, String proxyId, String serverName) {}
 }

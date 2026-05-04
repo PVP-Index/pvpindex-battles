@@ -433,4 +433,4 @@ modes:
       start_health: 20.0
       start_food_level: 20
       use_player_inventory: true
-      loot_cooldown_seconds: 180
+      loot_cooldown_seconds: 15

@@ -10,7 +10,13 @@ import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gamemode.GameModeRules;
 import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.replay.BattleReplayRecorder;
+import java.time.Duration;
 import java.util.ArrayList;
+import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -215,6 +221,35 @@ public class BattleEventListener implements Listener {
             UUID battleUuid = session.getUuid();
 
             if (isSmpLoot && smpLootPhaseService != null && !winners.isEmpty()) {
+                // SMP: show defeat/victory titles immediately so players get feedback.
+                Title.Times times = Title.Times.times(
+                        Duration.ofMillis(300), Duration.ofSeconds(3), Duration.ofMillis(700));
+                Bukkit.getScheduler().runTask(
+                        Bukkit.getPluginManager().getPlugin("PvPIndexBattles"), () -> {
+                    Player loser = Bukkit.getPlayer(dead);
+                    if (loser != null && loser.isOnline()) {
+                        loser.showTitle(Title.title(
+                                Component.text("Defeated", NamedTextColor.RED)
+                                        .decoration(TextDecoration.BOLD, true),
+                                Component.text("Your items have been dropped!", NamedTextColor.WHITE),
+                                times));
+                        loser.sendMessage(Component.text("You lost the battle.", NamedTextColor.RED));
+                        loser.playSound(Sound.sound(org.bukkit.Sound.ENTITY_WITHER_DEATH,
+                                Sound.Source.MASTER, 0.5f, 1.2f));
+                    }
+                    for (UUID winnerUuid : winners) {
+                        Player winner = Bukkit.getPlayer(winnerUuid);
+                        if (winner != null && winner.isOnline()) {
+                            winner.showTitle(Title.title(
+                                    Component.text("Victory!", NamedTextColor.GOLD)
+                                            .decoration(TextDecoration.BOLD, true),
+                                    Component.text("Collect your opponent's items!", NamedTextColor.GRAY),
+                                    times));
+                            winner.playSound(Sound.sound(org.bukkit.Sound.UI_TOAST_CHALLENGE_COMPLETE,
+                                    Sound.Source.MASTER, 1.0f, 1.0f));
+                        }
+                    }
+                });
                 // SMP: start the loot cooldown phase instead of immediate cleanup.
                 Runnable startLoot = () -> smpLootPhaseService.startLootPhase(
                         battleUuid, winners.get(0), dead, rules.lootCooldownSeconds());

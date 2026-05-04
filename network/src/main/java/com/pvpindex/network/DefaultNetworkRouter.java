@@ -171,11 +171,14 @@ public final class DefaultNetworkRouter implements NetworkRouter {
         int players = msg.payloadInt("playerCount", 0);
         if (id == null) return;
 
+        boolean isNew = !proxies.containsKey(id);
         ProxyNode node = proxies.computeIfAbsent(id, k -> new ProxyNode(id, region));
         node.heartbeat(players);
-        LOGGER.info("[PvPIndex Network] Proxy registered: " + id + " (region=" + region + ")");
 
-        publishProxyRegister();
+        if (isNew) {
+            LOGGER.info("[PvPIndex Network] Proxy registered: " + id + " (region=" + region + ")");
+            publishProxyRegister();
+        }
     }
 
     private void handleProxyHeartbeat(NetworkMessage msg) {

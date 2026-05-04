@@ -4,6 +4,7 @@ import com.pvpindex.network.PlayerRegistry;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public final class RedisPlayerRegistry implements PlayerRegistry {
 
@@ -70,6 +71,11 @@ public final class RedisPlayerRegistry implements PlayerRegistry {
         return (int) byId.values().stream()
                 .filter(loc -> loc.proxyId().equals(proxyId))
                 .count();
+    }
+
+    @Override
+    public Collection<PlayerLocation> allPlayers() {
+        return Collections.unmodifiableCollection(byId.values());
     }
 
     public void removeAllForProxy(String proxyId) {
