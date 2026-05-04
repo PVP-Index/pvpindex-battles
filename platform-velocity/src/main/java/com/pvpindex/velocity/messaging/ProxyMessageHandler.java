@@ -325,8 +325,31 @@ public final class ProxyMessageHandler {
             return;
         }
 
-        if (pending.targetServer().startsWith("__cross_proxy__:")) {
-            String targetProxy = pending.targetServer().substring("__cross_proxy__:".length());
+        // Receiver-side pending: forward accept back to the origin proxy via Redis
+        if (pending.isCrossProxyReceiver()) {
+            NetworkRouter router = plugin.networkRouter();
+            if (router != null) {
+                router.sendToProxy(pending.originProxy(), NetworkMessageType.CHALLENGE_ACCEPT, Map.of(
+                        "challengeId", challengeId.toString(),
+                        "accepterUuid", pending.targetUuid().toString(),
+                        "targetServer", pending.targetServer(),
+                        "originProxy", pending.originProxy(),
+                        "originServer", pending.challengerServer(),
+                        "challengerUuid", pending.challengerUuid().toString(),
+                        "modeId", pending.modeId() != null ? pending.modeId() : ""
+                ));
+            }
+            if (plugin.config().debug()) {
+                logger.info("[ProxyMessageHandler] Challenge " + challengeId
+                        + " ACCEPTED on receiver proxy, forwarding to origin " + pending.originProxy());
+            }
+            return;
+        }
+
+        // Origin-side pending for cross-proxy: should not happen here (handled by Redis),
+        // but guard against it anyway
+        if (pending.isCrossProxyOrigin()) {
+            String targetProxy = pending.crossProxyTargetId();
             NetworkRouter router = plugin.networkRouter();
             if (router != null) {
                 router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_ACCEPT, Map.of(
@@ -340,6 +363,7 @@ public final class ProxyMessageHandler {
             return;
         }
 
+        // Local challenge accept
         boolean sameServer = pending.challengerServer().equals(pending.targetServer());
 
         if (!sameServer) {
@@ -387,8 +411,25 @@ public final class ProxyMessageHandler {
         PendingChallenge pending = pendingChallenges.remove(challengeId);
         if (pending == null) return;
 
-        if (pending.targetServer().startsWith("__cross_proxy__:")) {
-            String targetProxy = pending.targetServer().substring("__cross_proxy__:".length());
+        // Receiver-side: forward decline back to origin proxy via Redis
+        if (pending.isCrossProxyReceiver()) {
+            NetworkRouter router = plugin.networkRouter();
+            if (router != null) {
+                router.sendToProxy(pending.originProxy(), NetworkMessageType.CHALLENGE_DENY, Map.of(
+                        "challengeId", challengeId.toString(),
+                        "reason", "declined"
+                ));
+            }
+            if (plugin.config().debug()) {
+                logger.info("[ProxyMessageHandler] Challenge " + challengeId
+                        + " DECLINED on receiver proxy, forwarding to origin " + pending.originProxy());
+            }
+            return;
+        }
+
+        // Origin-side cross-proxy: notify remote proxy to clean up
+        if (pending.isCrossProxyOrigin()) {
+            String targetProxy = pending.crossProxyTargetId();
             NetworkRouter router = plugin.networkRouter();
             if (router != null) {
                 router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_DENY, Map.of(
@@ -422,6 +463,7 @@ public final class ProxyMessageHandler {
 
         UUID targetUuid = UUID.fromString(targetUuidStr);
         UUID challengeId = UUID.fromString(challengeIdStr);
+        UUID challengerUuid = UUID.fromString(challengerUuidStr);
 
         Optional<Player> target = plugin.getServer().getPlayer(targetUuid);
         if (target.isEmpty()) {
@@ -437,29 +479,53 @@ public final class ProxyMessageHandler {
 
         target.get().getCurrentServer().ifPresent(conn -> {
             String targetServer = conn.getServerInfo().getName();
+
+            PendingChallenge pending = new PendingChallenge(
+                    challengeId, challengerUuid, originServer,
+                    targetUuid, targetServer, modeId,
+                    Instant.now(), originProxy);
+            pendingChallenges.put(challengeId, pending);
+
             plugin.backendMessenger().sendChallengeForward(
                     targetServer, challengeId, challengerName,
-                    UUID.fromString(challengerUuidStr), modeId, targetUuid);
+                    challengerUuid, modeId, targetUuid);
+
+            if (plugin.config().debug()) {
+                logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
+                        + " received from " + originProxy + ", stored pending and forwarded to "
+                        + targetServer);
+            }
         });
     }
 
     private void handleCrossProxyChallengeAcceptReceive(NetworkMessage msg) {
         String challengeIdStr = msg.payloadString("challengeId");
-        String originServer = msg.payloadString("originServer");
+        String accepterUuidStr = msg.payloadString("accepterUuid");
+        String targetServerOnReceiver = msg.payloadString("targetServer");
         String challengerUuidStr = msg.payloadString("challengerUuid");
         String modeId = msg.payloadString("modeId");
 
-        if (challengeIdStr == null || originServer == null || challengerUuidStr == null) return;
+        if (challengeIdStr == null || challengerUuidStr == null) return;
 
         UUID challengeId = UUID.fromString(challengeIdStr);
-        UUID challengerUuid = UUID.fromString(challengerUuidStr);
 
         PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending != null) {
-            plugin.backendMessenger().sendChallengeConfirmed(
-                    pending.challengerServer(), challengeId,
-                    pending.challengerUuid(), pending.targetUuid(),
-                    pending.modeId());
+        if (pending == null) {
+            if (plugin.config().debug()) {
+                logger.info("[ProxyMessageHandler] Cross-proxy CHALLENGE_ACCEPT for unknown/expired "
+                        + challengeId);
+            }
+            return;
+        }
+
+        plugin.backendMessenger().sendChallengeConfirmed(
+                pending.challengerServer(), challengeId,
+                pending.challengerUuid(), pending.targetUuid(),
+                pending.modeId());
+
+        if (plugin.config().debug()) {
+            logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
+                    + " ACCEPTED, confirmed to " + pending.challengerServer());
         }
     }
 
@@ -469,11 +535,27 @@ public final class ProxyMessageHandler {
 
         UUID challengeId = UUID.fromString(challengeIdStr);
         PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending != null) {
-            String reason = msg.payloadString("reason");
+        if (pending == null) return;
+
+        String reason = msg.payloadString("reason");
+        String rejectReason = reason != null ? reason : "declined";
+
+        if (pending.isCrossProxyOrigin()) {
+            // Origin received a deny from remote: notify the challenger's Paper server
             plugin.backendMessenger().sendChallengeRejected(
-                    pending.challengerServer(), challengeId,
-                    reason != null ? reason : "declined");
+                    pending.challengerServer(), challengeId, rejectReason);
+        } else if (pending.isCrossProxyReceiver()) {
+            // Receiver got a deny from origin (e.g. origin expired): clean up target's Paper server
+            plugin.backendMessenger().sendChallengeRejected(
+                    pending.targetServer(), challengeId, rejectReason);
+        } else {
+            plugin.backendMessenger().sendChallengeRejected(
+                    pending.challengerServer(), challengeId, rejectReason);
+        }
+
+        if (plugin.config().debug()) {
+            logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
+                    + " DENIED via Redis (reason=" + rejectReason + ")");
         }
     }
 
@@ -484,14 +566,44 @@ public final class ProxyMessageHandler {
             PendingChallenge p = it.next().getValue();
             if (p.createdAt().isBefore(cutoff)) {
                 it.remove();
-                plugin.backendMessenger().sendChallengeRejected(
-                        p.challengerServer(), p.challengeId(), "timeout");
-                if (!p.challengerServer().equals(p.targetServer())) {
+
+                if (p.isCrossProxyReceiver()) {
+                    // Receiver-side pending expired: notify origin proxy
+                    NetworkRouter router = plugin.networkRouter();
+                    if (router != null) {
+                        router.sendToProxy(p.originProxy(), NetworkMessageType.CHALLENGE_DENY, Map.of(
+                                "challengeId", p.challengeId().toString(),
+                                "reason", "timeout"
+                        ));
+                    }
+                } else if (p.isCrossProxyOrigin()) {
+                    // Origin-side pending expired: notify challenger's Paper server locally,
+                    // and send cleanup to the remote proxy
                     plugin.backendMessenger().sendChallengeRejected(
-                            p.targetServer(), p.challengeId(), "timeout");
+                            p.challengerServer(), p.challengeId(), "timeout");
+                    NetworkRouter router = plugin.networkRouter();
+                    if (router != null) {
+                        String targetProxy = p.crossProxyTargetId();
+                        router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_DENY, Map.of(
+                                "challengeId", p.challengeId().toString(),
+                                "reason", "timeout"
+                        ));
+                    }
+                } else {
+                    // Fully local challenge: notify both servers
+                    plugin.backendMessenger().sendChallengeRejected(
+                            p.challengerServer(), p.challengeId(), "timeout");
+                    if (!p.challengerServer().equals(p.targetServer())) {
+                        plugin.backendMessenger().sendChallengeRejected(
+                                p.targetServer(), p.challengeId(), "timeout");
+                    }
                 }
+
                 if (plugin.config().debug()) {
-                    logger.info("[ProxyMessageHandler] Challenge " + p.challengeId() + " EXPIRED");
+                    logger.info("[ProxyMessageHandler] Challenge " + p.challengeId() + " EXPIRED"
+                            + (p.isCrossProxyReceiver() ? " (receiver-side, notified " + p.originProxy() + ")"
+                            : p.isCrossProxyOrigin() ? " (origin-side, notified remote)"
+                            : ""));
                 }
             }
         }
