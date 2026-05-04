@@ -227,6 +227,13 @@ public class BattleGuiListener implements Listener {
 	public void onInventoryClose(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player player)) return;
 		if (guiConfig.battleTitle().equals(event.getView().title())) {
+			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
+			if (state != null && state.pendingConfirmationModeId() != null) {
+				return;
+			}
+			guiCommand.guiStates().remove(player.getUniqueId());
+		}
+		if (guiConfig.confirmationTitle().equals(event.getView().title())) {
 			guiCommand.guiStates().remove(player.getUniqueId());
 		}
 	}

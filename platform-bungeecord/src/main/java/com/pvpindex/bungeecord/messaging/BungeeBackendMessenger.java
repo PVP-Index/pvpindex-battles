@@ -86,6 +86,17 @@ public final class BungeeBackendMessenger {
         }
     }
 
+    public void sendChallengeConfirmedExcluding(String targetServer, UUID challengeId,
+                                                UUID challengerUuid, UUID targetUuid,
+                                                String modeId, UUID excludeUuid) {
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("challengeId", challengeId.toString());
+        data.put("challengerUuid", challengerUuid.toString());
+        data.put("targetUuid", targetUuid.toString());
+        data.put("modeId", modeId != null ? modeId : "");
+        send(targetServer, MessageType.CHALLENGE_CONFIRMED, data);
+    }
+
     private void send(String targetServerName, MessageType type, Map<String, Object> data) {
         ServerInfo serverInfo = plugin.getProxy().getServerInfo(targetServerName);
         if (serverInfo == null) {
