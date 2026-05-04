@@ -272,6 +272,12 @@ public final class ChallengeManager {
 				? gameModeRegistry.findMode(modeId).map(GameModeDefinition::displayName).orElse(modeId)
 				: modeId;
 
+		Optional<GameModeDefinition> modeOpt = modeId != null
+				? gameModeRegistry.findMode(modeId) : Optional.empty();
+		boolean isSmpRisk = modeOpt.isPresent()
+				&& modeOpt.get().rules() != null
+				&& modeOpt.get().rules().usePlayerInventory();
+
 		Component header = messageService.component("challenge.header",
 				"%challenger%", challengerName, "%mode%", modeName != null ? modeName : "");
 
@@ -284,6 +290,9 @@ public final class ChallengeManager {
 				.clickEvent(ClickEvent.runCommand("/battle decline " + challengeId));
 
 		target.sendMessage(header);
+		if (isSmpRisk) {
+			messageService.send(target, "challenge.smp_warning");
+		}
 		target.sendMessage(Component.text("  ").append(accept).append(Component.text(" ")).append(decline));
 	}
 

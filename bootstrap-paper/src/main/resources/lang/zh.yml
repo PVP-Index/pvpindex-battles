@@ -57,6 +57,7 @@ challenge:
   usage_accept: "&c用法: /battle accept <挑战ID>"
   usage_decline: "&c用法: /battle decline <挑战ID>"
   invalid_id: "&c无效的挑战ID。"
+  smp_warning: "&c&l警告: &e这是一场SMP战斗！如果你输了，&c&l你会掉落所有物品&e，胜者可以拾取。你确定要继续吗？"
   gui_hint: "&7使用 /battle challenge <玩家> 发起挑战。"
 
 replay:

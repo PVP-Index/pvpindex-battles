@@ -57,6 +57,7 @@ challenge:
   usage_accept: "&cUso: /battle accept <idDesafio>"
   usage_decline: "&cUso: /battle decline <idDesafio>"
   invalid_id: "&cID de desafio no valido."
+  smp_warning: "&c&lADVERTENCIA: &eEsta es una batalla SMP! Si pierdes, &c&lsoltaras todos tus objetos &ey el ganador podra tomarlos. Deseas continuar?"
   gui_hint: "&7Usa /battle challenge <jugador> para iniciar un desafio."
 
 replay:

@@ -105,17 +105,24 @@ public class BattleGuiListener implements Listener {
 
 			if (state != null && state.mode() == PlayerGuiState.Mode.CHALLENGE
 					&& challengeManager != null && state.challengeTarget() != null) {
+				if (mode.rules() != null && mode.rules().usePlayerInventory()) {
+					state.setPendingConfirmationModeId(modeId);
+					state.setPendingChallengeTarget(state.challengeTarget());
+					player.closeInventory();
+					openConfirmationGui(player);
+					return;
+				}
 				player.closeInventory();
 				challengeManager.sendChallenge(player, state.challengeTarget(), modeId);
 				return;
 			}
 
 			if (mode.rules() != null && mode.rules().usePlayerInventory()) {
-				// SMP mode — show risk confirmation before joining queue.
 				PlayerGuiState guiState = guiCommand.guiStates()
 						.computeIfAbsent(player.getUniqueId(),
 								k -> new PlayerGuiState(PlayerGuiState.Mode.QUEUE, null, 0));
 				guiState.setPendingConfirmationModeId(modeId);
+				guiState.setPendingChallengeTarget(null);
 				player.closeInventory();
 				openConfirmationGui(player);
 				return;
@@ -155,14 +162,21 @@ public class BattleGuiListener implements Listener {
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
 			if (state != null && state.pendingConfirmationModeId() != null) {
 				String modeId = state.pendingConfirmationModeId();
+				String challengeTarget = state.pendingChallengeTarget();
 				state.setPendingConfirmationModeId(null);
-				gameModeRegistry.findMode(modeId).ifPresent(mode -> queueService.join(player, mode));
+				state.setPendingChallengeTarget(null);
+				if (challengeTarget != null && challengeManager != null) {
+					challengeManager.sendChallenge(player, challengeTarget, modeId);
+				} else {
+					gameModeRegistry.findMode(modeId).ifPresent(mode -> queueService.join(player, mode));
+				}
 			}
 		} else if (slot == guiConfig.confirmCancelSlot()) {
 			player.closeInventory();
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
 			if (state != null) {
 				state.setPendingConfirmationModeId(null);
+				state.setPendingChallengeTarget(null);
 			}
 		}
 	}
