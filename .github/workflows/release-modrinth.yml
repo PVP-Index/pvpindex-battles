@@ -11,16 +11,31 @@ on:
         required: true
 
 permissions:
-  contents: write   # Required to create GitHub Releases
+  contents: write
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#  RELEASE PIPELINE
+#
+#  1. Build          – compile all modules with JDK 25
+#  2. Locate JARs    – find the shaded Paper & Velocity artifacts
+#  3. Extract info   – version string + changelog from CHANGELOG.md
+#  4. GitHub Release – create the GH release with both JARs attached
+#  5. Modrinth       – upload Paper JAR then Velocity JAR (skips duplicates)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
 
-      # JDK 25 is required to compile the Paper 26.1.x adapter module.
+      # ────────────────────────────────────────────────────────────────────────
+      #  1. CHECKOUT & BUILD
+      # ────────────────────────────────────────────────────────────────────────
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
@@ -28,32 +43,36 @@ jobs:
           distribution: temurin
           cache: maven
 
-      - name: Build (skip tests for release speed)
+      - name: Build all modules
         run: mvn clean package -B -DskipTests
 
-      # ── Locate artifacts ─────────────────────────────────────────────────────
-      - name: Locate JARs
+      # ────────────────────────────────────────────────────────────────────────
+      #  2. LOCATE ARTIFACTS
+      # ────────────────────────────────────────────────────────────────────────
+
+      - name: Locate shaded JARs
         id: jars
         run: |
           PAPER=$(ls bootstrap-paper/target/PvPIndexBattles-*.jar | grep -v 'original' | head -1)
           VELOCITY=$(ls bootstrap-velocity/target/PvPIndexBattles-velocity-*.jar | grep -v 'original' | head -1)
-          echo "paper=$PAPER"     >> "$GITHUB_OUTPUT"
+          echo "paper=$PAPER"       >> "$GITHUB_OUTPUT"
           echo "velocity=$VELOCITY" >> "$GITHUB_OUTPUT"
 
-      # ── Extract version (strip leading 'v') ───────────────────────────────────
-      - name: Extract version
+      # ────────────────────────────────────────────────────────────────────────
+      #  3. EXTRACT VERSION & CHANGELOG
+      # ────────────────────────────────────────────────────────────────────────
+
+      - name: Extract version from tag
         id: meta
         run: |
           REF="${{ github.event.inputs.tag || github.ref_name }}"
-          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
-          echo "version=${REF#v}" >> "$GITHUB_OUTPUT"
+          echo "ref=${REF}"           >> "$GITHUB_OUTPUT"
+          echo "version=${REF#v}"     >> "$GITHUB_OUTPUT"
 
-      # ── Extract changelog section for this tag from CHANGELOG.md ───────────
-      - name: Extract changelog
+      - name: Extract changelog for this version
         id: changelog
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
-          # Grab lines between the version header and the next '## [' header (exclusive).
           NOTES=$(awk \
             "/^## \[${VERSION}\]/{found=1; next} found && /^## \[/{exit} found{print}" \
             CHANGELOG.md | sed '/^[[:space:]]*$/d' | sed '/^###/!b; s/^### /\n### /')
@@ -66,7 +85,10 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
-      # ── GitHub Release ───────────────────────────────────────────────────────
+      # ────────────────────────────────────────────────────────────────────────
+      #  4. GITHUB RELEASE
+      # ────────────────────────────────────────────────────────────────────────
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -91,7 +113,13 @@ jobs:
             ${{ steps.jars.outputs.velocity }}
           fail_on_unmatched_files: true
 
-      # ── Modrinth — Paper JAR ─────────────────────────────────────────────────
+      # ────────────────────────────────────────────────────────────────────────
+      #  5a. MODRINTH — PAPER JAR
+      #
+      #  Loaders : paper, folia, purpur, spigot, bukkit
+      #  Skips   : if this version was already uploaded
+      # ────────────────────────────────────────────────────────────────────────
+
       - name: Upload Paper JAR to Modrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
@@ -99,12 +127,33 @@ jobs:
           PAPER_JAR="${{ steps.jars.outputs.paper }}"
           PAPER_FILENAME=$(basename "$PAPER_JAR")
           VERSION="${{ steps.meta.outputs.version }}"
+
           CHANGELOG=$(cat << 'ENDOFCHANGELOG'
           ${{ steps.changelog.outputs.notes }}
           ENDOFCHANGELOG
           )
 
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Paper)','version_number':f'{v}-paper','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11','26.1','26.1.1','26.1.2'],'version_type':'release','loaders':['paper','folia','purpur','spigot','bukkit'],'featured':True,'project_id':'wOZtwr2V','primary_file':'paper_jar','file_parts':['paper_jar']}))" > /tmp/modrinth_paper_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "
+          import json, os
+          v = os.environ['VERSION']
+          c = os.environ['CHANGELOG']
+          print(json.dumps({
+              'name':          f'PvPIndex Battles {v} (Paper)',
+              'version_number': f'{v}-paper',
+              'changelog':     c,
+              'dependencies':  [],
+              'game_versions': [
+                  '1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5',
+                  '1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11',
+                  '26.1','26.1.1','26.1.2'
+              ],
+              'version_type':  'release',
+              'loaders':       ['paper','folia','purpur','spigot','bukkit'],
+              'featured':      True,
+              'project_id':    'wOZtwr2V',
+              'primary_file':  'paper_jar',
+              'file_parts':    ['paper_jar']
+          }))" > /tmp/modrinth_paper_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_paper.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
@@ -112,17 +161,28 @@ jobs:
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data=</tmp/modrinth_paper_payload.json" \
             -F "paper_jar=@${PAPER_JAR};filename=${PAPER_FILENAME}")
+
           echo "Modrinth response (HTTP $HTTP_CODE):"
           cat /tmp/modrinth_paper.json
+          echo ""
+
           if [[ "$HTTP_CODE" =~ ^2 ]]; then
             echo "Paper JAR uploaded successfully."
           elif grep -q 'already exists' /tmp/modrinth_paper.json 2>/dev/null; then
             echo "Paper version already exists on Modrinth — skipping."
           else
+            echo "Paper upload failed!"
             exit 1
           fi
 
-      # ── Modrinth — Velocity JAR ──────────────────────────────────────────────
+      # ────────────────────────────────────────────────────────────────────────
+      #  5b. MODRINTH — VELOCITY JAR
+      #
+      #  Loaders : velocity (only — do NOT include bungeecord here,
+      #            Modrinth rejects JARs missing bungee.yml for that loader)
+      #  Skips   : if this version was already uploaded
+      # ────────────────────────────────────────────────────────────────────────
+
       - name: Upload Velocity JAR to Modrinth
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
@@ -130,12 +190,33 @@ jobs:
           VELOCITY_JAR="${{ steps.jars.outputs.velocity }}"
           VELOCITY_FILENAME=$(basename "$VELOCITY_JAR")
           VERSION="${{ steps.meta.outputs.version }}"
+
           CHANGELOG=$(cat << 'ENDOFCHANGELOG'
           ${{ steps.changelog.outputs.notes }}
           ENDOFCHANGELOG
           )
 
-          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "import json,os; v=os.environ['VERSION']; c=os.environ['CHANGELOG']; print(json.dumps({'name':f'PvPIndex Battles {v} (Velocity)','version_number':f'{v}-velocity','changelog':c,'dependencies':[],'game_versions':['1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5','1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11','26.1','26.1.1','26.1.2'],'version_type':'release','loaders':['velocity'],'featured':False,'project_id':'wOZtwr2V','primary_file':'velocity_jar','file_parts':['velocity_jar']}))" > /tmp/modrinth_velocity_payload.json
+          VERSION="$VERSION" CHANGELOG="$CHANGELOG" python3 -c "
+          import json, os
+          v = os.environ['VERSION']
+          c = os.environ['CHANGELOG']
+          print(json.dumps({
+              'name':          f'PvPIndex Battles {v} (Velocity)',
+              'version_number': f'{v}-velocity',
+              'changelog':     c,
+              'dependencies':  [],
+              'game_versions': [
+                  '1.21','1.21.1','1.21.2','1.21.3','1.21.4','1.21.5',
+                  '1.21.6','1.21.7','1.21.8','1.21.9','1.21.10','1.21.11',
+                  '26.1','26.1.1','26.1.2'
+              ],
+              'version_type':  'release',
+              'loaders':       ['velocity'],
+              'featured':      False,
+              'project_id':    'wOZtwr2V',
+              'primary_file':  'velocity_jar',
+              'file_parts':    ['velocity_jar']
+          }))" > /tmp/modrinth_velocity_payload.json
 
           HTTP_CODE=$(curl -s -o /tmp/modrinth_velocity.json -w '%{http_code}' \
             --retry 3 --retry-delay 10 --retry-all-errors \
@@ -143,12 +224,16 @@ jobs:
             -H "Authorization: $MODRINTH_TOKEN" \
             -F "data=</tmp/modrinth_velocity_payload.json" \
             -F "velocity_jar=@${VELOCITY_JAR};filename=${VELOCITY_FILENAME}")
+
           echo "Modrinth response (HTTP $HTTP_CODE):"
           cat /tmp/modrinth_velocity.json
+          echo ""
+
           if [[ "$HTTP_CODE" =~ ^2 ]]; then
             echo "Velocity JAR uploaded successfully."
           elif grep -q 'already exists' /tmp/modrinth_velocity.json 2>/dev/null; then
             echo "Velocity version already exists on Modrinth — skipping."
           else
+            echo "Velocity upload failed!"
             exit 1
           fi
