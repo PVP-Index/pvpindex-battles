@@ -7,7 +7,8 @@ import com.pvpindex.battles.common.messaging.PluginChannel;
 import com.pvpindex.network.DefaultNetworkRouter;
 import com.pvpindex.network.NetworkConfig;
 import com.pvpindex.network.NetworkRouter;
-import com.pvpindex.network.node.ProxyNode;
+import com.pvpindex.network.node.NetworkNode;
+import com.pvpindex.network.node.NodeType;
 import com.pvpindex.network.redis.RedisConnectionManager;
 import com.pvpindex.network.redis.RedisMessageBus;
 import com.pvpindex.network.redis.RedisPlayerRegistry;
@@ -43,7 +44,7 @@ import java.util.logging.Logger;
 @Plugin(
         id           = "pvpindex-proxy",
         name         = "PvPIndex Proxy",
-        version      = "1.0.1",
+        version      = "1.0.2",
         description  = "Cross-server battle tracking and coordination for PvPIndex",
         url          = "https://pvpindex.com",
         authors      = {"PvPIndex Team"}
@@ -60,6 +61,7 @@ public final class PvPIndexVelocityPlugin {
     private BattleRegistry battleRegistry;
     private BackendMessenger backendMessenger;
     private final Set<UUID> challengeTransfers = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, String> playerOriginServers = new ConcurrentHashMap<>();
 
     private NetworkRouter networkRouter;
     private RedisMessageBus messageBus;
@@ -141,9 +143,9 @@ public final class PvPIndexVelocityPlugin {
             messageBus.connect();
             networkRouter.start();
 
-            ProxyNode localNode = new ProxyNode(netCfg.proxyId(), netCfg.region());
+            NetworkNode localNode = new NetworkNode(netCfg.proxyId(), NodeType.PROXY, netCfg.region());
             localNode.heartbeat(server.getPlayerCount());
-            networkRouter.registerLocalProxy(localNode);
+            networkRouter.registerLocalNode(localNode);
 
             for (var rs : server.getAllServers()) {
                 netServerRegistry.registerServer(netCfg.proxyId(),
@@ -225,6 +227,10 @@ public final class PvPIndexVelocityPlugin {
     public void markChallengeTransfer(UUID playerUuid)   { challengeTransfers.add(playerUuid); }
     public boolean isChallengeTransfer(UUID playerUuid)  { return challengeTransfers.contains(playerUuid); }
     public void clearChallengeTransfer(UUID playerUuid)  { challengeTransfers.remove(playerUuid); }
+
+    public void setPlayerOriginServer(UUID playerUuid, String server) { playerOriginServers.put(playerUuid, server); }
+    public String removePlayerOriginServer(UUID playerUuid)           { return playerOriginServers.remove(playerUuid); }
+    public String getPlayerOriginServer(UUID playerUuid)              { return playerOriginServers.get(playerUuid); }
 
     public void reloadConfig() {
         config = VelocityPluginConfig.load(dataDirectory, server, logger);

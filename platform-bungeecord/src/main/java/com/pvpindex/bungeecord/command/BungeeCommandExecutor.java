@@ -2,7 +2,7 @@ package com.pvpindex.bungeecord.command;
 
 import com.pvpindex.bungeecord.PvPIndexBungeePlugin;
 import com.pvpindex.network.NetworkRouter;
-import com.pvpindex.network.node.ProxyNode;
+import com.pvpindex.network.node.NetworkNode;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -20,7 +20,7 @@ public final class BungeeCommandExecutor extends Command {
     @Override
     public void execute(CommandSender sender, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(text("&6PvPIndex BungeeCord Proxy &7v1.0.1"));
+            sender.sendMessage(text("&6PvPIndex BungeeCord Proxy &7v1.0.2"));
             sender.sendMessage(text("&7Use /pvpindex network to view network status."));
             return;
         }
@@ -46,9 +46,10 @@ public final class BungeeCommandExecutor extends Command {
                 + " &7(" + plugin.config().networkConfig().region() + ")"));
         sender.sendMessage(text("&7Online proxies:"));
 
-        for (ProxyNode node : router.onlineProxies()) {
-            sender.sendMessage(text("  &a" + node.proxyId()
-                    + " &7region=" + node.region()
+        for (NetworkNode node : router.onlineNodes()) {
+            sender.sendMessage(text("  &a" + node.nodeId()
+                    + " &7type=" + node.nodeType()
+                    + " region=" + node.region()
                     + " players=" + node.playerCount()));
         }
 

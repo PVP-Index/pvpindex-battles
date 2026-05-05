@@ -39,6 +39,7 @@ challenge:
   already_pending: "&cDu hast bereits eine offene Herausforderung an diesen Spieler."
   accepted: "&aHerausforderung angenommen! Kampf wird vorbereitet..."
   declined: "&7Herausforderung abgelehnt."
+  accepted_notify: "&f%player% &ahat deine Herausforderung angenommen!"
   declined_notify: "&f%player% &chat deine Herausforderung abgelehnt."
   expired: "&7Herausforderung abgelaufen."
   timed_out: "&cDeine Herausforderung ist abgelaufen."

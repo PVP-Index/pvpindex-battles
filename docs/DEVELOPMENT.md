@@ -15,9 +15,9 @@ mvn clean package
 ```
 
 Output JARs:
-- `bootstrap-paper/target/PvPIndexBattles-1.0.1.jar`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.1.jar`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.1.jar`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.3.jar`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.3.jar`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.3.jar`
 
 ## Running Tests
 
@@ -25,21 +25,35 @@ Output JARs:
 mvn test
 ```
 
-Tests live in `platform-paper/src/test/java/` and `network/src/test/java/`. They use JUnit 5 and Mockito.
+Tests live in `platform-paper/src/test/java/`, `network/src/test/java/`, and `database/src/test/java/`. They use JUnit 5 and Mockito.
 
 ## Project Structure
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full module map and dependency flow.
 
+## Package Structure (platform-paper)
+
+Key packages within `platform-paper/src/main/java/com/pvpindex/battles/`:
+
+| Package | Description |
+|---------|-------------|
+| `challenge/` | Challenge lifecycle (send, accept, decline, start) |
+| `network/` | Lobby-mode Redis services: `LobbyNetworkService`, `PlayerSyncService`, `ChallengeSyncService`, `PresenceService`, `InviteService`, `PartySyncService`, `RoutingService`, `TransferRequester` |
+| `data/` | `DataService` integration and `PlayerCache` |
+| `messaging/` | Plugin channel messaging and `NetworkPlayerCache` |
+
 ## Adding a New Service
 
 1. If the service is platform-agnostic (pure data, no Bukkit/Velocity/BungeeCord imports), put it in `common/`.
 2. If it involves cross-proxy networking, put it in `network/`.
-3. If it uses Paper API, put it in `platform-paper/`.
-4. If it uses Velocity API, put it in `platform-velocity/`.
-5. If it uses BungeeCord API, put it in `platform-bungeecord/`.
-6. If it uses version-specific API, put the interface in `platform-paper/` and implementations in the appropriate `paper-versions/` module.
-7. Wire it in the appropriate bootstrap module.
+3. If it involves persistent storage, put it in `database/`.
+4. If it is a lobby-mode Redis service, put it in `platform-paper/network/`.
+5. If it integrates with the database layer on Paper, put it in `platform-paper/data/`.
+6. If it uses Paper API, put it in `platform-paper/`.
+7. If it uses Velocity API, put it in `platform-velocity/`.
+8. If it uses BungeeCord API, put it in `platform-bungeecord/`.
+9. If it uses version-specific API, put the interface in `platform-paper/` and implementations in the appropriate `paper-versions/` module.
+10. Wire it in the appropriate bootstrap module.
 
 ## Adding a New Version Adapter
 
@@ -72,7 +86,7 @@ The pipeline uses a JDK matrix:
 | 21 | All modules except `paper-versions/paper.26.1.x` and `bootstrap-paper` (Paper API 26.1.x requires JDK 25) |
 | 25 | Full build including 26.1.x adapter. Runs all JAR verification checks and uploads artefacts. |
 
-Both JDK versions run tests. The JDK 25 job additionally verifies:
+Both JDK versions run tests (including `database/` module tests). The JDK 25 job additionally verifies:
 - Both version adapters are compiled and shaded into the Paper JAR
 - All config files (`plugin.yml`, `config.yml`, `gamemodes.yml`, etc.) are bundled
 - Language files (`lang/en.yml`) are bundled in the Paper JAR

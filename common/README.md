@@ -1,8 +1,8 @@
 # PvPIndex Common - Shared Messaging Protocol
 
-Platform-independent module containing the messaging protocol used between the Paper backend plugin and the Velocity proxy plugin. No Bukkit or Velocity dependencies - just Jackson for JSON encoding.
+Platform-independent module containing the messaging protocol used between the Paper backend plugin and the proxy plugins (Velocity and BungeeCord). No Bukkit, Velocity, or BungeeCord dependencies - just Jackson for JSON encoding.
 
-This module is shaded (embedded) into both the Paper and Velocity JARs at build time. It is never deployed as a standalone plugin.
+This module is shaded (embedded) into the Paper, Velocity, and BungeeCord JARs at build time. It is never deployed as a standalone plugin.
 
 ---
 

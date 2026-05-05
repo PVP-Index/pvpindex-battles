@@ -120,6 +120,44 @@ See [SETUP-VELOCITY.md](SETUP-VELOCITY.md) for a full walkthrough.
 | `proxy.secret` | String | `""` | Shared secret (must match Velocity plugin) |
 | `proxy.heartbeat_interval_ticks` | int | `200` | Heartbeat to proxy interval |
 
+### Lobby Mode (Redis Global Features)
+
+See [SETUP-LOBBY.md](SETUP-LOBBY.md) for a full walkthrough and [GLOBAL-FEATURES.md](GLOBAL-FEATURES.md) for feature details.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `lobby.enabled` | boolean | `false` | Enable lobby mode (direct Redis connectivity for global features) |
+| `lobby.node_id` | String | `lobby-1` | Unique identifier for this lobby server |
+| `lobby.region` | String | `default` | Region label used for routing decisions |
+| `lobby.redis.host` | String | `localhost` | Redis server hostname |
+| `lobby.redis.port` | int | `6379` | Redis server port |
+| `lobby.redis.password` | String | *(empty)* | Redis AUTH password |
+| `lobby.redis.database` | int | `0` | Redis database index (0-15) |
+| `lobby.redis.pool_size` | int | `8` | Jedis connection pool size |
+
+### Database (Optional Persistence)
+
+See [SETUP-DATABASE.md](SETUP-DATABASE.md) for a full walkthrough.
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `database.enabled` | boolean | `false` | Enable persistent storage |
+| `database.type` | String | `none` | Backend type: `mysql`, `sqlite`, `mongodb`, or `none` |
+| `database.mysql.host` | String | `localhost` | MySQL server hostname |
+| `database.mysql.port` | int | `3306` | MySQL server port |
+| `database.mysql.database` | String | `pvpindex` | MySQL database name |
+| `database.mysql.username` | String | `root` | MySQL username |
+| `database.mysql.password` | String | *(empty)* | MySQL password |
+| `database.mysql.pool_size` | int | `10` | HikariCP max connections |
+| `database.mysql.ssl` | boolean | `false` | Use SSL for MySQL connections |
+| `database.sqlite.file` | String | `pvpindex.db` | SQLite database file path (relative to plugin folder) |
+| `database.mongodb.uri` | String | *(empty)* | MongoDB connection URI |
+| `database.mongodb.database` | String | `pvpindex` | MongoDB database name |
+
+When `lobby.enabled` is `true`, the server starts `LobbyNetworkService` and its dependent services: `PlayerSyncService`, `ChallengeSyncService`, `PresenceService`, `InviteService`, `PartySyncService`, `RoutingService`, `TransferRequester`.
+
+When `database.enabled` is `false` (the default), stats, history, and leaderboard data are not persisted.
+
 ### Debug
 
 | Key | Type | Default | Description |

@@ -1,7 +1,7 @@
 {
 	"id": "pvpindex-proxy",
 	"name": "PvPIndex Proxy",
-	"version": "1.0.1",
+	"version": "1.0.3",
 	"description": "Cross-server battle tracking and coordination for PvPIndex",
 	"authors": ["PvPIndex Team"],
 	"main": "com.pvpindex.velocity.PvPIndexVelocityPlugin",

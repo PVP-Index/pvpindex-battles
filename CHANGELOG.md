@@ -5,7 +5,7 @@ All notable changes to PvPIndex Battles are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Release tags use the `v` prefix (e.g. `v1.0.1`).
+Release tags use the `v` prefix (e.g. `v1.0.3`).
 
 ---
 
@@ -15,6 +15,75 @@ Release tags use the `v` prefix (e.g. `v1.0.1`).
 ### Changed
 ### Fixed
 ### Removed
+
+---
+
+## [1.0.3] - 2026-05-05
+
+### Fixed
+- **Challenge "Player not found" after restart**: `NetworkPlayerCache` now merges proxy player list updates in lobby mode instead of ignoring them. After a lobby server restart, remote players are visible within seconds rather than requiring each player to trigger a new Redis event.
+- **Cross-proxy challenge lookup**: Velocity and BungeeCord proxies now fall back to the Redis player registry when the target player is not on the local proxy. Challenges between players on different proxies (e.g. US to EU) no longer fail with "Player not found".
+- **Dead player teleport failure**: `PlayerStateSnapshot.restoreInternal()` now force-respawns dead players before attempting teleport, preventing the silent teleport failure that left defeated players stranded in deleted arena worlds.
+- **Cross-server return after battle**: `PaperMessenger.sendBattleEnd()` now includes participant UUIDs. Velocity and BungeeCord proxies track each player's origin server before transfer and automatically return them after the battle ends.
+- **SMP loot phase cleanup on winner disconnect**: If the winner disconnects during the SMP loot phase, the plugin now ends the loot phase cleanly (restoring the loser, cancelling boss bars, and stopping the timer) instead of calling the generic cleanup path.
+- **Challenge accepted notification routing**: Fixed routing of `CHALLENGE_ACCEPT` and `CHALLENGE_DECLINE` messages between Redis (lobby servers) and plugin messaging (backend servers) on both Velocity and BungeeCord proxies.
+- **TeleHop arena conflict**: Added `excluded-worlds` support to TeleHop's random respawn feature, preventing it from interfering with PvPIndex arena death handling.
+
+---
+
+## [1.0.2] - 2026-05-05
+
+### Added
+- **Lobby mode**: Paper servers can now connect directly to Redis for real-time global sync (`lobby.enabled: true`).
+- **Global Player List**: real-time player visibility across all lobbies via Redis pub/sub (replaces periodic proxy dumps).
+- **Global Challenges**: lobby-to-lobby challenge routing via Redis. 2-hop flow replaces the old 4-hop proxy-mediated routing.
+- **Global Presence**: real-time online/offline/in-battle/in-queue status across all regions via `PRESENCE_UPDATE` messages.
+- **Global Invites**: invite any player from any server with `INVITE_SEND`/`INVITE_ACCEPT`/`INVITE_DECLINE` messages.
+- **Global Parties**: create, join, and manage parties across all servers with Redis-synced state. Party-aware matchmaking. Commands: `/party create`, `/party invite`, `/party join`, `/party leave`, `/party kick`, `/party disband`.
+- **Global Routing**: smart region selection for cross-region battles (`ROUTE_REQUEST`/`ROUTE_RESPONSE`). Strategies: nearest, lowest latency, least loaded, shared server.
+- **Optional Database Layer**: persistent storage for stats, match history, ELO ratings, and player profiles.
+  - MySQL/MariaDB support with HikariCP connection pooling.
+  - SQLite support for single-server or development setups.
+  - MongoDB support for complex data (stub; requires driver on classpath).
+  - Configurable via `database.*` section in config.yml.
+- New Maven module: `pvpindex-database` with `DatabaseProvider` interface, repository abstractions, and implementations.
+- `NetworkNode` class with `NodeType` enum (`PROXY`, `LOBBY`, `BACKEND`) generalising the network module.
+- `LobbyNetworkService` orchestrates all Redis-based services on lobby Paper servers.
+- `PlayerSyncService`, `ChallengeSyncService`, `PresenceService`, `InviteService`, `PartySyncService`, `RoutingService`, `TransferRequester` in platform-paper `network` package.
+- `DataService` in platform-paper `data` package for database lifecycle management.
+- `TransferRequester`: lobbies request player transfers from proxy via Redis `TRANSFER_REQUEST`.
+- `TRANSFER_REQUEST` handler on Velocity and BungeeCord proxies. Executes player transfers requested by lobbies.
+- New `NetworkMessageType` entries: `PRESENCE_UPDATE`, `INVITE_SEND/ACCEPT/DECLINE`, `PARTY_CREATE/JOIN/LEAVE/DISBAND/INVITE/KICK/UPDATE/CHAT`, `ROUTE_REQUEST/RESPONSE`.
+- `NetworkPlayerCache` now supports incremental updates (`addPlayer`, `removePlayer`, `updateServer`) alongside bulk updates.
+- `LobbySettings` and `DatabaseSettings` config records.
+- New config sections: `lobby.*` (Redis connectivity for lobby servers) and `database.*` (optional persistence).
+- New docs: `SETUP-LOBBY.md`, `SETUP-DATABASE.md`, `GLOBAL-FEATURES.md`, `SCALING.md`.
+
+### Changed
+- **Architecture**: lobbies now handle all global features via Redis instead of routing through proxies. Proxies are simplified to authentication, routing, and player transfers.
+- Network module generalised: `ProxyNode` → `NetworkNode` with `NodeType` enum. `ProxyNode` kept as deprecated subclass.
+- `NetworkRouter` interface: added `registerLocalNode()`, `getNode()`, `allNodes()`, `onlineNodes()`, `sendToNode()`. Old proxy-specific methods deprecated.
+- `DefaultNetworkRouter`: refactored to use `NetworkNode` internally; backward-compatible with `ProxyNode` usage.
+- `ChallengeManager`: added `setLobbyServices()` for Redis-direct challenge routing. Supports three modes: lobby (Redis), proxy (plugin messaging), standalone (local).
+- Velocity `ProxyMessageHandler`: stripped all challenge routing logic. Now handles battle lifecycle, heartbeats, and `TRANSFER_REQUEST` only. Legacy challenge forwarding kept for backward compat.
+- BungeeCord `BungeeProxyMessageHandler`: same simplification as Velocity.
+- `PvPIndexBattlesPlugin`: added initialisation for `LobbyNetworkService` and `DataService`.
+
+### Fixed
+- Plugin messaging reliability: lobbies no longer depend on proxy for challenge delivery (no dropped messages when no players online).
+- Challenge flow reduced from 4 hops (Paper→Proxy→Redis→Proxy→Paper) to 2 hops (Lobby→Redis→Lobby).
+
+### Deprecated
+- `ProxyNode` class. Use `NetworkNode` with `NodeType.PROXY` instead.
+- `NetworkRouter.registerLocalProxy()`. Use `registerLocalNode()`.
+- `NetworkRouter.getProxy()`, `allProxies()`, `onlineProxies()`. Use node-generic equivalents.
+- Proxy-based challenge routing (kept as fallback for standalone/SMP servers without Redis).
+- Periodic `NETWORK_PLAYER_LIST` broadcast from proxy (kept as fallback for non-lobby backends).
+
+### Removed
+- `PendingChallenge` from `platform-velocity` (challenge state no longer lives on proxy).
+- `BungeePendingChallenge` from `platform-bungeecord`.
+- Cross-proxy challenge routing logic from both proxy message handlers.
 
 ---
 
@@ -29,7 +98,7 @@ Release tags use the `v` prefix (e.g. `v1.0.1`).
 
 ### Fixed
 - Cross-proxy player visibility: network player list now merges local and remote players from all proxies.
-- Proxy registration loop in `DefaultNetworkRouter` — only publishes registration for new proxies.
+- Proxy registration loop in `DefaultNetworkRouter`. Only publishes registration for new proxies.
 - Velocity plugin initialisation order: network layer now initialises before message handlers.
 - SMP loot pickup cooldown reduced from 180s to 15s (configurable in `gamemodes.yml`).
 
@@ -62,6 +131,8 @@ Release tags use the `v` prefix (e.g. `v1.0.1`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/PVP-Index/pvpindex-battles/releases/tag/v1.0.0

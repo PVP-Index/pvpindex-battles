@@ -1,6 +1,6 @@
 package com.pvpindex.network;
 
-import com.pvpindex.network.node.ProxyNode;
+import com.pvpindex.network.node.NetworkNode;
 import com.pvpindex.network.redis.RedisPlayerRegistry;
 
 import java.util.*;
@@ -18,8 +18,8 @@ public final class DefaultNetworkRouter implements NetworkRouter {
     private final ServerRegistry serverRegistry;
     private final NetworkConfig config;
 
-    private final ConcurrentMap<String, ProxyNode> proxies = new ConcurrentHashMap<>();
-    private ProxyNode localProxy;
+    private final ConcurrentMap<String, NetworkNode> nodes = new ConcurrentHashMap<>();
+    private NetworkNode localNode;
 
     private ScheduledExecutorService scheduler;
 
@@ -33,9 +33,9 @@ public final class DefaultNetworkRouter implements NetworkRouter {
 
     @Override
     public void start() {
-        messageBus.subscribe(NetworkMessageType.PROXY_REGISTER, this::handleProxyRegister);
-        messageBus.subscribe(NetworkMessageType.PROXY_HEARTBEAT, this::handleProxyHeartbeat);
-        messageBus.subscribe(NetworkMessageType.PROXY_SHUTDOWN, this::handleProxyShutdown);
+        messageBus.subscribe(NetworkMessageType.PROXY_REGISTER, this::handleNodeRegister);
+        messageBus.subscribe(NetworkMessageType.PROXY_HEARTBEAT, this::handleNodeHeartbeat);
+        messageBus.subscribe(NetworkMessageType.PROXY_SHUTDOWN, this::handleNodeShutdown);
         messageBus.subscribe(NetworkMessageType.PLAYER_JOIN, this::handlePlayerJoin);
         messageBus.subscribe(NetworkMessageType.PLAYER_LEAVE, this::handlePlayerLeave);
         messageBus.subscribe(NetworkMessageType.PLAYER_SWITCH_SERVER, this::handlePlayerSwitchServer);
@@ -51,23 +51,24 @@ public final class DefaultNetworkRouter implements NetworkRouter {
                 config.heartbeatIntervalSeconds(),
                 TimeUnit.SECONDS);
 
-        scheduler.scheduleAtFixedRate(this::pruneTimedOutProxies,
+        scheduler.scheduleAtFixedRate(this::pruneTimedOutNodes,
                 config.proxyTimeoutSeconds(),
                 config.proxyTimeoutSeconds() / 2,
                 TimeUnit.SECONDS);
 
-        if (localProxy != null) {
-            publishProxyRegister();
+        if (localNode != null) {
+            publishNodeRegister();
         }
 
-        LOGGER.info("[PvPIndex Network] Router started for proxy: " + config.proxyId());
+        LOGGER.info("[PvPIndex Network] Router started for node: " + config.proxyId());
     }
 
     @Override
     public void shutdown() {
-        if (localProxy != null) {
+        if (localNode != null) {
             broadcast(NetworkMessageType.PROXY_SHUTDOWN, Map.of(
-                    "proxyId", config.proxyId()
+                    "proxyId", config.proxyId(),
+                    "nodeId", config.proxyId()
             ));
         }
 
@@ -77,30 +78,34 @@ public final class DefaultNetworkRouter implements NetworkRouter {
             scheduler.shutdownNow();
         }
 
-        LOGGER.info("[PvPIndex Network] Router shut down for proxy: " + config.proxyId());
+        LOGGER.info("[PvPIndex Network] Router shut down for node: " + config.proxyId());
+    }
+
+    // ── Node-generic methods ────────────────────────────────────────────
+
+    @Override
+    public void registerLocalNode(NetworkNode self) {
+        this.localNode = self;
+        nodes.put(self.nodeId(), self);
+        publishNodeRegister();
     }
 
     @Override
-    public void registerLocalProxy(ProxyNode self) {
-        this.localProxy = self;
-        proxies.put(self.proxyId(), self);
-        publishProxyRegister();
+    public Optional<NetworkNode> getNode(String nodeId) {
+        return Optional.ofNullable(nodes.get(nodeId));
     }
 
     @Override
-    public Optional<ProxyNode> getProxy(String proxyId) {
-        return Optional.ofNullable(proxies.get(proxyId));
+    public Collection<NetworkNode> allNodes() {
+        return Collections.unmodifiableCollection(nodes.values());
     }
 
     @Override
-    public Collection<ProxyNode> allProxies() {
-        return Collections.unmodifiableCollection(proxies.values());
+    public Collection<NetworkNode> onlineNodes() {
+        return nodes.values().stream().filter(NetworkNode::isOnline).toList();
     }
 
-    @Override
-    public Collection<ProxyNode> onlineProxies() {
-        return proxies.values().stream().filter(ProxyNode::isOnline).toList();
-    }
+    // ── Messaging ───────────────────────────────────────────────────────
 
     @Override
     public void sendToProxy(String targetProxyId, NetworkMessageType type, Map<String, Object> payload) {
@@ -134,29 +139,37 @@ public final class DefaultNetworkRouter implements NetworkRouter {
     @Override
     public ServerRegistry serverRegistry() { return serverRegistry; }
 
-    private void publishProxyRegister() {
-        broadcast(NetworkMessageType.PROXY_REGISTER, Map.of(
-                "proxyId", config.proxyId(),
-                "region", config.region(),
-                "playerCount", localProxy != null ? localProxy.playerCount() : 0
-        ));
+    // ── Internal ────────────────────────────────────────────────────────
+
+    private void publishNodeRegister() {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("proxyId", config.proxyId());
+        payload.put("nodeId", config.proxyId());
+        payload.put("region", config.region());
+        payload.put("playerCount", localNode != null ? localNode.playerCount() : 0);
+        if (localNode != null) {
+            payload.put("nodeType", localNode.nodeType().name());
+        }
+        broadcast(NetworkMessageType.PROXY_REGISTER, payload);
     }
 
     private void heartbeat() {
-        if (localProxy != null) {
-            broadcast(NetworkMessageType.PROXY_HEARTBEAT, Map.of(
-                    "proxyId", config.proxyId(),
-                    "region", config.region(),
-                    "playerCount", localProxy.playerCount()
-            ));
+        if (localNode != null) {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("proxyId", config.proxyId());
+            payload.put("nodeId", config.proxyId());
+            payload.put("region", config.region());
+            payload.put("playerCount", localNode.playerCount());
+            payload.put("nodeType", localNode.nodeType().name());
+            broadcast(NetworkMessageType.PROXY_HEARTBEAT, payload);
         }
     }
 
-    private void pruneTimedOutProxies() {
-        proxies.forEach((id, node) -> {
+    private void pruneTimedOutNodes() {
+        nodes.forEach((id, node) -> {
             if (!id.equals(config.proxyId()) && node.isTimedOut(config.proxyTimeoutSeconds())) {
                 node.markOffline();
-                LOGGER.warning("[PvPIndex Network] Proxy timed out: " + id);
+                LOGGER.warning("[PvPIndex Network] Node timed out: " + id);
                 if (playerRegistry instanceof RedisPlayerRegistry redisReg) {
                     redisReg.removeAllForProxy(id);
                 }
@@ -165,44 +178,48 @@ public final class DefaultNetworkRouter implements NetworkRouter {
         });
     }
 
-    private void handleProxyRegister(NetworkMessage msg) {
-        String id = msg.payloadString("proxyId");
+    private void handleNodeRegister(NetworkMessage msg) {
+        String id = msg.payloadString("nodeId");
+        if (id == null) id = msg.payloadString("proxyId");
         String region = msg.payloadString("region");
         int players = msg.payloadInt("playerCount", 0);
         if (id == null) return;
 
-        boolean isNew = !proxies.containsKey(id);
-        ProxyNode node = proxies.computeIfAbsent(id, k -> new ProxyNode(id, region));
+        boolean isNew = !nodes.containsKey(id);
+        final String nodeId = id;
+        NetworkNode node = nodes.computeIfAbsent(nodeId, k -> new NetworkNode(nodeId, region));
         node.heartbeat(players);
 
         if (isNew) {
-            LOGGER.info("[PvPIndex Network] Proxy registered: " + id + " (region=" + region + ")");
-            publishProxyRegister();
+            LOGGER.info("[PvPIndex Network] Node registered: " + nodeId + " (region=" + region + ")");
+            publishNodeRegister();
         }
     }
 
-    private void handleProxyHeartbeat(NetworkMessage msg) {
-        String id = msg.payloadString("proxyId");
+    private void handleNodeHeartbeat(NetworkMessage msg) {
+        String id = msg.payloadString("nodeId");
+        if (id == null) id = msg.payloadString("proxyId");
         int players = msg.payloadInt("playerCount", 0);
         if (id == null) return;
 
-        ProxyNode node = proxies.get(id);
+        NetworkNode node = nodes.get(id);
         if (node != null) {
             node.heartbeat(players);
         } else {
             String region = msg.payloadString("region");
-            proxies.put(id, new ProxyNode(id, region));
+            nodes.put(id, new NetworkNode(id, region));
         }
     }
 
-    private void handleProxyShutdown(NetworkMessage msg) {
-        String id = msg.payloadString("proxyId");
+    private void handleNodeShutdown(NetworkMessage msg) {
+        String id = msg.payloadString("nodeId");
+        if (id == null) id = msg.payloadString("proxyId");
         if (id == null) return;
 
-        ProxyNode node = proxies.get(id);
+        NetworkNode node = nodes.get(id);
         if (node != null) {
             node.markOffline();
-            LOGGER.info("[PvPIndex Network] Proxy shut down: " + id);
+            LOGGER.info("[PvPIndex Network] Node shut down: " + id);
             if (playerRegistry instanceof RedisPlayerRegistry redisReg) {
                 redisReg.removeAllForProxy(id);
             }
@@ -214,6 +231,7 @@ public final class DefaultNetworkRouter implements NetworkRouter {
         String playerIdStr = msg.payloadString("playerId");
         String playerName = msg.payloadString("playerName");
         String proxyId = msg.payloadString("proxyId");
+        if (proxyId == null) proxyId = msg.payloadString("nodeId");
         String server = msg.payloadString("server");
         if (playerIdStr == null || playerName == null || proxyId == null) return;
 

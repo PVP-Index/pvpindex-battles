@@ -39,6 +39,7 @@ challenge:
   already_pending: "&cJe hebt al een openstaande uitdaging naar die speler."
   accepted: "&aUitdaging geaccepteerd! Gevecht wordt voorbereid..."
   declined: "&7Uitdaging afgewezen."
+  accepted_notify: "&f%player% &aheeft je uitdaging geaccepteerd!"
   declined_notify: "&f%player% &cheeft je uitdaging afgewezen."
   expired: "&7Uitdaging verlopen."
   timed_out: "&cJe uitdaging is verlopen."

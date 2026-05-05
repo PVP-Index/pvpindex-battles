@@ -2,7 +2,7 @@ package com.pvpindex.network;
 
 public enum NetworkMessageType {
 
-    // Proxy lifecycle
+    // Node lifecycle (generalized from PROXY_*)
     PROXY_REGISTER,
     PROXY_HEARTBEAT,
     PROXY_SHUTDOWN,
@@ -28,6 +28,28 @@ public enum NetworkMessageType {
     TRANSFER_REQUEST,
     TRANSFER_READY,
     TRANSFER_FAILED,
+
+    // Presence
+    PRESENCE_UPDATE,
+
+    // Invites
+    INVITE_SEND,
+    INVITE_ACCEPT,
+    INVITE_DECLINE,
+
+    // Parties
+    PARTY_CREATE,
+    PARTY_JOIN,
+    PARTY_LEAVE,
+    PARTY_DISBAND,
+    PARTY_INVITE,
+    PARTY_KICK,
+    PARTY_UPDATE,
+    PARTY_CHAT,
+
+    // Routing
+    ROUTE_REQUEST,
+    ROUTE_RESPONSE,
 
     // Administrative
     PLAYER_LOOKUP_REQUEST,

@@ -1,12 +1,12 @@
 **PvPIndex Battles** is a competitive PvP plugin for Paper, Folia, Purpur, Spigot, BungeeCord, and Velocity servers. It adds a full **1v1 duel and ranked matchmaking system** with per-mode **ELO ratings**, persistent global leaderboards, battle replays, and a moderation suite - all synced to [pvpindex.com](https://pvpindex.com) so your players' rankings persist across the entire network.
 
-> **Supported game modes:** Crystal PvP · Sword PvP · Pot PvP · NoDebuff · Soup PvP · Axe PvP · Mace PvP · Boxing · Sumo · UHC
+> **Supported game modes:** Crystal PvP · Sword PvP · Pot PvP · NoDebuff · Soup PvP · Axe PvP · Mace PvP · Boxing · Sumo · UHC · SMP
 
 ---
 
 ## Features
 
-- **10 ranked game modes** - Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC - each with independent ELO ladders and separate leaderboards
+- **11 ranked game modes** - Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC, SMP - each with independent ELO ladders and separate leaderboards
 - **1v1 matchmaking queue** - fully configurable 54-slot GUI with per-mode ELO, countdowns, and automatic arena teleportation
 - **Cross-server duels** - `/battle challenge <player> [mode]` works standalone or routes through a Velocity or BungeeCord proxy
 - **Network-wide tab completion** - proxy broadcasts all online players so `/battle challenge <TAB>` shows names from every backend server

@@ -7,7 +7,7 @@
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-1.0.1.jar`.
+1. Download or build `PvPIndexBattles-1.0.3.jar`.
 2. Place it in your server's `plugins/` folder.
 
 ## Step 2: First Run
@@ -86,6 +86,58 @@ See [CONFIGURATION.md](CONFIGURATION.md) for the full reference.
 | `%pvpindex_wins%` | Session win count |
 | `%pvpindex_losses%` | Session loss count |
 | `%pvpindex_kd%` | Win/loss ratio |
+
+## Optional: Lobby Mode
+
+Lobby mode enables direct Redis connectivity for global features (player sync, challenges, presence, invites, parties, routing) without relying on a proxy for coordination.
+
+Edit `plugins/PvPIndexBattles/config.yml`:
+
+```yaml
+lobby:
+  enabled: true
+  redis:
+    host: "redis.internal"
+    port: 6379
+    password: ""
+    database: 0
+    pool_size: 8
+  sync_interval_ticks: 20
+```
+
+When `lobby.enabled` is `true`, the server starts `LobbyNetworkService` and all its dependent services (`PlayerSyncService`, `ChallengeSyncService`, `PresenceService`, `InviteService`, `PartySyncService`, `RoutingService`, `TransferRequester`).
+
+When `lobby.enabled` is `false` (the default), the server runs in backend/SMP mode. No Redis connection is made from the Paper side.
+
+See [CONFIGURATION.md](CONFIGURATION.md) for the full `lobby.*` reference.
+
+## Optional: Database
+
+An optional database layer provides persistent storage for player stats, battle history, and leaderboards. Supported backends: MySQL, SQLite, MongoDB.
+
+Edit `plugins/PvPIndexBattles/config.yml`:
+
+```yaml
+database:
+  enabled: true
+  type: "mysql"            # mysql, sqlite, or mongodb
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "pvpindex"
+    username: "pvpindex"
+    password: "your-password"
+    pool_size: 10
+  sqlite:
+    file: "pvpindex.db"
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "pvpindex"
+```
+
+When `database.enabled` is `false` (the default), stats and history are not persisted. The plugin operates with in-memory/API-only data.
+
+See [CONFIGURATION.md](CONFIGURATION.md) for the full `database.*` reference.
 
 ## Optional: Velocity Proxy
 

@@ -2,10 +2,14 @@
 
 This guide covers setting up the PvPIndex Velocity proxy plugin and linking it to your Paper backend servers.
 
+> **Note (1.0.3):** The Velocity proxy plugin is now a thin layer handling auth, routing, and transfers only. Global features (player sync, challenges, presence, invites, parties) are handled by Paper lobby servers connecting directly to Redis. See [SETUP-PAPER.md](SETUP-PAPER.md) for lobby mode setup.
+
 ## What the Velocity Plugin Does
 
+- Authenticates plugin messages between the proxy and backends
+- Routes players to the correct backend server
+- Handles transfer packets for cross-server player movement
 - Tracks which server each player is on
-- Maintains a registry of all active battles across all backends
 - Cancels battles when a player switches servers mid-fight
 - Provides `/vpvpindex` commands for network-wide battle status
 - Forwards plugin messages between the proxy and backends over the `pvpindex:proxy` channel
@@ -18,7 +22,7 @@ This guide covers setting up the PvPIndex Velocity proxy plugin and linking it t
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-velocity-1.0.1.jar`.
+1. Download or build `PvPIndexBattles-velocity-1.0.3.jar`.
 2. Place it in your Velocity proxy's `plugins/` folder.
 
 ## Step 2: First Run
@@ -187,6 +191,16 @@ Look for:
 
 If `status` shows your backends with heartbeat timestamps, the link is working.
 
+## Transfer Handler
+
+When lobby servers use `TransferRequester` to move players between backends, the Velocity plugin receives the transfer request and executes the server switch. The flow is:
+
+1. Lobby server publishes a transfer request via Redis.
+2. The Velocity plugin picks up the request and calls `player.createConnectionRequest(server).fireAndForget()`.
+3. The target backend receives the player and processes the pending challenge or party join.
+
+No additional configuration is needed. The transfer handler is active whenever the Velocity plugin is loaded.
+
 ## How It Works
 
 | Event | What Happens |
@@ -209,7 +223,7 @@ All messages are JSON-encoded, sent over the `pvpindex:proxy` Minecraft plugin c
 | `/vpvpindex` command not found | Make sure the Velocity JAR is in the proxy's `plugins/` folder and the proxy was restarted. |
 | Messages working but battles not cancelling on switch | Check `monitored_servers` includes the relevant servers (or leave it empty for all). |
 | Cross-server challenges not arriving | Check the console for `[BackendMessenger]` warnings. Common causes: no players on the target server (plugin messaging needs a conduit), server name not registered, or `monitored_servers` filtering out the sender. |
-| "That player is not online on the network" | The target player is not connected to any server behind this Velocity proxy. Verify they are online and connected through the same proxy. |
+| "That player is not online on the network" | The target player is not connected to any server on the network. In single-proxy setups, the player must be behind the same proxy. In multi-proxy setups with Redis enabled, the proxy also checks the Redis player registry across all proxies. If the player is still not found, confirm they are online and that `network.enabled=true` is set on all proxies. |
 | Tab completion not showing cross-server players | Velocity broadcasts the player list every 10 seconds. Wait a moment after the first player joins. Check `proxy.enabled: true` on the backend. |
 | `debug: true` | Enable on both proxy and backends for verbose logging during setup. Shows all message routing, challenge flow, and player list broadcasts. Disable in production. |
 

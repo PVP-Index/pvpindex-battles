@@ -109,6 +109,50 @@ moderation:
 
 debug: false
 
+# ─── Lobby mode (Redis global sync) ───────────────────────────────────────────
+# Enable this on Paper servers that act as lobby/hub servers in a multi-server
+# network. When enabled, the server connects directly to Redis for real-time
+# global features: player list, challenges, presence, invites, parties, routing.
+#
+# SMP/backend servers should leave this DISABLED — they receive players via
+# proxy transfers and use existing plugin messaging for battle events.
+lobby:
+  enabled: false
+  node_id: "lobby-us"
+  region: "us"
+  # The name of this server as registered in Velocity's velocity.toml [servers] block.
+  # Required for cross-lobby player transfers when a challenge is accepted.
+  velocity_server_name: ""
+  redis:
+    host: "localhost"
+    port: 6379
+    password: ""
+    database: 0
+    pool_size: 4
+
+# ─── Optional database (persistent storage) ──────────────────────────────────
+# Provides persistent storage for player stats, match history, ELO ratings,
+# accounts, and inventories. When disabled, all data lives in Redis/memory
+# and is lost on restart.
+#
+# Supported types: mysql, sqlite, mongodb, none
+database:
+  enabled: false
+  type: "none"
+  mysql:
+    host: "localhost"
+    port: 3306
+    database: "pvpindex"
+    username: "pvpindex"
+    password: ""
+    pool_size: 10
+    ssl: false
+  sqlite:
+    file: "pvpindex.db"
+  mongodb:
+    uri: "mongodb://localhost:27017"
+    database: "pvpindex"
+
 # ─── Velocity tracking ────────────────────────────────────────────────────────
 # Records velocity_change events in the replay when a player's speed delta
 # exceeds the threshold in a single tick. Runs inside the existing packet

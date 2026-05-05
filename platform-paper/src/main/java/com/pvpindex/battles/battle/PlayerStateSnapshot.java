@@ -77,6 +77,13 @@ public record PlayerStateSnapshot(
     }
 
     private void restoreInternal(Player player, org.bukkit.attribute.Attribute maxHealthAttr, boolean includeInventory) {
+        // Force-respawn dead players so teleport actually works; without
+        // this, player.teleport() silently fails on the death screen and
+        // the player gets stranded in the (soon-to-be-deleted) arena world.
+        if (player.isDead()) {
+            player.spigot().respawn();
+        }
+
         // Clear hostile state first
         player.getActivePotionEffects().forEach(e -> player.removePotionEffect(e.getType()));
         player.setFireTicks(0);

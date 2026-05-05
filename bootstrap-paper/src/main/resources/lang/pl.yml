@@ -39,6 +39,7 @@ challenge:
   already_pending: "&cMasz juz oczekujace wyzwanie dla tego gracza."
   accepted: "&aWyzwanie przyjete! Przygotowywanie walki..."
   declined: "&7Wyzwanie odrzucone."
+  accepted_notify: "&f%player% &azaakceptowal twoje wyzwanie!"
   declined_notify: "&f%player% &codrzucil twoje wyzwanie."
   expired: "&7Wyzwanie wygaslo."
   timed_out: "&cTwoje wyzwanie wygaslo."

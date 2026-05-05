@@ -1,6 +1,8 @@
 # BungeeCord Setup
 
-PvPIndex supports BungeeCord as an alternative to Velocity. The BungeeCord plugin provides the same cross-server battle tracking, challenge routing, and network coordination.
+PvPIndex supports BungeeCord as an alternative to Velocity. The BungeeCord plugin provides auth, routing, and transfer handling for cross-server player movement.
+
+> **Note (1.0.3):** The BungeeCord proxy plugin is now a thin layer. Global features (player sync, challenges, presence, invites, parties) are handled by Paper lobby servers connecting directly to Redis. See [SETUP-PAPER.md](SETUP-PAPER.md) for lobby mode setup.
 
 ## Requirements
 
@@ -18,9 +20,9 @@ PvPIndex supports BungeeCord as an alternative to Velocity. The BungeeCord plugi
 mvn clean package
 ```
 
-2. Copy `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.1.jar` into your BungeeCord `plugins/` folder.
+2. Copy `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.3.jar` into your BungeeCord `plugins/` folder.
 
-3. Copy `bootstrap-paper/target/PvPIndexBattles-1.0.1.jar` into each Paper backend's `plugins/` folder.
+3. Copy `bootstrap-paper/target/PvPIndexBattles-1.0.3.jar` into each Paper backend's `plugins/` folder.
 
 4. Start BungeeCord once to generate the default config at `plugins/PvPIndex-Proxy/config.properties`.
 
@@ -67,6 +69,10 @@ network.region=asia
 network.redis.host=redis.internal
 network.redis.port=6379
 ```
+
+## Transfer Handler
+
+When lobby servers use `TransferRequester` to move players between backends, the BungeeCord plugin receives the transfer request and executes the server switch. No additional configuration is needed beyond the standard setup above.
 
 ## Differences from Velocity
 

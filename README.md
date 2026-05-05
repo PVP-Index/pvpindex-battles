@@ -1,6 +1,8 @@
 # PvPIndex Battles
 
-Competitive PvP battle tracking, replay recording, Elo rating, moderation, and cross-server coordination for Minecraft. Ships as three separate JARs: one for **Paper** servers, one for **Velocity** proxies, and one for **BungeeCord** proxies. Each proxy JAR is independent - install only the one matching your proxy platform.
+Competitive PvP battle tracking, replay recording, Elo rating, moderation, and cross-server coordination for Minecraft. Ships as three separate JARs: one for **Paper** servers, one for **Velocity** proxies, and one for **BungeeCord** proxies. Each proxy JAR is independent, install only the one matching your proxy platform.
+
+Paper servers can run in **lobby mode** (connecting directly to Redis for global features) or **backend/SMP mode** (the default). Proxies handle auth, routing, and transfers only.
 
 ## Requirements
 
@@ -10,7 +12,8 @@ Competitive PvP battle tracking, replay recording, Elo rating, moderation, and c
 | Paper | 1.21.x or 1.21.4+ (API 26.1.x) |
 | Velocity (optional) | 3.x |
 | BungeeCord (optional) | 1.21+ |
-| Redis (optional) | 6.x+ (for multi-proxy networks) |
+| Redis (optional) | 6.x+ (required for lobby mode and multi-proxy networks) |
+| Database (optional) | MySQL 8+, SQLite, or MongoDB 6+ (persistent stats/history) |
 | PlaceholderAPI (optional) | 2.11+ |
 
 ## Quick Start
@@ -23,9 +26,9 @@ mvn clean package
 
 Output:
 
-- `bootstrap-paper/target/PvPIndexBattles-1.0.1.jar` - drop into Paper `plugins/`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.1.jar` - drop into Velocity `plugins/`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.1.jar` - drop into BungeeCord `plugins/`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.3.jar` - drop into Paper `plugins/`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.3.jar` - drop into Velocity `plugins/`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.3.jar` - drop into BungeeCord `plugins/`
 
 The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No manual configuration needed for version selection.
 
@@ -50,7 +53,10 @@ pvpindex-parent
 ├── common/                  Shared data models, messaging protocol
 ├── api/                     Platform-agnostic interfaces
 ├── network/                 Cross-proxy messaging API and Redis implementation
+├── database/                Optional persistent storage (MySQL, SQLite, MongoDB)
 ├── platform-paper/          Paper services, listeners, commands, events
+│   ├── network/             Lobby-mode Redis services (sync, presence, invites, parties, routing)
+│   └── data/                DataService, PlayerCache
 ├── paper-versions/
 │   ├── paper.1.21.x/        Version adapter for 1.21.x
 │   └── paper.26.1.x/        Version adapter for 26.1.x
@@ -65,14 +71,18 @@ pvpindex-parent
 
 - **11 game modes** out of the box: Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, Crystal, UHC, SMP
 - **Matchmaking queue** with configurable GUI (`gui.yml`), per-mode Elo, countdowns, and arena teleportation
-- **Cross-server challenges**: `/battle challenge <player> [mode]` routes through Velocity or works standalone
-- **Network-wide tab completion**: Velocity broadcasts all online players so `/battle challenge <TAB>` shows players on every server
+- **Cross-server challenges**: `/battle challenge <player> [mode]` routes through proxy or lobby Redis, or works standalone
+- **Lobby mode**: Paper lobby servers connect directly to Redis for global player lists, challenges, presence, invites, parties, and routing without relying on a proxy
+- **Network-wide tab completion**: lobby Redis sync or proxy broadcast ensures `/battle challenge <TAB>` shows players on every server
 - **Challenge UI**: clickable chat accept/decline buttons with clear feedback messages
 - **Procedural arenas**: duel, crystal, and sumo arenas generated in code with no asset files
 - **Replay system** with frame-by-frame recording and in-game playback
 - **Arena pool** with procedural, schematic, and world-copy generation strategies
 - **Moderation** with reports, local bans, and federated network-wide bans
-- **Cross-server coordination** via Velocity or BungeeCord proxy plugin messaging with visible error logging
+- **Party system** with create, invite, join, leave, kick, and disband
+- **Persistent database** support (MySQL, SQLite, MongoDB) for player stats, battle history, and leaderboards
+- **Stats and leaderboards**: `/stats`, `/history`, `/leaderboard` commands with per-mode breakdowns
+- **Cross-server coordination** via lobby Redis or proxy plugin messaging with visible error logging
 - **Multi-proxy networking** via Redis Pub/Sub for unlimited proxy instances across regions
 - **PlaceholderAPI** integration for Elo, rank, win/loss, battle state, and battle type
 - **Configurable GUI** via `gui.yml` for full customisation of materials, slots, titles, and colours

@@ -289,24 +289,31 @@ public class BattleEventListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         UUID playerUuid = event.getPlayer().getUniqueId();
-        // Always dequeue — a player who quits while waiting for a match should not
-        // remain stuck in the queue until someone else joins.
         if (queueService != null) {
             queueService.leaveQuietly(playerUuid);
         }
         for (BattleSession session : battleService.activeBattles()) {
             if (!contains(session, playerUuid)) continue;
             replayRecorder.record(session, "player_leave", playerUuid, null, Map.of("reason", "quit"));
-            battleService.markPlayerLeftEarly(session.getUuid(), playerUuid);
 
-            // Mid-battle disconnect = forfeit. Survivors win.
+            UUID battleUuid = session.getUuid();
+
+            // If the quitting player is the winner in an active SMP loot phase,
+            // end the loot phase cleanly (restores loser, cancels boss bar,
+            // etc.) instead of calling endAndCleanup directly.
+            if (smpLootPhaseService != null && smpLootPhaseService.isInLootPhase(battleUuid)) {
+                battleService.markPlayerLeftEarly(battleUuid, playerUuid);
+                smpLootPhaseService.endLootPhase(battleUuid);
+                return;
+            }
+
+            battleService.markPlayerLeftEarly(battleUuid, playerUuid);
+
             List<UUID> winners = new ArrayList<>();
             for (BattleParticipant p : session.getParticipants()) {
                 if (!p.getUuid().equals(playerUuid)) winners.add(p.getUuid());
             }
-            // Note: PlayerStateService keeps the quitter's snapshot on disk;
-            // StateRestoreListener restores it on next join.
-            battleService.endAndCleanup(session.getUuid(), winners);
+            battleService.endAndCleanup(battleUuid, winners);
             return;
         }
     }

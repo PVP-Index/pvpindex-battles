@@ -39,6 +39,7 @@ challenge:
   already_pending: "&c你已经向该玩家发送了一个待处理的挑战。"
   accepted: "&a挑战已接受！准备战斗..."
   declined: "&7挑战已拒绝。"
+  accepted_notify: "&f%player% &a接受了你的挑战！"
   declined_notify: "&f%player% &c拒绝了你的挑战。"
   expired: "&7挑战已过期。"
   timed_out: "&c你的挑战已超时。"

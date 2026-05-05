@@ -3,12 +3,9 @@ package com.pvpindex.velocity.messaging;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pvpindex.battles.common.messaging.BattleMessage;
 import com.pvpindex.battles.common.messaging.PluginChannel;
-import com.pvpindex.network.NetworkMessage;
 import com.pvpindex.network.NetworkMessageType;
 import com.pvpindex.network.NetworkRouter;
-import com.pvpindex.network.PlayerRegistry;
 import com.pvpindex.velocity.PvPIndexVelocityPlugin;
-import com.pvpindex.velocity.challenge.PendingChallenge;
 import com.pvpindex.velocity.registry.BattleRegistry;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
@@ -25,37 +22,129 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+/**
+ * Proxy message handler bridging plugin messaging (Paper backends) and
+ * Redis (lobby servers). Tracks pending legacy challenges so that
+ * accepts/declines from lobby servers (arriving via Redis) can be
+ * forwarded to the correct backend via plugin messaging.
+ */
 public final class ProxyMessageHandler {
 
     private static final MinecraftChannelIdentifier CHANNEL =
             MinecraftChannelIdentifier.from(PluginChannel.PROXY);
-    private static final long CHALLENGE_TIMEOUT_SECONDS = 30;
 
     private final PvPIndexVelocityPlugin plugin;
     private final ObjectMapper mapper;
     private final Logger logger;
-    private final Map<UUID, PendingChallenge> pendingChallenges = new ConcurrentHashMap<>();
+
+    private record PendingLegacyChallenge(
+            String senderServer, UUID challengeId, UUID challengerUuid,
+            String challengerName, UUID targetUuid, String targetServer,
+            String modeId, Instant createdAt
+    ) {}
+
+    private final ConcurrentHashMap<UUID, PendingLegacyChallenge> pendingChallenges =
+            new ConcurrentHashMap<>();
 
     public ProxyMessageHandler(PvPIndexVelocityPlugin plugin, ObjectMapper mapper) {
         this.plugin = plugin;
         this.mapper = mapper;
         this.logger = plugin.getLogger();
 
-        plugin.getServer().getScheduler()
-                .buildTask(plugin, this::expireStaleChallenge)
-                .repeat(5, TimeUnit.SECONDS)
-                .schedule();
-
-        registerCrossProxyHandlers();
+        registerTransferHandler();
+        registerRedisChallengeHandlers();
+        scheduleExpiry();
     }
 
-    private void registerCrossProxyHandlers() {
+    private void registerTransferHandler() {
         NetworkRouter router = plugin.networkRouter();
         if (router == null) return;
 
-        router.addHandler(NetworkMessageType.CHALLENGE_SEND, this::handleCrossProxyChallengeReceive);
-        router.addHandler(NetworkMessageType.CHALLENGE_ACCEPT, this::handleCrossProxyChallengeAcceptReceive);
-        router.addHandler(NetworkMessageType.CHALLENGE_DENY, this::handleCrossProxyChallengeDeclineReceive);
+        router.addHandler(NetworkMessageType.TRANSFER_REQUEST, msg -> {
+            String playerIdStr = msg.payloadString("playerId");
+            String targetServer = msg.payloadString("targetServer");
+            if (playerIdStr == null || targetServer == null) return;
+
+            UUID playerId = UUID.fromString(playerIdStr);
+            Optional<Player> player = plugin.getServer().getPlayer(playerId);
+            Optional<RegisteredServer> server = plugin.getServer().getServer(targetServer);
+
+            if (player.isPresent() && server.isPresent()) {
+                plugin.markChallengeTransfer(playerId);
+                player.get().createConnectionRequest(server.get()).fireAndForget();
+                logger.info("[PvPIndex Transfer] Transferring " + player.get().getUsername()
+                        + " to " + targetServer + " (requested by " + msg.payloadString("requestingNode") + ")");
+
+                router.broadcast(NetworkMessageType.TRANSFER_READY, Map.of(
+                        "playerId", playerIdStr,
+                        "targetServer", targetServer,
+                        "proxyId", plugin.config().networkConfig().proxyId()
+                ));
+            } else {
+                router.broadcast(NetworkMessageType.TRANSFER_FAILED, Map.of(
+                        "playerId", playerIdStr,
+                        "targetServer", targetServer,
+                        "reason", player.isEmpty() ? "player_not_found" : "server_not_found",
+                        "proxyId", plugin.config().networkConfig().proxyId()
+                ));
+            }
+        });
+    }
+
+    private void registerRedisChallengeHandlers() {
+        NetworkRouter router = plugin.networkRouter();
+        if (router == null) return;
+
+        router.addHandler(NetworkMessageType.CHALLENGE_ACCEPT, msg -> {
+            UUID challengeId = msg.payloadUuid("challengeId");
+            if (challengeId == null) return;
+
+            PendingLegacyChallenge plc = pendingChallenges.remove(challengeId);
+            if (plc == null) return;
+
+            UUID accepterUuid = msg.payloadUuid("accepterUuid");
+            UUID targetUuid = accepterUuid != null ? accepterUuid : plc.targetUuid();
+            logger.info("[PvPIndex] Redis CHALLENGE_ACCEPT for challenge " + challengeId
+                    + " - forwarding CONFIRMED to backend '" + plc.senderServer() + "'");
+
+            plugin.backendMessenger().sendChallengeConfirmedExcluding(
+                    plc.senderServer(), plc.challengeId(),
+                    plc.challengerUuid(), targetUuid, plc.modeId(), targetUuid);
+
+            if (plc.targetServer() != null && !plc.targetServer().equals(plc.senderServer())) {
+                plugin.backendMessenger().sendChallengeCleanup(plc.targetServer(), challengeId);
+            }
+
+            transferTargetToBackend(targetUuid, plc.senderServer(), challengeId);
+        });
+
+        router.addHandler(NetworkMessageType.CHALLENGE_DENY, msg -> {
+            UUID challengeId = msg.payloadUuid("challengeId");
+            if (challengeId == null) return;
+
+            PendingLegacyChallenge plc = pendingChallenges.remove(challengeId);
+            if (plc == null) return;
+
+            logger.info("[PvPIndex] Redis CHALLENGE_DENY for challenge " + challengeId
+                    + " — forwarding REJECTED to backend '" + plc.senderServer() + "'");
+
+            plugin.backendMessenger().sendChallengeRejected(
+                    plc.senderServer(), plc.challengeId(), "declined");
+
+            if (plc.targetServer() != null && !plc.targetServer().equals(plc.senderServer())) {
+                plugin.backendMessenger().sendChallengeCleanup(plc.targetServer(), challengeId);
+            }
+        });
+    }
+
+    private void scheduleExpiry() {
+        plugin.getServer().getScheduler()
+                .buildTask(plugin, () -> {
+                    Instant cutoff = Instant.now().minusSeconds(120);
+                    pendingChallenges.values().removeIf(plc -> plc.createdAt().isBefore(cutoff));
+                })
+                .repeat(java.time.Duration.ofSeconds(30))
+                .schedule();
     }
 
     @Subscribe
@@ -99,9 +188,11 @@ public final class ProxyMessageHandler {
             case PLAYER_ENTER_BATTLE  -> handlePlayerEnterBattle(msg);
             case PLAYER_LEAVE_BATTLE  -> handlePlayerLeaveBattle(msg);
             case HEARTBEAT            -> handleHeartbeat(senderServer, msg);
-            case CHALLENGE_SEND       -> handleChallengeSend(senderServer, msg);
-            case CHALLENGE_ACCEPT     -> handleChallengeAccept(msg);
-            case CHALLENGE_DECLINE    -> handleChallengeDecline(msg);
+            // Challenge messages from legacy Paper servers (no lobby mode) are
+            // still accepted and forwarded via plugin messaging for backward compat
+            case CHALLENGE_SEND       -> handleLegacyChallengeSend(senderServer, msg);
+            case CHALLENGE_ACCEPT     -> handleLegacyChallengeAccept(senderServer, msg);
+            case CHALLENGE_DECLINE    -> handleLegacyChallengeDecline(senderServer, msg);
             default -> {
                 if (plugin.config().debug()) {
                     logger.info("[ProxyMessageHandler] Unhandled message type from backend: " + msg.type());
@@ -109,10 +200,6 @@ public final class ProxyMessageHandler {
             }
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Local handlers (Paper → Velocity)
-    // -------------------------------------------------------------------------
 
     @SuppressWarnings("unchecked")
     private void handleBattleStart(String serverName, BattleMessage msg) {
@@ -150,6 +237,7 @@ public final class ProxyMessageHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void handleBattleEnd(BattleMessage msg) {
         String battleUuidStr = (String) msg.data().get("battleUuid");
         if (battleUuidStr == null) return;
@@ -163,6 +251,20 @@ public final class ProxyMessageHandler {
             logger.info("[PvPIndex] Battle ended on '" + entry.serverName() + "': "
                     + battleUuid + " (status=" + msg.data().get("status") + ")");
         }
+
+        // Return transferred players using participant list from the message
+        List<String> participantStrs = (List<String>) msg.data().get("participants");
+        if (participantStrs != null) {
+            Set<UUID> participants = new HashSet<>();
+            for (String s : participantStrs) {
+                try { participants.add(UUID.fromString(s)); }
+                catch (IllegalArgumentException ignored) {}
+            }
+            returnTransferredPlayers(participants);
+        } else if (entry != null) {
+            returnTransferredPlayers(entry.participantUuids());
+        }
+
         plugin.battleRegistry().remove(battleUuid);
 
         NetworkRouter router = plugin.networkRouter();
@@ -171,6 +273,44 @@ public final class ProxyMessageHandler {
                     "battleUuid", battleUuidStr,
                     "proxyId", plugin.config().networkConfig().proxyId()
             ));
+        }
+    }
+
+    /**
+     * After a battle ends, transfer any participants who were moved
+     * cross-server for the challenge back to the server they came from.
+     */
+    private void returnTransferredPlayers(Set<UUID> participantUuids) {
+        for (UUID playerUuid : participantUuids) {
+            String originServer = plugin.removePlayerOriginServer(playerUuid);
+            if (originServer == null) continue;
+
+            Optional<Player> player = plugin.getServer().getPlayer(playerUuid);
+            if (player.isEmpty() || !player.get().isActive()) continue;
+
+            Optional<RegisteredServer> target = plugin.getServer().getServer(originServer);
+            if (target.isEmpty()) {
+                logger.warning("[PvPIndex Return] Origin server '" + originServer
+                        + "' not found for " + playerUuid + " — cannot return.");
+                continue;
+            }
+
+            String currentServer = player.get().getCurrentServer()
+                    .map(c -> c.getServerInfo().getName()).orElse("unknown");
+            if (currentServer.equals(originServer)) continue;
+
+            plugin.markChallengeTransfer(playerUuid);
+            plugin.getServer().getScheduler()
+                    .buildTask(plugin, () -> {
+                        if (player.get().isActive()) {
+                            player.get().createConnectionRequest(target.get()).fireAndForget();
+                            logger.info("[PvPIndex Return] Battle ended — returning "
+                                    + player.get().getUsername() + " from " + currentServer
+                                    + " to origin '" + originServer + "'");
+                        }
+                    })
+                    .delay(2, TimeUnit.SECONDS)
+                    .schedule();
         }
     }
 
@@ -199,117 +339,126 @@ public final class ProxyMessageHandler {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Challenge handlers (Paper → Velocity → Paper)
-    // -------------------------------------------------------------------------
+    private void transferTargetToBackend(UUID targetUuid, String backendServer, UUID challengeId) {
+        Optional<Player> target = plugin.getServer().getPlayer(targetUuid);
+        Optional<RegisteredServer> server = plugin.getServer().getServer(backendServer);
 
-    private void handleChallengeSend(String senderServer, BattleMessage msg) {
+        if (target.isPresent() && server.isPresent()) {
+            String currentServer = target.get().getCurrentServer()
+                    .map(c -> c.getServerInfo().getName()).orElse("unknown");
+            if (!currentServer.equals(backendServer)) {
+                plugin.setPlayerOriginServer(targetUuid, currentServer);
+                plugin.markChallengeTransfer(targetUuid);
+                target.get().createConnectionRequest(server.get()).fireAndForget();
+                logger.info("[PvPIndex Transfer] Challenge " + challengeId
+                        + " - transferring " + target.get().getUsername()
+                        + " from " + currentServer + " to " + backendServer);
+            }
+        } else {
+            logger.warning("[PvPIndex Transfer] Cannot transfer target " + targetUuid
+                    + " to " + backendServer + " - player="
+                    + (target.isPresent() ? "found" : "not_found")
+                    + " server=" + (server.isPresent() ? "found" : "not_found"));
+        }
+    }
+
+    // Legacy challenge forwarding for Paper servers without lobby mode
+    private void handleLegacyChallengeSend(String senderServer, BattleMessage msg) {
+        String targetName = (String) msg.data().get("targetName");
         String challengeIdStr = (String) msg.data().get("challengeId");
         String challengerUuidStr = (String) msg.data().get("challengerUuid");
         String challengerName = (String) msg.data().get("challengerName");
-        String targetName = (String) msg.data().get("targetName");
         String modeId = (String) msg.data().get("modeId");
 
-        if (challengerUuidStr == null || challengerName == null || targetName == null) {
-            logger.warning("[ProxyMessageHandler] CHALLENGE_SEND missing required fields.");
-            return;
-        }
+        if (targetName == null || challengerUuidStr == null) return;
+
+        UUID challengeId;
+        try { challengeId = challengeIdStr != null ? UUID.fromString(challengeIdStr) : UUID.randomUUID(); }
+        catch (IllegalArgumentException e) { challengeId = UUID.randomUUID(); }
 
         UUID challengerUuid;
         try { challengerUuid = UUID.fromString(challengerUuidStr); }
         catch (IllegalArgumentException e) { return; }
 
-        UUID challengeId;
-        if (challengeIdStr != null) {
-            try { challengeId = UUID.fromString(challengeIdStr); }
-            catch (IllegalArgumentException e) { challengeId = UUID.randomUUID(); }
+        String targetServer;
+        UUID targetUuid;
+
+        // First check if the target is on this proxy
+        Optional<Player> target = plugin.getServer().getPlayer(targetName);
+        if (target.isPresent() && target.get().getCurrentServer().isPresent()) {
+            targetServer = target.get().getCurrentServer().get().getServerInfo().getName();
+            targetUuid = target.get().getUniqueId();
         } else {
-            challengeId = UUID.randomUUID();
-        }
-
-        Optional<Player> targetPlayer = plugin.getServer().getPlayer(targetName);
-        if (targetPlayer.isPresent()) {
-            handleLocalChallenge(senderServer, challengeId, challengerUuid, challengerName,
-                    targetPlayer.get(), modeId);
-            return;
-        }
-
-        NetworkRouter router = plugin.networkRouter();
-        if (router != null) {
-            Optional<PlayerRegistry.PlayerLocation> remoteLoc =
-                    router.playerRegistry().findPlayerByName(targetName);
-            if (remoteLoc.isPresent()) {
-                handleCrossProxyChallenge(senderServer, challengeId, challengerUuid,
-                        challengerName, remoteLoc.get(), modeId);
+            // Fall back to the Redis player registry for cross-proxy lookup
+            NetworkRouter router = plugin.networkRouter();
+            if (router != null) {
+                var location = router.playerRegistry().findPlayerByName(targetName);
+                if (location.isPresent()) {
+                    targetUuid = location.get().playerId();
+                    targetServer = location.get().serverName();
+                    logger.info("[ProxyMessageHandler] Cross-proxy lookup: " + targetName
+                            + " found on " + location.get().proxyId() + "/" + targetServer);
+                } else {
+                    plugin.backendMessenger().sendChallengeRejected(senderServer, challengeId, "player_not_found");
+                    return;
+                }
+            } else {
+                plugin.backendMessenger().sendChallengeRejected(senderServer, challengeId, "player_not_found");
                 return;
             }
         }
 
-        plugin.backendMessenger().sendChallengeRejected(
-                senderServer, challengeId, "player_not_found");
-    }
-
-    private void handleLocalChallenge(String senderServer, UUID challengeId,
-                                      UUID challengerUuid, String challengerName,
-                                      Player target, String modeId) {
-        Optional<ServerConnection> targetConn = target.getCurrentServer();
-        if (targetConn.isEmpty()) {
-            plugin.backendMessenger().sendChallengeRejected(
-                    senderServer, challengeId, "player_not_connected");
-            return;
-        }
-
-        String targetServer = targetConn.get().getServerInfo().getName();
-
-        PendingChallenge pending = new PendingChallenge(
-                challengeId, challengerUuid, senderServer,
-                target.getUniqueId(), targetServer, modeId, Instant.now());
-        pendingChallenges.put(challengeId, pending);
+        pendingChallenges.put(challengeId, new PendingLegacyChallenge(
+                senderServer, challengeId, challengerUuid, challengerName,
+                targetUuid, targetServer, modeId, Instant.now()));
 
         plugin.backendMessenger().sendChallengeForward(
-                targetServer, challengeId, challengerName, challengerUuid,
-                modeId, target.getUniqueId());
+                targetServer, challengeId, challengerName, challengerUuid, modeId, targetUuid);
 
         if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Challenge " + challengeId
-                    + " from " + challengerName + "@" + senderServer
-                    + " -> " + target.getUsername() + "@" + targetServer
-                    + " mode=" + modeId);
+            logger.info("[ProxyMessageHandler] Tracked challenge " + challengeId
+                    + " from " + senderServer + " -> " + targetServer);
         }
     }
 
-    private void handleCrossProxyChallenge(String senderServer, UUID challengeId,
-                                           UUID challengerUuid, String challengerName,
-                                           PlayerRegistry.PlayerLocation targetLoc, String modeId) {
-        NetworkRouter router = plugin.networkRouter();
-        if (router == null) return;
+    private void handleLegacyChallengeAccept(String senderServer, BattleMessage msg) {
+        String challengeIdStr = (String) msg.data().get("challengeId");
+        String accepterUuidStr = (String) msg.data().get("accepterUuid");
+        if (challengeIdStr == null) return;
 
-        PendingChallenge pending = new PendingChallenge(
-                challengeId, challengerUuid, senderServer,
-                targetLoc.playerId(), "__cross_proxy__:" + targetLoc.proxyId(),
-                modeId, Instant.now());
-        pendingChallenges.put(challengeId, pending);
+        UUID challengeId;
+        try { challengeId = UUID.fromString(challengeIdStr); }
+        catch (IllegalArgumentException e) { return; }
 
-        router.sendToProxy(targetLoc.proxyId(), NetworkMessageType.CHALLENGE_SEND, Map.of(
-                "challengeId", challengeId.toString(),
-                "challengerUuid", challengerUuid.toString(),
-                "challengerName", challengerName,
-                "targetUuid", targetLoc.playerId().toString(),
-                "targetName", targetLoc.playerName(),
-                "modeId", modeId != null ? modeId : "",
-                "originProxy", plugin.config().networkConfig().proxyId(),
-                "originServer", senderServer
-        ));
-
-        if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
-                    + " from " + challengerName + "@" + senderServer
-                    + " -> " + targetLoc.playerName() + "@" + targetLoc.proxyId()
-                    + " mode=" + modeId);
+        PendingLegacyChallenge plc = pendingChallenges.remove(challengeId);
+        if (plc == null) {
+            logger.warning("[ProxyMessageHandler] CHALLENGE_ACCEPT for unknown challenge " + challengeId);
+            return;
         }
+
+        UUID accepterUuid = null;
+        if (accepterUuidStr != null) {
+            try { accepterUuid = UUID.fromString(accepterUuidStr); }
+            catch (IllegalArgumentException ignored) {}
+        }
+
+        logger.info("[ProxyMessageHandler] Forwarding CHALLENGE_CONFIRMED to '" + plc.senderServer()
+                + "' for challenge " + challengeId);
+
+        UUID targetUuid = accepterUuid != null ? accepterUuid : plc.targetUuid();
+
+        plugin.backendMessenger().sendChallengeConfirmedExcluding(
+                plc.senderServer(), plc.challengeId(), plc.challengerUuid(),
+                targetUuid, plc.modeId(), targetUuid);
+
+        if (!senderServer.equals(plc.senderServer())) {
+            plugin.backendMessenger().sendChallengeCleanup(senderServer, challengeId);
+        }
+
+        transferTargetToBackend(targetUuid, plc.senderServer(), challengeId);
     }
 
-    private void handleChallengeAccept(BattleMessage msg) {
+    private void handleLegacyChallengeDecline(String senderServer, BattleMessage msg) {
         String challengeIdStr = (String) msg.data().get("challengeId");
         if (challengeIdStr == null) return;
 
@@ -317,295 +466,20 @@ public final class ProxyMessageHandler {
         try { challengeId = UUID.fromString(challengeIdStr); }
         catch (IllegalArgumentException e) { return; }
 
-        PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending == null) {
-            if (plugin.config().debug()) {
-                logger.info("[ProxyMessageHandler] CHALLENGE_ACCEPT for unknown/expired challenge " + challengeId);
-            }
+        PendingLegacyChallenge plc = pendingChallenges.remove(challengeId);
+        if (plc == null) {
+            logger.warning("[ProxyMessageHandler] CHALLENGE_DECLINE for unknown challenge " + challengeId);
             return;
         }
 
-        // Receiver-side pending: forward accept back to the origin proxy via Redis
-        if (pending.isCrossProxyReceiver()) {
-            NetworkRouter router = plugin.networkRouter();
-            if (router != null) {
-                router.sendToProxy(pending.originProxy(), NetworkMessageType.CHALLENGE_ACCEPT, Map.of(
-                        "challengeId", challengeId.toString(),
-                        "accepterUuid", pending.targetUuid().toString(),
-                        "targetServer", pending.targetServer(),
-                        "originProxy", pending.originProxy(),
-                        "originServer", pending.challengerServer(),
-                        "challengerUuid", pending.challengerUuid().toString(),
-                        "modeId", pending.modeId() != null ? pending.modeId() : ""
-                ));
-            }
-            if (plugin.config().debug()) {
-                logger.info("[ProxyMessageHandler] Challenge " + challengeId
-                        + " ACCEPTED on receiver proxy, forwarding to origin " + pending.originProxy());
-            }
-            return;
-        }
-
-        // Origin-side pending for cross-proxy: should not happen here (handled by Redis),
-        // but guard against it anyway
-        if (pending.isCrossProxyOrigin()) {
-            String targetProxy = pending.crossProxyTargetId();
-            NetworkRouter router = plugin.networkRouter();
-            if (router != null) {
-                router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_ACCEPT, Map.of(
-                        "challengeId", challengeId.toString(),
-                        "originProxy", plugin.config().networkConfig().proxyId(),
-                        "originServer", pending.challengerServer(),
-                        "challengerUuid", pending.challengerUuid().toString(),
-                        "modeId", pending.modeId() != null ? pending.modeId() : ""
-                ));
-            }
-            return;
-        }
-
-        // Local challenge accept
-        boolean sameServer = pending.challengerServer().equals(pending.targetServer());
-
-        if (!sameServer) {
-            plugin.markChallengeTransfer(pending.targetUuid());
-
-            plugin.backendMessenger().sendChallengeConfirmedExcluding(
-                    pending.challengerServer(), challengeId,
-                    pending.challengerUuid(), pending.targetUuid(), pending.modeId(),
-                    pending.targetUuid());
-
-            plugin.backendMessenger().sendChallengeCleanup(
-                    pending.targetServer(), challengeId);
-
-            Optional<Player> targetPlayer = plugin.getServer().getPlayer(pending.targetUuid());
-            Optional<RegisteredServer> challengerServer = plugin.getServer().getServer(pending.challengerServer());
-            if (targetPlayer.isPresent() && challengerServer.isPresent()) {
-                targetPlayer.get().createConnectionRequest(challengerServer.get()).fireAndForget();
-                if (plugin.config().debug()) {
-                    logger.info("[ProxyMessageHandler] Transferring target "
-                            + pending.targetUuid() + " from " + pending.targetServer()
-                            + " to " + pending.challengerServer());
-                }
-            }
-        } else {
-            plugin.backendMessenger().sendChallengeConfirmed(
-                    pending.challengerServer(), challengeId,
-                    pending.challengerUuid(), pending.targetUuid(), pending.modeId());
-        }
-
-        if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Challenge " + challengeId
-                    + " ACCEPTED, notifying " + pending.challengerServer()
-                    + (sameServer ? " (same server)" : " + CLEANUP to " + pending.targetServer() + " (cross-server)"));
-        }
-    }
-
-    private void handleChallengeDecline(BattleMessage msg) {
-        String challengeIdStr = (String) msg.data().get("challengeId");
-        if (challengeIdStr == null) return;
-
-        UUID challengeId;
-        try { challengeId = UUID.fromString(challengeIdStr); }
-        catch (IllegalArgumentException e) { return; }
-
-        PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending == null) return;
-
-        // Receiver-side: forward decline back to origin proxy via Redis
-        if (pending.isCrossProxyReceiver()) {
-            NetworkRouter router = plugin.networkRouter();
-            if (router != null) {
-                router.sendToProxy(pending.originProxy(), NetworkMessageType.CHALLENGE_DENY, Map.of(
-                        "challengeId", challengeId.toString(),
-                        "reason", "declined"
-                ));
-            }
-            if (plugin.config().debug()) {
-                logger.info("[ProxyMessageHandler] Challenge " + challengeId
-                        + " DECLINED on receiver proxy, forwarding to origin " + pending.originProxy());
-            }
-            return;
-        }
-
-        // Origin-side cross-proxy: notify remote proxy to clean up
-        if (pending.isCrossProxyOrigin()) {
-            String targetProxy = pending.crossProxyTargetId();
-            NetworkRouter router = plugin.networkRouter();
-            if (router != null) {
-                router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_DENY, Map.of(
-                        "challengeId", challengeId.toString()
-                ));
-            }
-        }
+        logger.info("[ProxyMessageHandler] Forwarding CHALLENGE_REJECTED to '" + plc.senderServer()
+                + "' for challenge " + challengeId);
 
         plugin.backendMessenger().sendChallengeRejected(
-                pending.challengerServer(), challengeId, "declined");
+                plc.senderServer(), plc.challengeId(), "declined");
 
-        if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Challenge " + challengeId + " DECLINED");
-        }
-    }
-
-    // -------------------------------------------------------------------------
-    // Cross-proxy incoming handlers (Redis → this proxy)
-    // -------------------------------------------------------------------------
-
-    private void handleCrossProxyChallengeReceive(NetworkMessage msg) {
-        String targetUuidStr = msg.payloadString("targetUuid");
-        String challengeIdStr = msg.payloadString("challengeId");
-        String challengerName = msg.payloadString("challengerName");
-        String challengerUuidStr = msg.payloadString("challengerUuid");
-        String modeId = msg.payloadString("modeId");
-        String originProxy = msg.payloadString("originProxy");
-        String originServer = msg.payloadString("originServer");
-
-        if (targetUuidStr == null || challengeIdStr == null) return;
-
-        UUID targetUuid = UUID.fromString(targetUuidStr);
-        UUID challengeId = UUID.fromString(challengeIdStr);
-        UUID challengerUuid = UUID.fromString(challengerUuidStr);
-
-        Optional<Player> target = plugin.getServer().getPlayer(targetUuid);
-        if (target.isEmpty()) {
-            NetworkRouter router = plugin.networkRouter();
-            if (router != null) {
-                router.sendToProxy(originProxy, NetworkMessageType.CHALLENGE_DENY, Map.of(
-                        "challengeId", challengeIdStr,
-                        "reason", "player_not_found"
-                ));
-            }
-            return;
-        }
-
-        target.get().getCurrentServer().ifPresent(conn -> {
-            String targetServer = conn.getServerInfo().getName();
-
-            PendingChallenge pending = new PendingChallenge(
-                    challengeId, challengerUuid, originServer,
-                    targetUuid, targetServer, modeId,
-                    Instant.now(), originProxy);
-            pendingChallenges.put(challengeId, pending);
-
-            plugin.backendMessenger().sendChallengeForward(
-                    targetServer, challengeId, challengerName,
-                    challengerUuid, modeId, targetUuid);
-
-            if (plugin.config().debug()) {
-                logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
-                        + " received from " + originProxy + ", stored pending and forwarded to "
-                        + targetServer);
-            }
-        });
-    }
-
-    private void handleCrossProxyChallengeAcceptReceive(NetworkMessage msg) {
-        String challengeIdStr = msg.payloadString("challengeId");
-        String accepterUuidStr = msg.payloadString("accepterUuid");
-        String targetServerOnReceiver = msg.payloadString("targetServer");
-        String challengerUuidStr = msg.payloadString("challengerUuid");
-        String modeId = msg.payloadString("modeId");
-
-        if (challengeIdStr == null || challengerUuidStr == null) return;
-
-        UUID challengeId = UUID.fromString(challengeIdStr);
-
-        PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending == null) {
-            if (plugin.config().debug()) {
-                logger.info("[ProxyMessageHandler] Cross-proxy CHALLENGE_ACCEPT for unknown/expired "
-                        + challengeId);
-            }
-            return;
-        }
-
-        plugin.backendMessenger().sendChallengeConfirmed(
-                pending.challengerServer(), challengeId,
-                pending.challengerUuid(), pending.targetUuid(),
-                pending.modeId());
-
-        if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
-                    + " ACCEPTED, confirmed to " + pending.challengerServer());
-        }
-    }
-
-    private void handleCrossProxyChallengeDeclineReceive(NetworkMessage msg) {
-        String challengeIdStr = msg.payloadString("challengeId");
-        if (challengeIdStr == null) return;
-
-        UUID challengeId = UUID.fromString(challengeIdStr);
-        PendingChallenge pending = pendingChallenges.remove(challengeId);
-        if (pending == null) return;
-
-        String reason = msg.payloadString("reason");
-        String rejectReason = reason != null ? reason : "declined";
-
-        if (pending.isCrossProxyOrigin()) {
-            // Origin received a deny from remote: notify the challenger's Paper server
-            plugin.backendMessenger().sendChallengeRejected(
-                    pending.challengerServer(), challengeId, rejectReason);
-        } else if (pending.isCrossProxyReceiver()) {
-            // Receiver got a deny from origin (e.g. origin expired): clean up target's Paper server
-            plugin.backendMessenger().sendChallengeRejected(
-                    pending.targetServer(), challengeId, rejectReason);
-        } else {
-            plugin.backendMessenger().sendChallengeRejected(
-                    pending.challengerServer(), challengeId, rejectReason);
-        }
-
-        if (plugin.config().debug()) {
-            logger.info("[ProxyMessageHandler] Cross-proxy challenge " + challengeId
-                    + " DENIED via Redis (reason=" + rejectReason + ")");
-        }
-    }
-
-    private void expireStaleChallenge() {
-        Instant cutoff = Instant.now().minusSeconds(CHALLENGE_TIMEOUT_SECONDS);
-        Iterator<Map.Entry<UUID, PendingChallenge>> it = pendingChallenges.entrySet().iterator();
-        while (it.hasNext()) {
-            PendingChallenge p = it.next().getValue();
-            if (p.createdAt().isBefore(cutoff)) {
-                it.remove();
-
-                if (p.isCrossProxyReceiver()) {
-                    // Receiver-side pending expired: notify origin proxy
-                    NetworkRouter router = plugin.networkRouter();
-                    if (router != null) {
-                        router.sendToProxy(p.originProxy(), NetworkMessageType.CHALLENGE_DENY, Map.of(
-                                "challengeId", p.challengeId().toString(),
-                                "reason", "timeout"
-                        ));
-                    }
-                } else if (p.isCrossProxyOrigin()) {
-                    // Origin-side pending expired: notify challenger's Paper server locally,
-                    // and send cleanup to the remote proxy
-                    plugin.backendMessenger().sendChallengeRejected(
-                            p.challengerServer(), p.challengeId(), "timeout");
-                    NetworkRouter router = plugin.networkRouter();
-                    if (router != null) {
-                        String targetProxy = p.crossProxyTargetId();
-                        router.sendToProxy(targetProxy, NetworkMessageType.CHALLENGE_DENY, Map.of(
-                                "challengeId", p.challengeId().toString(),
-                                "reason", "timeout"
-                        ));
-                    }
-                } else {
-                    // Fully local challenge: notify both servers
-                    plugin.backendMessenger().sendChallengeRejected(
-                            p.challengerServer(), p.challengeId(), "timeout");
-                    if (!p.challengerServer().equals(p.targetServer())) {
-                        plugin.backendMessenger().sendChallengeRejected(
-                                p.targetServer(), p.challengeId(), "timeout");
-                    }
-                }
-
-                if (plugin.config().debug()) {
-                    logger.info("[ProxyMessageHandler] Challenge " + p.challengeId() + " EXPIRED"
-                            + (p.isCrossProxyReceiver() ? " (receiver-side, notified " + p.originProxy() + ")"
-                            : p.isCrossProxyOrigin() ? " (origin-side, notified remote)"
-                            : ""));
-                }
-            }
+        if (!senderServer.equals(plc.senderServer())) {
+            plugin.backendMessenger().sendChallengeCleanup(senderServer, challengeId);
         }
     }
 }

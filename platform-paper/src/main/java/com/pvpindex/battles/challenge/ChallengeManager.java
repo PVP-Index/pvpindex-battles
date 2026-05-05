@@ -3,7 +3,9 @@ package com.pvpindex.battles.challenge;
 import com.pvpindex.battles.gamemode.GameModeDefinition;
 import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gui.GuiConfig;
+import com.pvpindex.battles.messaging.NetworkPlayerCache;
 import com.pvpindex.battles.messaging.PaperMessenger;
+import com.pvpindex.battles.network.ChallengeSyncService;
 import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.util.DebugLogger;
 import com.pvpindex.battles.util.MessageService;
@@ -47,6 +49,10 @@ public final class ChallengeManager {
 	private ChallengeArrivalListener arrivalListener;
 
 	private final Map<UUID, LocalChallenge> pending = new ConcurrentHashMap<>();
+	private ChallengeSyncService challengeSyncService;
+	private NetworkPlayerCache lobbyPlayerCache;
+	private com.pvpindex.battles.network.TransferRequester transferRequester;
+	private String velocityServerName;
 
 	public ChallengeManager(JavaPlugin plugin, PaperMessenger paperMessenger,
 			BattleQueueService queueService, GameModeRegistry gameModeRegistry,
@@ -68,6 +74,28 @@ public final class ChallengeManager {
 		this.arrivalListener = arrivalListener;
 	}
 
+	/**
+	 * Enables lobby-direct challenge routing via Redis.
+	 * When set, challenges bypass the proxy and go lobby-to-lobby.
+	 */
+	public void setLobbyServices(ChallengeSyncService syncService, NetworkPlayerCache playerCache,
+			com.pvpindex.battles.network.TransferRequester transferRequester, String velocityServerName) {
+		this.challengeSyncService = syncService;
+		this.lobbyPlayerCache = playerCache;
+		this.transferRequester = transferRequester;
+		this.velocityServerName = velocityServerName;
+
+		syncService.setChallengeReceivedCallback(this::handleIncomingChallenge);
+		syncService.setChallengeAcceptedCallback(this::handleChallengeConfirmed);
+		syncService.setChallengeDeniedCallback((challengeId, challengerUuid) -> {
+			handleChallengeRejected(challengeId, "declined");
+		});
+	}
+
+	public boolean isLobbyMode() {
+		return challengeSyncService != null;
+	}
+
 	// ── Outbound: send a challenge ──────────────────────────────────────────
 
 	public void sendChallenge(Player challenger, String targetName, String modeId) {
@@ -83,7 +111,36 @@ public final class ChallengeManager {
 
 		UUID challengeId = UUID.randomUUID();
 
-		if (proxyEnabled && paperMessenger != null) {
+		if (challengeSyncService != null && lobbyPlayerCache != null) {
+			// Lobby mode: always check local player first to avoid Redis self-routing
+			Player localTarget = Bukkit.getPlayerExact(targetName);
+			if (localTarget != null && localTarget.isOnline()) {
+				LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
+						challenger.getName(), localTarget.getUniqueId(), targetName, modeId, Instant.now(), false);
+				pending.put(challengeId, lc);
+				showChallengeToTarget(localTarget, challengeId, challenger.getName(), modeId);
+				messageService.send(challenger, "challenge.sent", "%target%", targetName);
+				debug.logChallenge("SEND_LOCAL", challengeId, challenger.getName() + " -> " + targetName);
+				return;
+			}
+
+			// Not local - look up remote player in the network cache
+			NetworkPlayerCache.NetworkPlayer target = lobbyPlayerCache.findByName(targetName);
+			if (target == null) {
+				messageService.send(challenger, "general.player_not_found");
+				return;
+			}
+
+			LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
+					challenger.getName(), target.uuid(), targetName, modeId, Instant.now(), false);
+			pending.put(challengeId, lc);
+
+			String targetNodeId = target.server();
+			challengeSyncService.sendChallenge(challengeId, challenger.getUniqueId(),
+					challenger.getName(), targetName, target.uuid(), targetNodeId, modeId);
+			messageService.send(challenger, "challenge.sent", "%target%", targetName);
+			debug.logChallenge("SEND_REDIS", challengeId, challenger.getName() + " -> " + targetName + " mode=" + modeId);
+		} else if (proxyEnabled && paperMessenger != null) {
 			LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
 					challenger.getName(), null, targetName, modeId, Instant.now(), false);
 			pending.put(challengeId, lc);
@@ -130,7 +187,25 @@ public final class ChallengeManager {
 			return;
 		}
 
-		if (proxyEnabled && paperMessenger != null) {
+		if (challengeSyncService != null) {
+			boolean isRedisChallenge = challengeSyncService.pendingChallenges().containsKey(challengeId);
+			if (isRedisChallenge) {
+				pending.put(challengeId, lc.withAccepted(true));
+				challengeSyncService.acceptChallenge(challengeId, player.getUniqueId());
+				messageService.send(player, "challenge.accepted");
+				debug.logChallenge("ACCEPT_REDIS", challengeId, player.getName());
+			} else if (proxyEnabled && paperMessenger != null) {
+				pending.put(challengeId, lc.withAccepted(true));
+				paperMessenger.sendChallengeAccept(challengeId, player.getUniqueId());
+				messageService.send(player, "challenge.accepted");
+				debug.logChallenge("ACCEPT_PROXY", challengeId, player.getName());
+			} else {
+				pending.put(challengeId, lc.withAccepted(true));
+				challengeSyncService.acceptChallenge(challengeId, player.getUniqueId());
+				messageService.send(player, "challenge.accepted");
+				debug.logChallenge("ACCEPT_REDIS_FALLBACK", challengeId, player.getName());
+			}
+		} else if (proxyEnabled && paperMessenger != null) {
 			pending.put(challengeId, lc.withAccepted(true));
 			paperMessenger.sendChallengeAccept(challengeId, player.getUniqueId());
 			messageService.send(player, "challenge.accepted");
@@ -150,7 +225,16 @@ public final class ChallengeManager {
 			return;
 		}
 
-		if (proxyEnabled && paperMessenger != null) {
+		if (challengeSyncService != null) {
+			boolean isRedisChallenge = challengeSyncService.pendingChallenges().containsKey(challengeId);
+			if (isRedisChallenge) {
+				challengeSyncService.declineChallenge(challengeId, player.getUniqueId());
+			} else if (proxyEnabled && paperMessenger != null) {
+				paperMessenger.sendChallengeDecline(challengeId, player.getUniqueId());
+			} else {
+				challengeSyncService.declineChallenge(challengeId, player.getUniqueId());
+			}
+		} else if (proxyEnabled && paperMessenger != null) {
 			paperMessenger.sendChallengeDecline(challengeId, player.getUniqueId());
 		} else {
 			Player challenger = Bukkit.getPlayer(lc.challengerUuid());
@@ -165,8 +249,10 @@ public final class ChallengeManager {
 	// ── Velocity callbacks (CHALLENGE_CONFIRMED / CHALLENGE_REJECTED) ───────
 
 	/**
-	 * Called when Velocity confirms a challenge was accepted.
+	 * Called when a challenge is accepted (from proxy or Redis).
 	 * Only the battle-hosting server (challenger's server) receives this.
+	 * May be called from the Redis subscriber thread, so all Bukkit work
+	 * is posted to the main thread via the scheduler.
 	 */
 	public void handleChallengeConfirmed(UUID challengeId, UUID challengerUuid,
 			UUID targetUuid, String modeId) {
@@ -175,20 +261,34 @@ public final class ChallengeManager {
 		UUID cUuid = lc != null ? lc.challengerUuid() : challengerUuid;
 		UUID tUuid = lc != null && lc.targetUuid() != null ? lc.targetUuid() : targetUuid;
 		String mode = lc != null && lc.modeId() != null ? lc.modeId() : modeId;
+		String targetName = lc != null ? lc.targetName() : "";
 
 		debug.logChallenge("CONFIRMED", challengeId,
 				"challenger=" + cUuid + " target=" + tUuid + " mode=" + mode);
 
-		Player target = Bukkit.getPlayer(tUuid);
-		if (target != null && target.isOnline()) {
-			Bukkit.getScheduler().runTaskLater(plugin,
-					() -> startBattle(cUuid, tUuid, mode), 20L);
-		} else if (arrivalListener != null) {
-			arrivalListener.expectArrival(tUuid, cUuid, mode);
-		} else {
-			debug.logChallenge("CONFIRMED_NO_ARRIVAL_LISTENER", challengeId,
-					"Target not online and no arrival listener — cannot start battle");
-		}
+		Bukkit.getScheduler().runTask(plugin, () -> {
+			Player challenger = Bukkit.getPlayer(cUuid);
+			if (challenger != null && challenger.isOnline()) {
+				messageService.send(challenger, "challenge.accepted_notify",
+						"%player%", targetName);
+			}
+
+			Player target = Bukkit.getPlayer(tUuid);
+			if (target != null && target.isOnline()) {
+				Bukkit.getScheduler().runTaskLater(plugin,
+						() -> startBattle(cUuid, tUuid, mode), 20L);
+			} else if (arrivalListener != null) {
+				arrivalListener.expectArrival(tUuid, cUuid, mode);
+				if (transferRequester != null && velocityServerName != null && !velocityServerName.isEmpty()) {
+					transferRequester.requestTransfer(tUuid, velocityServerName, "challenge_accept");
+					debug.logChallenge("TRANSFER_REQUESTED", challengeId,
+							"target=" + tUuid + " -> " + velocityServerName);
+				}
+			} else {
+				debug.logChallenge("CONFIRMED_NO_ARRIVAL_LISTENER", challengeId,
+						"Target not online and no arrival listener - cannot start battle");
+			}
+		});
 	}
 
 	/**
@@ -244,25 +344,32 @@ public final class ChallengeManager {
 
 	public void handleChallengeRejected(UUID challengeId, String reason) {
 		LocalChallenge lc = pending.remove(challengeId);
-
-		Player challenger = lc != null ? Bukkit.getPlayer(lc.challengerUuid()) : null;
-		if (challenger != null && challenger.isOnline()) {
-			switch (reason) {
-				case "timeout" -> messageService.send(challenger, "challenge.timed_out");
-				case "player_not_found" -> messageService.send(challenger, "general.player_not_found");
-				case "player_not_connected" -> messageService.send(challenger, "challenge.opponent_offline");
-				case "declined" -> messageService.send(challenger, "challenge.declined");
-				default -> messageService.send(challenger, "challenge.rejected", "%reason%", reason);
-			}
-		}
-
-		Player target = lc != null && lc.targetUuid() != null
-				? Bukkit.getPlayer(lc.targetUuid()) : null;
-		if (target != null && target.isOnline() && "timeout".equals(reason)) {
-			messageService.send(target, "challenge.expired");
-		}
-
 		debug.logChallenge("REJECTED", challengeId, reason);
+
+		if (lc == null) return;
+
+		Bukkit.getScheduler().runTask(plugin, () -> {
+			Player challenger = Bukkit.getPlayer(lc.challengerUuid());
+			if (challenger != null && challenger.isOnline()) {
+				switch (reason) {
+					case "timeout" -> messageService.send(challenger, "challenge.timed_out");
+					case "player_not_found" -> messageService.send(challenger, "general.player_not_found");
+					case "player_not_connected" -> messageService.send(challenger, "challenge.opponent_offline");
+					case "declined" -> messageService.send(challenger, "challenge.declined_notify",
+							"%player%", lc.targetName());
+					default -> messageService.send(challenger, "challenge.rejected", "%reason%", reason);
+				}
+			}
+		});
+
+		if ("timeout".equals(reason) && lc.targetUuid() != null) {
+			Bukkit.getScheduler().runTask(plugin, () -> {
+				Player target = Bukkit.getPlayer(lc.targetUuid());
+				if (target != null && target.isOnline()) {
+					messageService.send(target, "challenge.expired");
+				}
+			});
+		}
 	}
 
 	// ── UI (chat-only) ──────────────────────────────────────────────────────

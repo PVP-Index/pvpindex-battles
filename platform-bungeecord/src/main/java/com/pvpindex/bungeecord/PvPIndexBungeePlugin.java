@@ -11,13 +11,15 @@ import com.pvpindex.bungeecord.messaging.BungeeProxyMessageHandler;
 import com.pvpindex.network.DefaultNetworkRouter;
 import com.pvpindex.network.NetworkConfig;
 import com.pvpindex.network.NetworkRouter;
-import com.pvpindex.network.node.ProxyNode;
+import com.pvpindex.network.node.NetworkNode;
+import com.pvpindex.network.node.NodeType;
 import com.pvpindex.network.redis.RedisConnectionManager;
 import com.pvpindex.network.redis.RedisMessageBus;
 import com.pvpindex.network.redis.RedisPlayerRegistry;
 import com.pvpindex.network.redis.RedisServerRegistry;
 import net.md_5.bungee.api.plugin.Plugin;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -30,6 +32,7 @@ public final class PvPIndexBungeePlugin extends Plugin {
     private ObjectMapper objectMapper;
     private BungeeBackendMessenger backendMessenger;
     private final Set<UUID> challengeTransfers = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, String> playerOriginServers = new ConcurrentHashMap<>();
 
     private NetworkRouter networkRouter;
     private RedisMessageBus messageBus;
@@ -85,9 +88,9 @@ public final class PvPIndexBungeePlugin extends Plugin {
             messageBus.connect();
             networkRouter.start();
 
-            ProxyNode localNode = new ProxyNode(netCfg.proxyId(), netCfg.region());
+            NetworkNode localNode = new NetworkNode(netCfg.proxyId(), NodeType.PROXY, netCfg.region());
             localNode.heartbeat(getProxy().getOnlineCount());
-            networkRouter.registerLocalProxy(localNode);
+            networkRouter.registerLocalNode(localNode);
 
             for (var entry : getProxy().getServers().entrySet()) {
                 netServerRegistry.registerServer(netCfg.proxyId(),
@@ -129,4 +132,8 @@ public final class PvPIndexBungeePlugin extends Plugin {
     public void markChallengeTransfer(UUID uuid) { challengeTransfers.add(uuid); }
     public boolean isChallengeTransfer(UUID uuid) { return challengeTransfers.contains(uuid); }
     public void clearChallengeTransfer(UUID uuid) { challengeTransfers.remove(uuid); }
+
+    public void setPlayerOriginServer(UUID uuid, String server) { playerOriginServers.put(uuid, server); }
+    public String removePlayerOriginServer(UUID uuid)           { return playerOriginServers.remove(uuid); }
+    public String getPlayerOriginServer(UUID uuid)              { return playerOriginServers.get(uuid); }
 }

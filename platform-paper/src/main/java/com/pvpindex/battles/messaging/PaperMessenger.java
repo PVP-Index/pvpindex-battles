@@ -81,12 +81,14 @@ public final class PaperMessenger {
         send(MessageType.BATTLE_START, data);
     }
 
-    /** Notify Velocity that a battle has ended. */
+    /** Notify the proxy that a battle has ended. */
     public void sendBattleEnd(BattleSession session) {
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("battleUuid", session.getUuid().toString());
         data.put("status", session.getStatus().name());
         data.put("winners", session.getWinners().stream().map(UUID::toString).toList());
+        data.put("participants", session.getParticipants().stream()
+                .map(p -> p.getUuid().toString()).toList());
         send(MessageType.BATTLE_END, data);
     }
 

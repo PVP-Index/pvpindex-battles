@@ -92,6 +92,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 	private GuiConfig guiConfig;
 	private NetworkPlayerCache networkPlayerCache;
 	private com.pvpindex.battles.battle.SmpLootPhaseService smpLootPhaseService;
+	private com.pvpindex.battles.network.LobbyNetworkService lobbyNetworkService;
+	private com.pvpindex.battles.data.DataService dataService;
 
 	@Override
 	public void onEnable() {
@@ -314,10 +316,33 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			getLogger().info("Velocity proxy messaging enabled (channel=pvpindex:proxy).");
 		}
 
-		// ChallengeManager — works in both proxy and standalone modes
+		// Optional database service — only active when database.enabled = true.
+		if (configManager.databaseSettings().enabled()) {
+			dataService = new com.pvpindex.battles.data.DataService(this, configManager.databaseSettings());
+			dataService.start();
+		}
+
+		// Lobby network service — only active when lobby.enabled = true.
+		if (configManager.lobbySettings().enabled()) {
+			networkPlayerCache = networkPlayerCache != null ? networkPlayerCache : new NetworkPlayerCache();
+			lobbyNetworkService = new com.pvpindex.battles.network.LobbyNetworkService(this, configManager.lobbySettings());
+			lobbyNetworkService.start();
+			if (lobbyNetworkService.isActive()) {
+				networkPlayerCache.setLobbyMode(true);
+				lobbyNetworkService.playerSync().setCache(networkPlayerCache);
+				lobbyNetworkService.playerSync().seedLocalPlayers();
+				getLogger().info("Lobby network service active - global sync via Redis enabled.");
+			}
+		}
+
+		// ChallengeManager — works in proxy, lobby, and standalone modes
 		challengeManager = new ChallengeManager(this, paperMessenger,
 				battleQueueService, gameModeRegistry, debugLogger, guiConfig,
 				configManager.settings().proxyEnabled(), messageService);
+		if (lobbyNetworkService != null && lobbyNetworkService.isActive()) {
+			challengeManager.setLobbyServices(lobbyNetworkService.challengeSync(), networkPlayerCache,
+					lobbyNetworkService.transfers(), configManager.lobbySettings().velocityServerName());
+		}
 		battleGuiCommand.setChallengeManager(challengeManager);
 		battleGuiListener.setChallengeManager(challengeManager);
 		if (proxyMessageListener != null) {
@@ -396,6 +421,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		if (lobbyNetworkService != null) lobbyNetworkService.shutdown();
+		if (dataService != null) dataService.shutdown();
 		if (smpLootPhaseService != null) smpLootPhaseService.cancelAll();
 		if (battleBatchScheduler != null) battleBatchScheduler.stop();
 		if (proxyMessageListener != null) proxyMessageListener.unregister();

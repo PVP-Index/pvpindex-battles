@@ -1,5 +1,6 @@
 package com.pvpindex.network;
 
+import com.pvpindex.network.node.NetworkNode;
 import com.pvpindex.network.node.ProxyNode;
 import com.pvpindex.network.redis.RedisPlayerRegistry;
 import com.pvpindex.network.redis.RedisServerRegistry;

@@ -39,6 +39,7 @@ challenge:
   already_pending: "&cYou already have a pending challenge to that player."
   accepted: "&aChallenge accepted! Preparing battle..."
   declined: "&7Challenge declined."
+  accepted_notify: "&f%player% &aaccepted your challenge!"
   declined_notify: "&f%player% &cdeclined your challenge."
   expired: "&7Challenge expired."
   timed_out: "&cYour challenge timed out."

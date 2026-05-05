@@ -5,7 +5,7 @@
 
     <groupId>com.pvpindex</groupId>
     <artifactId>pvpindex-parent</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
 
     <name>PvPIndex Parent</name>
@@ -15,6 +15,7 @@
         <module>common</module>
         <module>api</module>
         <module>network</module>
+        <module>database</module>
         <module>platform-paper</module>
         <module>paper-versions/paper.1.21.x</module>
         <module>paper-versions/paper.26.1.x</module>
@@ -84,6 +85,11 @@
             <dependency>
                 <groupId>com.pvpindex</groupId>
                 <artifactId>pvpindex-network</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.pvpindex</groupId>
+                <artifactId>pvpindex-database</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

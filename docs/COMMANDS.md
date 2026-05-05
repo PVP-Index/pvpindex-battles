@@ -36,6 +36,48 @@ Moderator tools for watching, replaying, reporting, and banning.
 | `ban <player> <duration> <reason>` | `pvpindex.mod.ban` | Ban a player from PvPIndex battles |
 | `unban <player>` | `pvpindex.mod.ban` | Unban a player |
 
+### /party
+Party management commands.
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| `create` | `pvpindex.party` | Create a new party |
+| `invite <player>` | `pvpindex.party` | Invite a player to your party |
+| `join <player>` | `pvpindex.party` | Join a player's party (requires invite) |
+| `leave` | `pvpindex.party` | Leave your current party |
+| `kick <player>` | `pvpindex.party` | Kick a player from your party (leader only) |
+| `disband` | `pvpindex.party` | Disband your party (leader only) |
+
+### /invite
+Direct battle invitation.
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| `<player>` | `pvpindex.battle.queue` | Send a battle invitation to a player |
+
+### /stats
+View player statistics (requires database).
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| *(no args)* | `pvpindex.stats` | View your own stats |
+| `<player> [mode]` | `pvpindex.stats` | View a player's stats, optionally filtered by mode |
+
+### /history
+View battle history (requires database).
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| *(no args)* | `pvpindex.stats` | View your own battle history |
+| `<player>` | `pvpindex.stats` | View a player's battle history |
+
+### /leaderboard
+View leaderboards (requires database).
+
+| Subcommand | Permission | Description |
+|------------|------------|-------------|
+| `<mode> [stat]` | `pvpindex.stats` | View leaderboard for a mode, optionally filtered by stat (elo, wins, kd) |
+
 ## Velocity Plugin
 
 ### /vpvpindex
@@ -71,3 +113,5 @@ All permissions default to `op` unless noted otherwise.
 | `pvpindex.mod.ban` | op | Ban/unban players |
 | `pvpindex.mod.ban.federated` | op | Federated cross-server bans |
 | `pvpindex.mod.report` | true | Submit reports |
+| `pvpindex.party` | true | Party commands (create, invite, join, leave, kick, disband) |
+| `pvpindex.stats` | true | View stats, history, and leaderboards |

@@ -1,5 +1,6 @@
 package com.pvpindex.network;
 
+import com.pvpindex.network.node.NetworkNode;
 import com.pvpindex.network.node.ProxyNode;
 
 import java.util.Collection;
@@ -14,15 +15,58 @@ public interface NetworkRouter {
 
     void shutdown();
 
-    void registerLocalProxy(ProxyNode self);
+    // ── Node-generic methods ────────────────────────────────────────────
 
-    Optional<ProxyNode> getProxy(String proxyId);
+    void registerLocalNode(NetworkNode self);
 
-    Collection<ProxyNode> allProxies();
+    Optional<NetworkNode> getNode(String nodeId);
 
-    Collection<ProxyNode> onlineProxies();
+    Collection<NetworkNode> allNodes();
+
+    Collection<NetworkNode> onlineNodes();
+
+    // ── Backward-compatible proxy methods (delegate to node methods) ────
+
+    /** @deprecated Use {@link #registerLocalNode(NetworkNode)} */
+    @Deprecated
+    default void registerLocalProxy(ProxyNode self) {
+        registerLocalNode(self);
+    }
+
+    /** @deprecated Use {@link #getNode(String)} */
+    @Deprecated
+    default Optional<ProxyNode> getProxy(String proxyId) {
+        return getNode(proxyId)
+                .filter(n -> n instanceof ProxyNode)
+                .map(n -> (ProxyNode) n);
+    }
+
+    /** @deprecated Use {@link #allNodes()} */
+    @Deprecated
+    default Collection<ProxyNode> allProxies() {
+        return allNodes().stream()
+                .filter(n -> n instanceof ProxyNode)
+                .map(n -> (ProxyNode) n)
+                .toList();
+    }
+
+    /** @deprecated Use {@link #onlineNodes()} */
+    @Deprecated
+    default Collection<ProxyNode> onlineProxies() {
+        return onlineNodes().stream()
+                .filter(n -> n instanceof ProxyNode)
+                .map(n -> (ProxyNode) n)
+                .toList();
+    }
+
+    // ── Messaging ───────────────────────────────────────────────────────
 
     void sendToProxy(String targetProxyId, NetworkMessageType type, Map<String, Object> payload);
+
+    /** Send a message to a specific node by ID. Alias for sendToProxy. */
+    default void sendToNode(String targetNodeId, NetworkMessageType type, Map<String, Object> payload) {
+        sendToProxy(targetNodeId, type, payload);
+    }
 
     void broadcast(NetworkMessageType type, Map<String, Object> payload);
 

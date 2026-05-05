@@ -16,6 +16,8 @@ public class ConfigManager {
     private PluginSettings settings;
     private ReplaySettings replaySettings;
     private ModerationSettings moderationSettings;
+    private LobbySettings lobbySettings;
+    private DatabaseSettings databaseSettings;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -88,6 +90,33 @@ public class ConfigManager {
                 cfg.getString("moderation.ban_screen_message",
                         "&cYou are banned from this server.\n&7Reason: %reason%")
         );
+
+        lobbySettings = new LobbySettings(
+                cfg.getBoolean("lobby.enabled", false),
+                cfg.getString("lobby.node_id", "lobby-us"),
+                cfg.getString("lobby.region", "us"),
+                cfg.getString("lobby.velocity_server_name", ""),
+                cfg.getString("lobby.redis.host", "localhost"),
+                cfg.getInt("lobby.redis.port", 6379),
+                cfg.getString("lobby.redis.password", ""),
+                cfg.getInt("lobby.redis.database", 0),
+                Math.max(1, cfg.getInt("lobby.redis.pool_size", 4))
+        );
+
+        databaseSettings = new DatabaseSettings(
+                cfg.getBoolean("database.enabled", false),
+                cfg.getString("database.type", "none"),
+                cfg.getString("database.mysql.host", "localhost"),
+                cfg.getInt("database.mysql.port", 3306),
+                cfg.getString("database.mysql.database", "pvpindex"),
+                cfg.getString("database.mysql.username", "pvpindex"),
+                cfg.getString("database.mysql.password", ""),
+                Math.max(1, cfg.getInt("database.mysql.pool_size", 10)),
+                cfg.getBoolean("database.mysql.ssl", false),
+                cfg.getString("database.sqlite.file", "pvpindex.db"),
+                cfg.getString("database.mongodb.uri", "mongodb://localhost:27017"),
+                cfg.getString("database.mongodb.database", "pvpindex")
+        );
     }
 
     private <E extends Enum<E>> Set<E> parseEnums(List<String> values, Class<E> type) {
@@ -105,4 +134,6 @@ public class ConfigManager {
     public PluginSettings settings() { return settings; }
     public ReplaySettings replaySettings() { return replaySettings == null ? ReplaySettings.defaults() : replaySettings; }
     public ModerationSettings moderationSettings() { return moderationSettings == null ? ModerationSettings.defaults() : moderationSettings; }
+    public LobbySettings lobbySettings() { return lobbySettings == null ? LobbySettings.defaults() : lobbySettings; }
+    public DatabaseSettings databaseSettings() { return databaseSettings == null ? DatabaseSettings.defaults() : databaseSettings; }
 }
