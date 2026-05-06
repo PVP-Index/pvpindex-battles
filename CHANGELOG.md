@@ -5,7 +5,7 @@ All notable changes to PvPIndex Battles are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-Release tags use the `v` prefix (e.g. `v1.0.3`).
+Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
@@ -15,19 +15,6 @@ Release tags use the `v` prefix (e.g. `v1.0.3`).
 ### Changed
 ### Fixed
 ### Removed
-
----
-
-## [1.0.3] - 2026-05-05
-
-### Fixed
-- **Challenge "Player not found" after restart**: `NetworkPlayerCache` now merges proxy player list updates in lobby mode instead of ignoring them. After a lobby server restart, remote players are visible within seconds rather than requiring each player to trigger a new Redis event.
-- **Cross-proxy challenge lookup**: Velocity and BungeeCord proxies now fall back to the Redis player registry when the target player is not on the local proxy. Challenges between players on different proxies (e.g. US to EU) no longer fail with "Player not found".
-- **Dead player teleport failure**: `PlayerStateSnapshot.restoreInternal()` now force-respawns dead players before attempting teleport, preventing the silent teleport failure that left defeated players stranded in deleted arena worlds.
-- **Cross-server return after battle**: `PaperMessenger.sendBattleEnd()` now includes participant UUIDs. Velocity and BungeeCord proxies track each player's origin server before transfer and automatically return them after the battle ends.
-- **SMP loot phase cleanup on winner disconnect**: If the winner disconnects during the SMP loot phase, the plugin now ends the loot phase cleanly (restoring the loser, cancelling boss bars, and stopping the timer) instead of calling the generic cleanup path.
-- **Challenge accepted notification routing**: Fixed routing of `CHALLENGE_ACCEPT` and `CHALLENGE_DECLINE` messages between Redis (lobby servers) and plugin messaging (backend servers) on both Velocity and BungeeCord proxies.
-- **TeleHop arena conflict**: Added `excluded-worlds` support to TeleHop's random respawn feature, preventing it from interfering with PvPIndex arena death handling.
 
 ---
 
@@ -68,10 +55,17 @@ Release tags use the `v` prefix (e.g. `v1.0.3`).
 - Velocity `ProxyMessageHandler`: stripped all challenge routing logic. Now handles battle lifecycle, heartbeats, and `TRANSFER_REQUEST` only. Legacy challenge forwarding kept for backward compat.
 - BungeeCord `BungeeProxyMessageHandler`: same simplification as Velocity.
 - `PvPIndexBattlesPlugin`: added initialisation for `LobbyNetworkService` and `DataService`.
-
-### Fixed
 - Plugin messaging reliability: lobbies no longer depend on proxy for challenge delivery (no dropped messages when no players online).
 - Challenge flow reduced from 4 hops (Paper→Proxy→Redis→Proxy→Paper) to 2 hops (Lobby→Redis→Lobby).
+
+### Fixed
+- **Challenge "Player not found" after restart**: lobby servers ignored proxy player list updates after restarting, leaving the network player cache empty for remote players. `NetworkPlayerCache` now merges incoming updates so remote players are visible within seconds of a restart.
+- **Cross-proxy challenge lookup**: challenges between players on different proxies (e.g. US to EU) failed with "Player not found" because the proxy only checked its own player list. Velocity and BungeeCord proxies now fall back to the Redis player registry for cross-proxy lookups.
+- **Dead player teleport failure**: after a battle, defeated players who were still dead could not be teleported, silently stranding them in deleted arena worlds. `PlayerStateSnapshot` now force-respawns dead players before attempting the teleport.
+- **Cross-server return after battle**: players transferred to another server for a battle were not returned to their original server afterwards. Proxies now track each player's origin server before transfer and automatically return them when the battle ends.
+- **SMP loot phase cleanup on winner disconnect**: if the winner disconnected during the SMP loot phase, the loser was left stranded with no boss bar and no timer. The plugin now ends the loot phase cleanly, restoring the loser and cancelling all timers.
+- **Challenge accepted notification not delivered**: accepting or declining a challenge from a backend server through a lobby produced no response on the challenger's side. Fixed routing of `CHALLENGE_ACCEPT` and `CHALLENGE_DECLINE` messages between Redis and plugin messaging on both Velocity and BungeeCord proxies.
+- **TeleHop arena conflict**: TeleHop's random respawn feature interfered with PvPIndex arena death handling by teleporting dead players before the plugin could process them. Added `excluded-worlds` support to TeleHop to skip arena worlds.
 
 ### Deprecated
 - `ProxyNode` class. Use `NetworkNode` with `NodeType.PROXY` instead.
@@ -131,8 +125,7 @@ Release tags use the `v` prefix (e.g. `v1.0.3`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...HEAD
-[1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...HEAD
 [1.0.2]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/PVP-Index/pvpindex-battles/releases/tag/v1.0.0

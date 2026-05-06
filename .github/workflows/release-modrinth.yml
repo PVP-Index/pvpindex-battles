@@ -16,11 +16,11 @@ permissions:
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 #  RELEASE PIPELINE
 #
-#  1. Build          – compile all modules with JDK 25
-#  2. Locate JARs    – find the shaded Paper, Velocity & BungeeCord artifacts
-#  3. Extract info   – version string + changelog from CHANGELOG.md
-#  4. GitHub Release – create the GH release with all JARs attached
-#  5. Modrinth       – upload Paper, Velocity & BungeeCord JARs (skips duplicates)
+#  1. Build          - compile all modules with JDK 25
+#  2. Locate JARs    - find the shaded Paper, Velocity & BungeeCord artifacts
+#  3. Extract info   - version string + changelog from CHANGELOG.md
+#  4. GitHub Release - create the GH release with all JARs attached
+#  5. Modrinth       - upload Paper, Velocity & BungeeCord JARs (skips duplicates)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 jobs:
@@ -118,7 +118,7 @@ jobs:
           fail_on_unmatched_files: true
 
       # ────────────────────────────────────────────────────────────────────────
-      #  5a. MODRINTH — PAPER JAR
+      #  5a. MODRINTH  - PAPER JAR
       #
       #  Loaders : paper, folia, purpur, spigot, bukkit
       #  Skips   : if this version was already uploaded
@@ -173,16 +173,16 @@ jobs:
           if [[ "$HTTP_CODE" =~ ^2 ]]; then
             echo "Paper JAR uploaded successfully."
           elif grep -q 'already exists' /tmp/modrinth_paper.json 2>/dev/null; then
-            echo "Paper version already exists on Modrinth — skipping."
+            echo "Paper version already exists on Modrinth  - skipping."
           else
             echo "Paper upload failed!"
             exit 1
           fi
 
       # ────────────────────────────────────────────────────────────────────────
-      #  5b. MODRINTH — VELOCITY JAR
+      #  5b. MODRINTH  - VELOCITY JAR
       #
-      #  Loaders : velocity (only — do NOT include bungeecord here,
+      #  Loaders : velocity (only  - do NOT include bungeecord here,
       #            Modrinth rejects JARs missing bungee.yml for that loader)
       #  Skips   : if this version was already uploaded
       # ────────────────────────────────────────────────────────────────────────
@@ -236,14 +236,14 @@ jobs:
           if [[ "$HTTP_CODE" =~ ^2 ]]; then
             echo "Velocity JAR uploaded successfully."
           elif grep -q 'already exists' /tmp/modrinth_velocity.json 2>/dev/null; then
-            echo "Velocity version already exists on Modrinth — skipping."
+            echo "Velocity version already exists on Modrinth  - skipping."
           else
             echo "Velocity upload failed!"
             exit 1
           fi
 
       # ────────────────────────────────────────────────────────────────────────
-      #  5c. MODRINTH — BUNGEECORD JAR
+      #  5c. MODRINTH  - BUNGEECORD JAR
       #
       #  Loaders : bungeecord, waterfall
       #  Skips   : if this version was already uploaded
@@ -298,7 +298,7 @@ jobs:
           if [[ "$HTTP_CODE" =~ ^2 ]]; then
             echo "BungeeCord JAR uploaded successfully."
           elif grep -q 'already exists' /tmp/modrinth_bungee.json 2>/dev/null; then
-            echo "BungeeCord version already exists on Modrinth — skipping."
+            echo "BungeeCord version already exists on Modrinth  - skipping."
           else
             echo "BungeeCord upload failed!"
             exit 1

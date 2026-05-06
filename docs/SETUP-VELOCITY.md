@@ -2,7 +2,7 @@
 
 This guide covers setting up the PvPIndex Velocity proxy plugin and linking it to your Paper backend servers.
 
-> **Note (1.0.3):** The Velocity proxy plugin is now a thin layer handling auth, routing, and transfers only. Global features (player sync, challenges, presence, invites, parties) are handled by Paper lobby servers connecting directly to Redis. See [SETUP-PAPER.md](SETUP-PAPER.md) for lobby mode setup.
+> **Note (1.0.2):** The Velocity proxy plugin is now a thin layer handling auth, routing, and transfers only. Global features (player sync, challenges, presence, invites, parties) are handled by Paper lobby servers connecting directly to Redis. See [SETUP-PAPER.md](SETUP-PAPER.md) for lobby mode setup.
 
 ## What the Velocity Plugin Does
 
@@ -22,7 +22,7 @@ This guide covers setting up the PvPIndex Velocity proxy plugin and linking it t
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-velocity-1.0.3.jar`.
+1. Download or build `PvPIndexBattles-velocity-1.0.2.jar`.
 2. Place it in your Velocity proxy's `plugins/` folder.
 
 ## Step 2: First Run

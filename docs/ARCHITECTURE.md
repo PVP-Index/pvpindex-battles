@@ -2,7 +2,7 @@
 
 PvPIndex Battles is a multi-module Maven project targeting Paper (Minecraft), Velocity (proxy), and BungeeCord (proxy).
 
-As of 1.0.3, the architecture is **lobby-centric**: Paper lobby servers connect directly to Redis for global features (player sync, challenges, presence, invites, parties, routing), whilst proxies are simplified to auth, routing, and transfers only. An optional database layer provides persistent storage for stats, history, and leaderboards.
+As of 1.0.2, the architecture is **lobby-centric**: Paper lobby servers connect directly to Redis for global features (player sync, challenges, presence, invites, parties, routing), whilst proxies are simplified to auth, routing, and transfers only. An optional database layer provides persistent storage for stats, history, and leaderboards.
 
 ## Module Map
 
@@ -59,7 +59,7 @@ Paper servers operate in one of two modes, controlled by `lobby.enabled` in `con
 | **Lobby** | `true` | Connects directly to Redis. Provides global player list, cross-server challenges, presence tracking, invites, parties, and routing. The lobby is the primary coordinator for network features. |
 | **Backend / SMP** | `false` (default) | Runs as a standalone battle server or behind a proxy. Receives routed players and hosts battles. |
 
-Proxies (Velocity/BungeeCord) are simplified in 1.0.3 to handle:
+Proxies (Velocity/BungeeCord) are simplified in 1.0.2 to handle:
 - Player authentication and forwarding
 - Server routing and connection management
 - Transfer packets for cross-server player movement
@@ -154,9 +154,9 @@ Produces three fat JARs:
 
 | Artefact | Location |
 |----------|----------|
-| `PvPIndexBattles-1.0.3.jar` | `bootstrap-paper/target/` |
-| `PvPIndexBattles-velocity-1.0.3.jar` | `bootstrap-velocity/target/` |
-| `PvPIndexBattles-bungeecord-1.0.3.jar` | `bootstrap-bungeecord/target/` |
+| `PvPIndexBattles-1.0.2.jar` | `bootstrap-paper/target/` |
+| `PvPIndexBattles-velocity-1.0.2.jar` | `bootstrap-velocity/target/` |
+| `PvPIndexBattles-bungeecord-1.0.2.jar` | `bootstrap-bungeecord/target/` |
 
 Jackson is relocated per-platform (`com.pvpindex.shade.jackson`, `com.pvpindex.velocity.shade.jackson`, `com.pvpindex.bungee.shade.jackson`). Jedis is relocated similarly to avoid classpath conflicts with other plugins.
 

@@ -3,25 +3,25 @@
 [SIZE=6][B]PvPIndex Battles[/B][/SIZE]
 [SIZE=4]Verified ELO Tracking for Competitive PvP[/SIZE][/CENTER]
 
-[B]PvPIndex Battles[/B] connects your Paper or Velocity server to [URL='https://pvpindex.com']pvpindex.com[/URL] — an open, tamper-proof ELO ranking platform for competitive Minecraft PvP. Every duel gets recorded, signed, and submitted to the API; your players earn verified ratings they can compare against the rest of the network.
+[B]PvPIndex Battles[/B] connects your Paper or Velocity server to [URL='https://pvpindex.com']pvpindex.com[/URL]  - an open, tamper-proof ELO ranking platform for competitive Minecraft PvP. Every duel gets recorded, signed, and submitted to the API; your players earn verified ratings they can compare against the rest of the network.
 
 [HR][/HR]
 
 [SIZE=5][B]Features[/B][/SIZE]
 
 [LIST]
-[*][B]10 ranked game modes[/B] — Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC — each with independent ELO ladders and separate leaderboards
-[*][B]1v1 matchmaking queue[/B] — fully configurable 54-slot GUI ([ICODE]gui.yml[/ICODE]) with per-mode ELO, countdowns, and automatic arena teleportation
-[*][B]Cross-server duels[/B] — [ICODE]/battle challenge <player> [mode][/ICODE] works standalone or routes through a Velocity or BungeeCord proxy
-[*][B]Network-wide tab completion[/B] — proxy broadcasts all online players so [ICODE]/battle challenge <TAB>[/ICODE] shows names from every backend server
-[*][B]Battle replay system[/B] — frame-by-frame recording, reviewable in-game with [ICODE]/pvpmod replay <id>[/ICODE]
-[*][B]Arena pool[/B] — procedural, schematic, and world-copy generation strategies; four bundled schematics included
-[*][B]Moderation suite[/B] — player reports, local bans, federated network-wide bans, real-time spectating
-[*][B]PlaceholderAPI integration[/B] — ELO, rank, win/loss, queue state, and active mode placeholders for scoreboards and tab lists
+[*][B]11 ranked game modes[/B] - Crystal, Sword, Pot, NoDebuff, Soup, Axe, Mace, Boxing, Sumo, UHC, SMP - each with independent ELO ladders and separate leaderboards
+[*][B]1v1 matchmaking queue[/B]  - fully configurable 54-slot GUI ([ICODE]gui.yml[/ICODE]) with per-mode ELO, countdowns, and automatic arena teleportation
+[*][B]Cross-server duels[/B]  - [ICODE]/battle challenge <player> [mode][/ICODE] works standalone or routes through a Velocity or BungeeCord proxy
+[*][B]Network-wide tab completion[/B]  - proxy broadcasts all online players so [ICODE]/battle challenge <TAB>[/ICODE] shows names from every backend server
+[*][B]Battle replay system[/B]  - frame-by-frame recording, reviewable in-game with [ICODE]/pvpmod replay <id>[/ICODE]
+[*][B]Arena pool[/B]  - procedural, schematic, and world-copy generation strategies; four bundled schematics included
+[*][B]Moderation suite[/B]  - player reports, local bans, federated network-wide bans, real-time spectating
+[*][B]PlaceholderAPI integration[/B]  - ELO, rank, win/loss, queue state, and active mode placeholders for scoreboards and tab lists
 [*][B]Fully configurable messages[/B] via [ICODE]messages.yml[/ICODE]
-[*][B]HMAC-signed payloads[/B] — battles are cryptographically signed before submission; the API rejects anything tampered with
-[*][B]Open ELO formula[/B] — K=32, trust-weighted implementation published under MIT at [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
-[*][B]Folia compatible[/B] — runs on Folia, Paper, Purpur, Spigot, and Bukkit (1.21+)
+[*][B]HMAC-signed payloads[/B]  - battles are cryptographically signed before submission; the API rejects anything tampered with
+[*][B]Open ELO formula[/B]  - K=32, trust-weighted implementation published under MIT at [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
+[*][B]Folia compatible[/B]  - runs on Folia, Paper, Purpur, Spigot, and Bukkit (1.21+)
 [/LIST]
 
 [HR][/HR]
@@ -63,7 +63,7 @@
 
 [LIST=1]
 [*]Drop [ICODE]PvPIndexBattles-<version>.jar[/ICODE] into your server's [ICODE]plugins/[/ICODE] folder.
-[*]Start the server — config files are generated automatically.
+[*]Start the server  - config files are generated automatically.
 [*]Stop the server and set your API key in [ICODE]plugins/PvPIndexBattles/config.yml[/ICODE]:
 [CODE=yaml]api:
   api_key: "your-api-key-here"
@@ -83,7 +83,7 @@ Drop [ICODE]PvPIndexBattles-velocity-<version>.jar[/ICODE] into your Velocity [I
 
 [SIZE=5][B]Commands[/B][/SIZE]
 
-[SIZE=4][B]/battle — Player commands[/B][/SIZE]
+[SIZE=4][B]/battle  - Player commands[/B][/SIZE]
 
 [TABLE]
 [TR]
@@ -112,7 +112,7 @@ Drop [ICODE]PvPIndexBattles-velocity-<version>.jar[/ICODE] into your Velocity [I
 [/TR]
 [/TABLE]
 
-[SIZE=4][B]/pvpindex — Admin commands[/B][/SIZE]
+[SIZE=4][B]/pvpindex  - Admin commands[/B][/SIZE]
 
 [TABLE]
 [TR]
@@ -142,7 +142,7 @@ Drop [ICODE]PvPIndexBattles-velocity-<version>.jar[/ICODE] into your Velocity [I
 [/TR]
 [/TABLE]
 
-[SIZE=4][B]/pvpmod — Moderation commands[/B][/SIZE]
+[SIZE=4][B]/pvpmod  - Moderation commands[/B][/SIZE]
 
 [TABLE]
 [TR]
@@ -256,9 +256,9 @@ queue:
 [SIZE=5][B]Links[/B][/SIZE]
 
 [LIST]
-[*][B]Website & leaderboards[/B] — [URL='https://pvpindex.com']pvpindex.com[/URL]
-[*][B]Documentation[/B] — [URL='https://docs.pvpindex.com']docs.pvpindex.com[/URL]
-[*][B]Source (plugin)[/B] — [URL='https://github.com/PVP-Index/pvpindex-battles']github.com/PVP-Index/pvpindex-battles[/URL]
-[*][B]Source (ELO formula / anti-cheat)[/B] — [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
-[*][B]Issue tracker[/B] — [URL='https://github.com/PVP-Index/pvpindex-battles/issues']github.com/PVP-Index/pvpindex-battles/issues[/URL]
+[*][B]Website & leaderboards[/B]  - [URL='https://pvpindex.com']pvpindex.com[/URL]
+[*][B]Documentation[/B]  - [URL='https://docs.pvpindex.com']docs.pvpindex.com[/URL]
+[*][B]Source (plugin)[/B]  - [URL='https://github.com/PVP-Index/pvpindex-battles']github.com/PVP-Index/pvpindex-battles[/URL]
+[*][B]Source (ELO formula / anti-cheat)[/B]  - [URL='https://github.com/PVP-Index/battle-validator']github.com/PVP-Index/battle-validator[/URL]
+[*][B]Issue tracker[/B]  - [URL='https://github.com/PVP-Index/pvpindex-battles/issues']github.com/PVP-Index/pvpindex-battles/issues[/URL]
 [/LIST]

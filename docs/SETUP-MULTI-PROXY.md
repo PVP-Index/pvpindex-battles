@@ -2,15 +2,15 @@
 
 This guide covers running PvPIndex across **multiple Velocity and/or BungeeCord proxy instances** so the entire network behaves as one connected system.
 
-> **Note (1.0.3):** Global synchronisation (player lists, challenges, presence, invites, parties) is now handled by Paper lobby servers connecting directly to Redis. Proxies in a multi-proxy setup are responsible for auth, routing, and transfers only. Lobby servers share the same Redis instance as the multi-proxy network layer.
+> **Note (1.0.2):** Global synchronisation (player lists, challenges, presence, invites, parties) is now handled by Paper lobby servers connecting directly to Redis. Proxies in a multi-proxy setup are responsible for auth, routing, and transfers only. Lobby servers share the same Redis instance as the multi-proxy network layer.
 
 ## Prerequisites
 
 | Requirement | Details |
 |-------------|---------|
 | Redis | 6.x+ (used for cross-proxy messaging) |
-| Proxy plugin | `PvPIndexBattles-velocity-1.0.3.jar` or `PvPIndexBattles-bungeecord-1.0.3.jar` on every proxy |
-| Paper plugin | `PvPIndexBattles-1.0.3.jar` on every backend server |
+| Proxy plugin | `PvPIndexBattles-velocity-1.0.2.jar` or `PvPIndexBattles-bungeecord-1.0.2.jar` on every proxy |
+| Paper plugin | `PvPIndexBattles-1.0.2.jar` on every backend server |
 | Network access | All proxies must be able to reach the same Redis instance |
 
 ## Architecture
