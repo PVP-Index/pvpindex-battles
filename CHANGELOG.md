@@ -65,7 +65,6 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 - **Cross-server return after battle**: players transferred to another server for a battle were not returned to their original server afterwards. Proxies now track each player's origin server before transfer and automatically return them when the battle ends.
 - **SMP loot phase cleanup on winner disconnect**: if the winner disconnected during the SMP loot phase, the loser was left stranded with no boss bar and no timer. The plugin now ends the loot phase cleanly, restoring the loser and cancelling all timers.
 - **Challenge accepted notification not delivered**: accepting or declining a challenge from a backend server through a lobby produced no response on the challenger's side. Fixed routing of `CHALLENGE_ACCEPT` and `CHALLENGE_DECLINE` messages between Redis and plugin messaging on both Velocity and BungeeCord proxies.
-- **TeleHop arena conflict**: TeleHop's random respawn feature interfered with PvPIndex arena death handling by teleporting dead players before the plugin could process them. Added `excluded-worlds` support to TeleHop to skip arena worlds.
 
 ### Deprecated
 - `ProxyNode` class. Use `NetworkNode` with `NodeType.PROXY` instead.
