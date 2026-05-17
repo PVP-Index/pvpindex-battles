@@ -18,6 +18,22 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.4] - 2026-05-17
+
+### Fixed
+- **Spigot/Paper/Folia compatibility**: removed all Adventure API calls that are only available on Paper. The plugin now runs on plain Spigot without `NoSuchMethodError` crashes.
+  - `player.sendMessage(Component)` → `player.sendMessage(String)`
+  - `player.showTitle(Title)` → `player.sendTitle(String, String, int, int, int)`
+  - `player.playSound(Sound)` → `player.playSound(Location, org.bukkit.Sound, float, float)`
+  - `Bukkit.createInventory(holder, size, Component)` → String overload
+  - `meta.displayName(Component)` / `meta.lore(List<Component>)` → `setDisplayName` / `setLore`
+  - `ClickEvent` / `HoverEvent` (Adventure) in challenge messages replaced with BungeeCord chat API (`player.spigot().sendMessage(...)`)
+- MiniMessage and `&`-style colour codes are still fully supported for config authors: inputs are parsed internally via MiniMessage/LegacyAmpersand and serialised to `§`-prefixed legacy strings before being passed to Bukkit APIs.
+- Enchantment glint on active GUI tabs now uses `item.addUnsafeEnchantment` (an `ItemStack` method, not `ItemMeta`), fixing a compile error against Paper API 1.21.
+- Removed references to `GameRule` fields that do not exist on older Bukkit versions (`FALL_DAMAGE`, `FIRE_DAMAGE`, `FREEZE_DAMAGE`, `DROWNING_DAMAGE`).
+
+---
+
 ## [1.0.3] - 2026-05-17
 
 ### Added
