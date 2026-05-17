@@ -3,7 +3,6 @@ package com.pvpindex.battles.listener;
 import com.pvpindex.battles.config.ConfigManager;
 import com.pvpindex.battles.config.PluginSettings;
 import com.pvpindex.battles.util.MessageService;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -44,36 +43,36 @@ public class SetupListener implements Listener {
     }
 
     private void sendGuide(Player player) {
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.separator");
-        messageService.sendRaw(player, "setup.title");
-        messageService.sendRaw(player, "setup.separator");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step1_heading");
-        messageService.sendRaw(player, "setup.step1_desc");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step1_yaml_key");
-        messageService.sendRaw(player, "setup.step1_yaml_value");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step1_token_info");
-        messageService.sendRaw(player, "setup.step1_howto");
-        messageService.sendRaw(player, "setup.step1_apply");
-        messageService.sendRaw(player, "setup.step1_wait");
-        messageService.sendRaw(player, "setup.step1_wait2");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step2_heading");
-        messageService.sendRaw(player, "setup.step2_desc");
-        messageService.sendRaw(player, "setup.step2_path");
-        messageService.sendRaw(player, "setup.step2_register");
-        messageService.sendRaw(player, "setup.step2_copy");
-        messageService.sendRaw(player, "setup.step2_schematic");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step3_heading");
-        messageService.sendRaw(player, "setup.step3_desc");
-        player.sendMessage(Component.empty());
-        messageService.sendRaw(player, "setup.step3_hint");
-        messageService.sendRaw(player, "setup.separator");
-        player.sendMessage(Component.empty());
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.separator");
+		messageService.sendRaw(player, "setup.title");
+		messageService.sendRaw(player, "setup.separator");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step1_heading");
+		messageService.sendRaw(player, "setup.step1_desc");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step1_yaml_key");
+		messageService.sendRaw(player, "setup.step1_yaml_value");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step1_token_info");
+		messageService.sendRaw(player, "setup.step1_howto");
+		messageService.sendRaw(player, "setup.step1_apply");
+		messageService.sendRaw(player, "setup.step1_wait");
+		messageService.sendRaw(player, "setup.step1_wait2");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step2_heading");
+		messageService.sendRaw(player, "setup.step2_desc");
+		messageService.sendRaw(player, "setup.step2_path");
+		messageService.sendRaw(player, "setup.step2_register");
+		messageService.sendRaw(player, "setup.step2_copy");
+		messageService.sendRaw(player, "setup.step2_schematic");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step3_heading");
+		messageService.sendRaw(player, "setup.step3_desc");
+		player.sendMessage("");
+		messageService.sendRaw(player, "setup.step3_hint");
+		messageService.sendRaw(player, "setup.separator");
+		player.sendMessage("");
     }
 }
 

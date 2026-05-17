@@ -21,12 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.adventure.sound.Sound;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import net.kyori.adventure.title.Title;
-import java.time.Duration;
+import org.bukkit.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -372,20 +367,16 @@ public class BattleQueueService {
                     }
                     return;
                 }
-                Title countdownTitle = Title.title(
-                        Component.text(remaining, NamedTextColor.YELLOW)
-                                .decoration(TextDecoration.BOLD, true),
-                        messageService.component("queue.countdown_subtitle"),
-                        Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(900), Duration.ofMillis(100)));
-                Sound tickSound = Sound.sound(org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT,
-                        Sound.Source.MASTER, 1.0f, remaining <= 3 ? 1.4f : 1.0f);
+                String titleText = ChatColor.YELLOW + "" + ChatColor.BOLD + remaining;
+                String subtitle = messageService.component("queue.countdown_subtitle");
+                float pitch = remaining <= 3 ? 1.4f : 1.0f;
                 if (p1.isOnline()) {
-                    p1.showTitle(countdownTitle);
-                    p1.playSound(tickSound);
+                    p1.sendTitle(titleText, subtitle, 0, 18, 2);
+                    p1.playSound(p1.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT, 1.0f, pitch);
                 }
                 if (p2.isOnline()) {
-                    p2.showTitle(countdownTitle);
-                    p2.playSound(tickSound);
+                    p2.sendTitle(titleText, subtitle, 0, 18, 2);
+                    p2.playSound(p2.getLocation(), org.bukkit.Sound.BLOCK_NOTE_BLOCK_HAT, 1.0f, pitch);
                 }
                 remaining--;
             }
@@ -414,19 +405,21 @@ public class BattleQueueService {
             return;
         }
         BattleSession session = battleService.find(battleUuid).orElse(null);
-        Component customMsg = session != null
-                ? (Component) session.getMetadata().get("custom_start_message")
-                : null;
+        Object customMsgObj = session != null ? session.getMetadata().get("custom_start_message") : null;
+        String customMsgStr = null;
+        if (customMsgObj instanceof net.kyori.adventure.text.Component c) {
+            customMsgStr = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+                    .legacySection().serialize(c);
+        } else if (customMsgObj instanceof String s) {
+            customMsgStr = s;
+        }
+        final String finalCustomMsg = customMsgStr;
         for (Player p : List.of(p1, p2)) {
             if (p.isOnline()) {
-                p.showTitle(Title.title(
-                        messageService.component("queue.go_title"),
-                        Component.empty(),
-                        Title.Times.times(Duration.ofMillis(0), Duration.ofMillis(800), Duration.ofMillis(400))));
-                p.playSound(Sound.sound(org.bukkit.Sound.ENTITY_ENDER_DRAGON_GROWL,
-                        Sound.Source.MASTER, 0.4f, 1.8f));
-                if (customMsg != null) {
-                    p.sendMessage(customMsg);
+                p.sendTitle(messageService.component("queue.go_title"), "", 0, 16, 8);
+                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ENDER_DRAGON_GROWL, 0.4f, 1.8f);
+                if (finalCustomMsg != null) {
+                    p.sendMessage(finalCustomMsg);
                 } else {
                     messageService.send(p, "battle.started_good_luck");
                 }

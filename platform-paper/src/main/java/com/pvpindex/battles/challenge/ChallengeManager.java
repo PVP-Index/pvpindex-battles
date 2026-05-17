@@ -17,9 +17,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.event.HoverEvent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -412,22 +413,22 @@ public final class ChallengeManager {
 				&& modeOpt.get().rules() != null
 				&& modeOpt.get().rules().usePlayerInventory();
 
-		Component header = messageService.component("challenge.header",
+		messageService.sendRaw(target, "challenge.header",
 				"%challenger%", challengerName, "%mode%", modeName != null ? modeName : "");
-
-		Component accept = messageService.component("challenge.accept_label")
-				.hoverEvent(HoverEvent.showText(messageService.component("challenge.accept_hover")))
-				.clickEvent(ClickEvent.runCommand("/battle accept " + challengeId));
-
-		Component decline = messageService.component("challenge.decline_label")
-				.hoverEvent(HoverEvent.showText(messageService.component("challenge.decline_hover")))
-				.clickEvent(ClickEvent.runCommand("/battle decline " + challengeId));
-
-		target.sendMessage(header);
 		if (isSmpRisk) {
 			messageService.send(target, "challenge.smp_warning");
 		}
-		target.sendMessage(Component.text("  ").append(accept).append(Component.text(" ")).append(decline));
+		TextComponent acceptBtn = new TextComponent(messageService.component("challenge.accept_label"));
+		acceptBtn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+				"/battle accept " + challengeId));
+		acceptBtn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+				new ComponentBuilder(messageService.component("challenge.accept_hover")).create()));
+		TextComponent declineBtn = new TextComponent(messageService.component("challenge.decline_label"));
+		declineBtn.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND,
+				"/battle decline " + challengeId));
+		declineBtn.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+				new ComponentBuilder(messageService.component("challenge.decline_hover")).create()));
+		target.spigot().sendMessage(new TextComponent("  "), acceptBtn, new TextComponent(" "), declineBtn);
 	}
 
 	// ── Internals ───────────────────────────────────────────────────────────

@@ -463,18 +463,10 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		String BOLD = "\u001B[1m";
 		String RESET = "\u001B[0m";
 		String GREY = "\u001B[90m";
-		String WHITE = "\u001B[97m";
 		String version = getDescription().getVersion();
 
 		getServer().getConsoleSender().sendMessage("");
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ╔═══════════════════════════════════════════╗" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "   ____        ____  ___           __       " + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "  / __ \\__  __/ __ \\/   |  ___  __/ /__  __ " + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + " / /_/ / / / / /_/ / /| | / _ \\/ _  / _ \\/ _/" + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "/ ____/\\/ /\\/ ____/ ___ |/  __/ /_/ /  __/ /  " + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + WHITE + "\\/ \\___/  \\/   /_/  |_|\\___/\\__,_/\\___/_/   " + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ║" + GREY + "           Battles v" + version + "                      " + CYAN + BOLD + "║" + RESET);
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  ╚═══════════════════════════════════════════╝" + RESET);
+		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  PvP Index Battles" + RESET + GREY + " v" + version + RESET);
 		getServer().getConsoleSender().sendMessage("");
 	}
 
@@ -492,7 +484,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		var console = getServer().getConsoleSender();
 		console.sendMessage(CYAN + BOLD + "  ─── Startup Summary ───" + RESET);
 		console.sendMessage("  " + WHITE + "Adapter     " + GREY + "│ " + GREEN + adapter.getClass().getSimpleName() + RESET);
-		console.sendMessage("  " + WHITE + "MC Version  " + GREY + "│ " + GREEN + getServer().getMinecraftVersion() + RESET);
+		console.sendMessage("  " + WHITE + "MC Version  " + GREY + "│ " + GREEN + detectMinecraftVersion() + RESET);
 		console.sendMessage("  " + WHITE + "Server      " + GREY + "│ " + GREEN + configManager.settings().serverId() + RESET);
 		console.sendMessage("  " + WHITE + "Game Modes  " + GREY + "│ " + GREEN + gameModeRegistry.allModes().size() + RESET);
 		console.sendMessage("  " + WHITE + "Kits        " + GREY + "│ " + GREEN + gameModeRegistry.allKits().size() + RESET);
@@ -542,8 +534,20 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		}
 	}
 
+	private String detectMinecraftVersion() {
+		try {
+			return (String) getServer().getClass().getMethod("getMinecraftVersion").invoke(getServer());
+		} catch (Exception e) {
+			// Spigot / non-Paper: parse from Bukkit version string e.g. "git-Spigot-xxx (MC: 1.21.4)"
+			String ver = org.bukkit.Bukkit.getVersion();
+			java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\(MC: ([\\d.]+)\\)").matcher(ver);
+			if (m.find()) return m.group(1);
+			return org.bukkit.Bukkit.getBukkitVersion().split("-")[0];
+		}
+	}
+
 	private com.pvpindex.battles.version.VersionAdapter resolveVersionAdapter() {
-		String mcVersion = getServer().getMinecraftVersion();
+		String mcVersion = detectMinecraftVersion();
 		getLogger().info("Minecraft version: " + mcVersion);
 
 		// Paper API 26.1.x (MC 1.21.4+)

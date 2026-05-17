@@ -80,17 +80,23 @@ public final class ProceduralCrystalArenaStrategy implements WorldGenerationStra
 		world.setSpawnLocation(0, FLOOR_Y + 1, 0);
 		world.setDifficulty(Difficulty.NORMAL);
 		world.setPVP(true);
-		world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-		world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-		world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-		world.setGameRule(GameRule.DO_FIRE_TICK, false);
-		world.setGameRule(GameRule.MOB_GRIEFING, false);
-		world.setGameRule(GameRule.KEEP_INVENTORY, false);
-		world.setGameRule(GameRule.ANNOUNCE_ADVANCEMENTS, false);
-		world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+		applyRule(world, "doDaylightCycle", false);
+		applyRule(world, "doWeatherCycle", false);
+		applyRule(world, "doMobSpawning", false);
+		applyRule(world, "doFireTick", false);
+		applyRule(world, "mobGriefing", false);
+		applyRule(world, "keepInventory", false);
+		applyRule(world, "announceAdvancements", false);
+		applyRule(world, "showDeathMessages", false);
 		world.setTime(6000L);
 		world.setStorm(false);
 		world.setThundering(false);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> void applyRule(World world, String name, T value) {
+		GameRule<T> rule = (GameRule<T>) GameRule.getByName(name);
+		if (rule != null) world.setGameRule(rule, value);
 	}
 
 	private void buildArena(World world) {
