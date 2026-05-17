@@ -69,6 +69,24 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
+        <!-- Adventure: shaded for Spigot compatibility (Spigot doesn't expose Adventure to plugins;
+             Paper's server classloader has it and parent-first delegation means Paper ignores
+             our copy at runtime - no relocation needed). -->
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-api</artifactId>
+            <version>4.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-minimessage</artifactId>
+            <version>4.17.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.kyori</groupId>
+            <artifactId>adventure-text-serializer-legacy</artifactId>
+            <version>4.17.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -119,6 +137,14 @@
                                     <include>org.json:json</include>
                                     <include>com.pvpindex:pvpindex-database</include>
                                     <include>com.zaxxer:HikariCP</include>
+                                    <!-- Adventure (Spigot compat) -->
+                                    <include>net.kyori:adventure-api</include>
+                                    <include>net.kyori:adventure-key</include>
+                                    <include>net.kyori:adventure-text-minimessage</include>
+                                    <include>net.kyori:adventure-text-serializer-legacy</include>
+                                    <include>net.kyori:adventure-text-serializer-plain</include>
+                                    <include>net.kyori:examination-api</include>
+                                    <include>net.kyori:examination-string</include>
                                 </includes>
                             </artifactSet>
                         </configuration>

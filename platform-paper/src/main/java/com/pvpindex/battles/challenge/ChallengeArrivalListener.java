@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -29,7 +30,14 @@ public final class ChallengeArrivalListener implements Listener {
 		this.plugin = plugin;
 		this.challengeManager = challengeManager;
 
-		Bukkit.getScheduler().runTaskTimer(plugin, this::expireStale, 100L, 100L);
+		try {
+			Bukkit.getScheduler().runTaskTimer(plugin, this::expireStale, 100L, 100L);
+		} catch (UnsupportedOperationException ignored) {
+			// Folia: BukkitScheduler is banned; use the async scheduler instead.
+			// expireStale() only touches a ConcurrentHashMap, so async is safe.
+			plugin.getServer().getAsyncScheduler().runAtFixedRate(
+					plugin, ignored2 -> expireStale(), 5_000L, 5_000L, TimeUnit.MILLISECONDS);
+		}
 	}
 
 	/**

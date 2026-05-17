@@ -18,7 +18,15 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-## [1.0.4] - 2026-05-17
+## [1.0.3] - 2026-05-17
+
+### Added
+- **TeamsAPI guard**: optional integration with [TeamsAPI](https://modrinth.com/plugin/teams-api) that prevents players on the same team from challenging each other. Disabled by default (`teams_guard.block_same_team: false`). Requires TeamsAPI + a compatible team plugin on the server; if either is absent, the feature is silently skipped (fail-open).
+- New `TeamsGuardService` class in `platform-paper` — encapsulates the same-team lookup with graceful `NoClassDefFoundError` handling so the plugin loads cleanly whether or not TeamsAPI is on the classpath.
+- `TeamsAPI` added to `softdepend` in `plugin.yml` so Paper loads it before PvPIndex Battles when both plugins are present.
+- New config section `teams_guard` in `config.yml`.
+- New lang keys `challenge.same_team` and `challenge.same_team_target` in all bundled language files (en, de, nl, es, pl, zh).
+- JitPack repository added to parent `pom.xml`; `teams-api:1.5.0` added as a `provided` dependency in `pvpindex-platform-paper`.
 
 ### Fixed
 - **Spigot/Paper/Folia compatibility**: removed all Adventure API calls that are only available on Paper. The plugin now runs on plain Spigot without `NoSuchMethodError` crashes.
@@ -31,18 +39,6 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 - MiniMessage and `&`-style colour codes are still fully supported for config authors: inputs are parsed internally via MiniMessage/LegacyAmpersand and serialised to `§`-prefixed legacy strings before being passed to Bukkit APIs.
 - Enchantment glint on active GUI tabs now uses `item.addUnsafeEnchantment` (an `ItemStack` method, not `ItemMeta`), fixing a compile error against Paper API 1.21.
 - Removed references to `GameRule` fields that do not exist on older Bukkit versions (`FALL_DAMAGE`, `FIRE_DAMAGE`, `FREEZE_DAMAGE`, `DROWNING_DAMAGE`).
-
----
-
-## [1.0.3] - 2026-05-17
-
-### Added
-- **TeamsAPI guard**: optional integration with [TeamsAPI](https://modrinth.com/plugin/teams-api) that prevents players on the same team from challenging each other. Disabled by default (`teams_guard.block_same_team: false`). Requires TeamsAPI + a compatible team plugin on the server; if either is absent, the feature is silently skipped (fail-open).
-- New `TeamsGuardService` class in `platform-paper` — encapsulates the same-team lookup with graceful `NoClassDefFoundError` handling so the plugin loads cleanly whether or not TeamsAPI is on the classpath.
-- `TeamsAPI` added to `softdepend` in `plugin.yml` so Paper loads it before PvPIndex Battles when both plugins are present.
-- New config section `teams_guard` in `config.yml`.
-- New lang keys `challenge.same_team` and `challenge.same_team_target` in all bundled language files (en, de, nl, es, pl, zh).
-- JitPack repository added to parent `pom.xml`; `teams-api:1.5.0` added as a `provided` dependency in `pvpindex-platform-paper`.
 
 ---
 

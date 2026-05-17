@@ -185,7 +185,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		int retryInterval = configManager.settings().persistentRetryIntervalSeconds();
 		if (retryInterval > 0) {
 			long ticks = (long) retryInterval * 20L;
-			getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+			scheduleAsyncRepeating(() -> {
 				int pending = battleService.pendingFailedSubmissionCount();
 				if (pending > 0) {
 					int recovered = battleService.retryFailedSubmissions();
@@ -202,7 +202,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		// crash / force-kill and never confirmed as received by the API.
 		// Runs 30 s after enable to give the server time to fully start up and
 		// establish a stable API connection before hammering it with old data.
-		getServer().getScheduler().runTaskLaterAsynchronously(this, () -> {
+		scheduleAsyncDelayed(() -> {
 			int queued = battleService.syncUnsubmittedBattles(true);
 			if (queued == 0) {
 				getLogger().info("Local battle sync: all battles already submitted, nothing to do.");
@@ -308,11 +308,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			// Proxy heartbeat timer — lets Velocity know this backend is alive.
 			int hbTicks = configManager.settings().proxyHeartbeatIntervalTicks();
 			if (hbTicks > 0) {
-				getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
-						paperMessenger.sendHeartbeat(
-								configManager.settings().serverId(),
-								battleService.activeBattles().size()),
-						hbTicks, hbTicks);
+				scheduleAsyncRepeating(() -> paperMessenger.sendHeartbeat(
+						configManager.settings().serverId(),
+						battleService.activeBattles().size()), hbTicks, hbTicks);
 			}
 			getLogger().info("Velocity proxy messaging enabled (channel=pvpindex:proxy).");
 		}
@@ -370,7 +368,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		// players no longer in any active battle.
 		int cleanupTicks = configManager.settings().cleanupIntervalTicks();
 		if (cleanupTicks > 0) {
-			getServer().getScheduler().runTaskTimer(this, () -> {
+			// Folia does not support sync global tasks; swallow UnsupportedOperationException
+			// and skip the cleanup timer on that platform (concurrent structures self-manage).
+			try { getServer().getScheduler().runTaskTimer(this, () -> {
 				java.util.List<com.pvpindex.battles.battle.BattleSession> active =
 						battleService.activeBattles();
 				int evicted = 0;
@@ -388,6 +388,27 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 					getLogger().info("[Cleanup] Evicted " + evicted + " stale tracking entries.");
 				}
 			}, cleanupTicks, cleanupTicks);
+			} catch (UnsupportedOperationException ignored) {
+				// Folia: fall back to async — safe since these are ConcurrentHashMap evictions
+				scheduleAsyncRepeating(() -> {
+					java.util.List<com.pvpindex.battles.battle.BattleSession> active =
+							battleService.activeBattles();
+					int evicted = 0;
+					if (battleEventListener != null) {
+						evicted += battleEventListener.evictStalePlayers(active);
+					}
+					if (velocityTracker != null) {
+						java.util.Set<java.util.UUID> activePlayers = active.stream()
+								.flatMap(s -> s.getParticipants().stream()
+										.map(com.pvpindex.battles.battle.BattleParticipant::getUuid))
+								.collect(java.util.stream.Collectors.toSet());
+						evicted += velocityTracker.evictInactive(activePlayers);
+					}
+					if (configManager.settings().debug() && evicted > 0) {
+						getLogger().info("[Cleanup] Evicted " + evicted + " stale tracking entries.");
+					}
+				}, cleanupTicks, cleanupTicks);
+			}
 		}
 
 		// Commands
@@ -534,6 +555,33 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		}
 	}
 
+	/**
+	 * Schedule a repeating async task on Spigot/Paper (BukkitScheduler) and fall
+	 * back to the Paper AsyncScheduler on Folia, which bans all BukkitScheduler calls.
+	 */
+	private void scheduleAsyncRepeating(Runnable task, long delayTicks, long periodTicks) {
+		try {
+			getServer().getScheduler().runTaskTimerAsynchronously(this, task, delayTicks, periodTicks);
+		} catch (UnsupportedOperationException e) {
+			getServer().getAsyncScheduler().runAtFixedRate(
+					this, ignored -> task.run(),
+					delayTicks * 50L, periodTicks * 50L, java.util.concurrent.TimeUnit.MILLISECONDS);
+		}
+	}
+
+	/**
+	 * Schedule a one-shot delayed async task, Folia-safe.
+	 */
+	private void scheduleAsyncDelayed(Runnable task, long delayTicks) {
+		try {
+			getServer().getScheduler().runTaskLaterAsynchronously(this, task, delayTicks);
+		} catch (UnsupportedOperationException e) {
+			getServer().getAsyncScheduler().runDelayed(
+					this, ignored -> task.run(),
+					delayTicks * 50L, java.util.concurrent.TimeUnit.MILLISECONDS);
+		}
+	}
+
 	private String detectMinecraftVersion() {
 		try {
 			return (String) getServer().getClass().getMethod("getMinecraftVersion").invoke(getServer());
@@ -550,15 +598,22 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		String mcVersion = detectMinecraftVersion();
 		getLogger().info("Minecraft version: " + mcVersion);
 
-		// Paper API 26.1.x (MC 1.21.4+)
-		try {
-			Class.forName("io.papermc.paper.registry.RegistryAccess");
-			return (com.pvpindex.battles.version.VersionAdapter)
-					Class.forName("com.pvpindex.paper.v1_26_1.Paper2610VersionAdapter")
-							.getDeclaredConstructor().newInstance();
-		} catch (ReflectiveOperationException ignored) {}
+		// Paper 26.1.x uses the new "26.x.y" versioning scheme introduced alongside MC 1.21.4.
+		// Do NOT rely on class detection here: RegistryAccess also ships with Folia/Paper 1.21.4,
+		// which would cause Paper2610VersionAdapter to be loaded on the wrong server, crashing
+		// with NoSuchFieldError (Attribute.MAX_HEALTH doesn't exist in the 1.21.4 API).
+		if (mcVersion.startsWith("26.")) {
+			try {
+				return (com.pvpindex.battles.version.VersionAdapter)
+						Class.forName("com.pvpindex.paper.v1_26_1.Paper2610VersionAdapter")
+								.getDeclaredConstructor().newInstance();
+			} catch (ReflectiveOperationException e) {
+				getLogger().severe("Failed to load Paper 26.1.x adapter: " + e.getMessage());
+				return null;
+			}
+		}
 
-		// Paper 1.21.x
+		// Paper 1.21.x / Folia 1.21.x / Spigot 1.21.x
 		try {
 			Class.forName("org.bukkit.Registry");
 			return (com.pvpindex.battles.version.VersionAdapter)

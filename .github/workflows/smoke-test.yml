@@ -1,0 +1,231 @@
+name: Smoke Test
+
+# Verify the plugin starts cleanly on Paper 1.21.1, Paper 26.1.2, Folia, and
+# Spigot for every PR targeting main. Tests both Java 21 (LTS) and Java 25
+# (current LTS); Paper 26.1.2 requires Java 25 and is excluded from the Java 21
+# matrix row.
+
+on:
+  pull_request:
+    branches: [main]
+
+env:
+  MC_VERSION: "1.21.1"
+  FOLIA_VERSION: "1.21.4"    # Folia skipped 1.21.1–1.21.3; earliest 1.21.x Folia release
+  PAPER_261_VERSION: "26.1.2" # New MC versioning scheme; uses fill.papermc.io API
+  SPIGOT_VERSION: "1.21.11"   # 1.21.11 is the minimum Spigot version that supports Java 25
+
+jobs:
+
+  # ── 1. Build the shaded plugin JAR once with JDK 25 ────────────────────────
+  build:
+    name: Build plugin JAR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: 25
+          distribution: temurin
+          cache: maven
+
+      - name: Build plugin (full reactor, skip tests)
+        run: mvn clean package -B -DskipTests -q
+
+      - name: Upload plugin JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-jar
+          # exclude the pre-shade original-*.jar created by maven-shade-plugin
+          path: |
+            bootstrap-paper/target/PvPIndexBattles-*.jar
+            !bootstrap-paper/target/original-PvPIndexBattles-*.jar
+          if-no-files-found: error
+          retention-days: 1
+
+  # ── 2. Matrix smoke test: 3 server types × 2 Java versions ─────────────────
+  smoke:
+    name: "${{ matrix.server }} / Java ${{ matrix.java }}"
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [21, 25]
+        server: [paper, folia, paper-261, spigot]
+        exclude:
+          - server: paper-261
+            java: 21  # Paper 26.1.2 requires Java 25+
+
+    steps:
+      - name: Set up Java ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+
+      - name: Download plugin JAR
+        uses: actions/download-artifact@v4
+        with:
+          name: plugin-jar
+          path: plugin
+
+      - name: Locate plugin JAR
+        id: jar
+        run: |
+          JAR=$(ls plugin/*.jar | grep -v 'original-' | head -1)
+          echo "path=$JAR" >> "$GITHUB_OUTPUT"
+          echo "Using JAR: $JAR"
+
+      # ── Paper ─────────────────────────────────────────────────────────────
+      - name: Download Paper ${{ env.MC_VERSION }}
+        if: matrix.server == 'paper'
+        run: |
+          BUILD=$(curl -sf \
+            "https://api.papermc.io/v2/projects/paper/versions/${MC_VERSION}/builds" \
+            | jq -r '.builds[-1].build')
+          curl -sfLo server.jar \
+            "https://api.papermc.io/v2/projects/paper/versions/${MC_VERSION}/builds/${BUILD}/downloads/paper-${MC_VERSION}-${BUILD}.jar"
+          echo "Paper build: $BUILD"
+
+      # ── Folia ─────────────────────────────────────────────────────────────
+      - name: Download Folia ${{ env.FOLIA_VERSION }}
+        if: matrix.server == 'folia'
+        run: |
+          BUILD=$(curl -sf \
+            "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds" \
+            | jq -r '.builds[-1].build')
+          curl -sfLo server.jar \
+            "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${BUILD}/downloads/folia-${FOLIA_VERSION}-${BUILD}.jar"
+          echo "Folia build: $BUILD"
+
+      # ── Paper 26.1.2 (new MC versioning; uses fill.papermc.io, not api.papermc.io) ─
+      - name: Download Paper ${{ env.PAPER_261_VERSION }}
+        if: matrix.server == 'paper-261'
+        run: |
+          URL=$(curl -sf \
+            "https://fill.papermc.io/v3/projects/paper/versions/${PAPER_261_VERSION}/builds" \
+            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url')
+          curl -sfLo server.jar "$URL"
+          echo "Paper 26.1.2 URL: $URL"
+
+      # ── Spigot (built via BuildTools; result cached by Spigot version) ───────
+      # Use Java 21 for BuildTools regardless of matrix.java (BuildTools is
+      # strict about the build JVM), then restore the matrix Java so we
+      # validate the plugin runs on the requested JVM.
+      - name: Set up Java 21 for Spigot BuildTools
+        if: matrix.server == 'spigot'
+        uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Cache Spigot ${{ env.SPIGOT_VERSION }}
+        if: matrix.server == 'spigot'
+        id: spigot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/spigot-jar
+          key: spigot-${{ env.SPIGOT_VERSION }}-buildtools-v1
+
+      - name: Build Spigot via BuildTools
+        if: matrix.server == 'spigot' && steps.spigot-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 25
+        run: |
+          mkdir -p ~/spigot-jar buildtools
+          cd buildtools
+          curl -sfLo BuildTools.jar \
+            "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
+          "$JAVA_HOME_21_X64/bin/java" -jar BuildTools.jar --rev "$SPIGOT_VERSION" --nogui
+          cp "spigot-${SPIGOT_VERSION}.jar" "$HOME/spigot-jar/"
+
+      - name: Restore matrix Java ${{ matrix.java }}
+        if: matrix.server == 'spigot'
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: temurin
+
+      - name: Use Spigot JAR
+        if: matrix.server == 'spigot'
+        run: cp "$HOME/spigot-jar/spigot-${SPIGOT_VERSION}.jar" server.jar
+
+      # ── Smoke test ────────────────────────────────────────────────────────
+      - name: Run smoke test
+        timeout-minutes: 5
+        run: |
+          mkdir -p server/plugins
+          cp "${{ steps.jar.outputs.path }}" server/plugins/
+
+          # Pre-accept EULA and disable online-mode so the server doesn't
+          # contact Mojang auth services during the headless startup check.
+          printf 'eula=true\n'         > server/eula.txt
+          printf 'online-mode=false\n' > server/server.properties
+
+          cd server
+          java -Xmx512M -Xms256M -jar ../server.jar --nogui \
+            < /dev/null > server.log 2>&1 &
+          SERVER_PID=$!
+
+          echo "Started PID=$SERVER_PID  server=${{ matrix.server }}  java=${{ matrix.java }}"
+
+          # Poll up to 120 s for a conclusive result
+          FAIL_PAT="NoSuchMethodError|NoSuchFieldError|Error enabling plugin PvPIndexBattles|Error occurred while enabling PvPIndexBattles"
+          RESULT=timeout
+          for i in $(seq 1 120); do
+            sleep 1
+            # Hard failures — API incompatibility or onEnable exception
+            if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
+              RESULT=fail
+              break
+            fi
+            # Server fully started → all plugins have been enabled without errors.
+            # Checking "Done (" is more reliable than "Enabling PvPIndexBattles"
+            # because some server variants (e.g. Paper 26.1) load worlds before
+            # enabling plugins, so "Enabling" can appear late.
+            if grep -qE "Done \([0-9.]" server.log 2>/dev/null; then
+              if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
+                RESULT=fail
+              else
+                RESULT=pass
+              fi
+              break
+            fi
+            # "Enabling" logged — wait 5 more seconds for any delayed crash before
+            # declaring pass (Folia errors can arrive after the enabling message).
+            if grep -q "Enabling PvPIndexBattles" server.log 2>/dev/null; then
+              sleep 5
+              if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
+                RESULT=fail
+              else
+                RESULT=pass
+              fi
+              break
+            fi
+          done
+
+          # SIGKILL guarantees the JVM exits immediately — SIGTERM can block for
+          # minutes on servers mid-way through world saves or chunk generation.
+          kill -9 "$SERVER_PID" 2>/dev/null || true
+          wait "$SERVER_PID" 2>/dev/null || true
+
+          echo ""
+          echo "=== Error context in server.log ==="
+          grep -n -B1 -A25 -E "Error occurred while enabling|Error enabling plugin|NoSuchMethodError|NoSuchFieldError" server.log | head -80 || true
+          echo ""
+          echo "=== Last 100 lines of server.log ==="
+          tail -100 server.log
+          echo "====================================="
+          echo ""
+
+          if [ "$RESULT" = "pass" ]; then
+            echo "PASS: PvPIndexBattles enabled on ${{ matrix.server }} / Java ${{ matrix.java }}"
+          elif [ "$RESULT" = "fail" ]; then
+            echo "FAIL: Plugin threw an error during startup"
+            exit 1
+          else
+            echo "FAIL: Timed out — PvPIndexBattles never appeared in server.log within 120 s"
+            exit 1
+          fi

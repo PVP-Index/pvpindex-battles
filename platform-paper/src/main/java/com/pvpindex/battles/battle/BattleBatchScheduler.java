@@ -5,9 +5,9 @@ import com.pvpindex.battles.api.PvPIndexApiClient.PostResult;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Sends a compact heartbeat payload for all currently active battles to
@@ -29,7 +29,7 @@ public final class BattleBatchScheduler {
     private final int maxBatchSize;
     private final boolean debug;
 
-    private BukkitTask task;
+    private Runnable cancelTask;
     /** Set to true after the first 404 so we stop sending pointless requests. */
     private volatile boolean endpointUnavailable = false;
 
@@ -53,16 +53,24 @@ public final class BattleBatchScheduler {
      * @param flushIntervalTicks ticks between flushes (20 ticks = 1 second)
      */
     public void start(long flushIntervalTicks) {
-        if (task != null) return;
+        if (cancelTask != null) return;
         long period = Math.max(1L, flushIntervalTicks);
-        task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::flush, period, period);
+        try {
+            var t = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::flush, period, period);
+            cancelTask = t::cancel;
+        } catch (UnsupportedOperationException e) {
+            // Folia: BukkitScheduler is not supported; use the async scheduler instead.
+            var st = plugin.getServer().getAsyncScheduler().runAtFixedRate(
+                    plugin, ignored -> flush(), period * 50L, period * 50L, TimeUnit.MILLISECONDS);
+            cancelTask = st::cancel;
+        }
     }
 
     /** Stop the heartbeat timer. Safe to call when already stopped. */
     public void stop() {
-        if (task != null) {
-            task.cancel();
-            task = null;
+        if (cancelTask != null) {
+            cancelTask.run();
+            cancelTask = null;
         }
     }
 

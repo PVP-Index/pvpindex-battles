@@ -173,7 +173,12 @@ public final class ArenaPoolService {
             if (isCopy) {
                 Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
             } else {
-                Bukkit.getScheduler().runTask(plugin, task);
+                // Folia does not support sync global tasks; fall back to GlobalRegionScheduler.
+                try {
+                    Bukkit.getScheduler().runTask(plugin, task);
+                } catch (UnsupportedOperationException e) {
+                    plugin.getServer().getGlobalRegionScheduler().run(plugin, ignored -> task.run());
+                }
             }
         } else {
             task.run();
