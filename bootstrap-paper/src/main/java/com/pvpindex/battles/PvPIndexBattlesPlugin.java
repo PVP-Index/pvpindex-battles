@@ -598,15 +598,22 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		String mcVersion = detectMinecraftVersion();
 		getLogger().info("Minecraft version: " + mcVersion);
 
-		// Paper API 26.1.x (MC 1.21.4+)
-		try {
-			Class.forName("io.papermc.paper.registry.RegistryAccess");
-			return (com.pvpindex.battles.version.VersionAdapter)
-					Class.forName("com.pvpindex.paper.v1_26_1.Paper2610VersionAdapter")
-							.getDeclaredConstructor().newInstance();
-		} catch (ReflectiveOperationException ignored) {}
+		// Paper 26.1.x uses the new "26.x.y" versioning scheme introduced alongside MC 1.21.4.
+		// Do NOT rely on class detection here: RegistryAccess also ships with Folia/Paper 1.21.4,
+		// which would cause Paper2610VersionAdapter to be loaded on the wrong server, crashing
+		// with NoSuchFieldError (Attribute.MAX_HEALTH doesn't exist in the 1.21.4 API).
+		if (mcVersion.startsWith("26.")) {
+			try {
+				return (com.pvpindex.battles.version.VersionAdapter)
+						Class.forName("com.pvpindex.paper.v1_26_1.Paper2610VersionAdapter")
+								.getDeclaredConstructor().newInstance();
+			} catch (ReflectiveOperationException e) {
+				getLogger().severe("Failed to load Paper 26.1.x adapter: " + e.getMessage());
+				return null;
+			}
+		}
 
-		// Paper 1.21.x
+		// Paper 1.21.x / Folia 1.21.x / Spigot 1.21.x
 		try {
 			Class.forName("org.bukkit.Registry");
 			return (com.pvpindex.battles.version.VersionAdapter)
