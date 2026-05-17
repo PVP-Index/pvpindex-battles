@@ -155,20 +155,24 @@ jobs:
           echo "Started PID=$SERVER_PID  server=${{ matrix.server }}  java=${{ matrix.java }}"
 
           # Poll up to 120 s for a conclusive result
+          FAIL_PAT="NoSuchMethodError|NoSuchFieldError|Error enabling plugin PvPIndexBattles|Error occurred while enabling PvPIndexBattles"
           RESULT=timeout
           for i in $(seq 1 120); do
             sleep 1
             # Hard failures — API incompatibility or onEnable exception
-            if grep -qE \
-              "NoSuchMethodError|NoSuchFieldError|Error enabling plugin PvPIndexBattles|Error occurred while enabling PvPIndexBattles" \
-              server.log 2>/dev/null
-            then
+            if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
               RESULT=fail
               break
             fi
-            # Success — Bukkit logged the enabling line
+            # "Enabling" logged — wait 5 more seconds for any delayed crash before
+            # declaring pass (Folia errors can arrive after the enabling message).
             if grep -q "Enabling PvPIndexBattles" server.log 2>/dev/null; then
-              RESULT=pass
+              sleep 5
+              if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
+                RESULT=fail
+              else
+                RESULT=pass
+              fi
               break
             fi
           done
