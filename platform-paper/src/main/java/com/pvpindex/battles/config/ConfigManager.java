@@ -71,7 +71,9 @@ public class ConfigManager {
 				// Velocity proxy integration
 				cfg.getBoolean("proxy.enabled", false),
 				cfg.getString("proxy.secret", ""),
-				Math.max(1, cfg.getInt("proxy.heartbeat_interval_ticks", 200))
+				Math.max(1, cfg.getInt("proxy.heartbeat_interval_ticks", 200)),
+				// TeamsAPI guard
+				cfg.getBoolean("teams_guard.block_same_team", false)
 		);
 
         replaySettings = new ReplaySettings(

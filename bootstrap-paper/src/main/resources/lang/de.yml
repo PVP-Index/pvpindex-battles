@@ -60,6 +60,8 @@ challenge:
   invalid_id: "&cUngueltige Herausforderungs-ID."
   smp_warning: "&c&lWARNUNG: &eDies ist ein SMP-Kampf! Wenn du verlierst, &c&ldropst du alle deine Items &eund der Gewinner kann sie aufsammeln. Moechtest du fortfahren?"
   gui_hint: "&7Verwende /battle challenge <Spieler> um eine Herausforderung zu starten."
+  same_team: "&cDu kannst kein Teammitglied herausfordern."
+  same_team_target: "&c%player% hat versucht, dich herauszufordern, aber ihr seid im selben Team."
 
 replay:
   exported: "&aReplay exportiert: %file%"

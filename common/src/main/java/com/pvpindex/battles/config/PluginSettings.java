@@ -38,5 +38,7 @@ public record PluginSettings(
         // Velocity proxy integration
         boolean proxyEnabled,
         String proxySecret,
-        int proxyHeartbeatIntervalTicks
+        int proxyHeartbeatIntervalTicks,
+        // TeamsAPI guard
+        boolean teamsGuardEnabled
 ) {}

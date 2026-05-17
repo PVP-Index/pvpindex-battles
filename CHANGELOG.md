@@ -18,6 +18,18 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.3] - 2026-05-17
+
+### Added
+- **TeamsAPI guard**: optional integration with [TeamsAPI](https://modrinth.com/plugin/teams-api) that prevents players on the same team from challenging each other. Disabled by default (`teams_guard.block_same_team: false`). Requires TeamsAPI + a compatible team plugin on the server; if either is absent, the feature is silently skipped (fail-open).
+- New `TeamsGuardService` class in `platform-paper` — encapsulates the same-team lookup with graceful `NoClassDefFoundError` handling so the plugin loads cleanly whether or not TeamsAPI is on the classpath.
+- `TeamsAPI` added to `softdepend` in `plugin.yml` so Paper loads it before PvPIndex Battles when both plugins are present.
+- New config section `teams_guard` in `config.yml`.
+- New lang keys `challenge.same_team` and `challenge.same_team_target` in all bundled language files (en, de, nl, es, pl, zh).
+- JitPack repository added to parent `pom.xml`; `teams-api:1.5.0` added as a `provided` dependency in `pvpindex-platform-paper`.
+
+---
+
 ## [1.0.2] - 2026-05-05
 
 ### Added
@@ -124,7 +136,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/PVP-Index/pvpindex-battles/releases/tag/v1.0.0

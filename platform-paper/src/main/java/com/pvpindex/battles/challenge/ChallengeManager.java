@@ -7,6 +7,7 @@ import com.pvpindex.battles.messaging.NetworkPlayerCache;
 import com.pvpindex.battles.messaging.PaperMessenger;
 import com.pvpindex.battles.network.ChallengeSyncService;
 import com.pvpindex.battles.queue.BattleQueueService;
+import com.pvpindex.battles.teams.TeamsGuardService;
 import com.pvpindex.battles.util.DebugLogger;
 import com.pvpindex.battles.util.MessageService;
 import java.time.Instant;
@@ -53,6 +54,7 @@ public final class ChallengeManager {
 	private NetworkPlayerCache lobbyPlayerCache;
 	private com.pvpindex.battles.network.TransferRequester transferRequester;
 	private String velocityServerName;
+	private TeamsGuardService teamsGuard;
 
 	public ChallengeManager(JavaPlugin plugin, PaperMessenger paperMessenger,
 			BattleQueueService queueService, GameModeRegistry gameModeRegistry,
@@ -72,6 +74,10 @@ public final class ChallengeManager {
 
 	public void setArrivalListener(ChallengeArrivalListener arrivalListener) {
 		this.arrivalListener = arrivalListener;
+	}
+
+	public void setTeamsGuard(TeamsGuardService teamsGuard) {
+		this.teamsGuard = teamsGuard;
 	}
 
 	/**
@@ -107,6 +113,18 @@ public final class ChallengeManager {
 		if (hasOutgoing(challenger.getUniqueId(), targetName)) {
 			messageService.send(challenger, "challenge.already_pending");
 			return;
+		}
+
+		// TeamsAPI guard — block same-team challenges when enabled (standalone only;
+		// cross-server challenges are re-checked in startBattle when both UUIDs are known).
+		if (teamsGuard != null && teamsGuard.isEnabled()) {
+			Player localTarget = Bukkit.getPlayerExact(targetName);
+			if (localTarget != null && localTarget.isOnline()) {
+				if (teamsGuard.isSameTeam(challenger.getUniqueId(), localTarget.getUniqueId())) {
+					messageService.send(challenger, "challenge.same_team");
+					return;
+				}
+			}
 		}
 
 		UUID challengeId = UUID.randomUUID();
@@ -332,6 +350,15 @@ public final class ChallengeManager {
 		if (modeOpt.isEmpty()) {
 			messageService.send(challenger, "challenge.unknown_mode", "%mode%", modeId);
 			messageService.send(target, "challenge.unknown_mode", "%mode%", modeId);
+			return;
+		}
+
+		// TeamsAPI guard — final check with both UUIDs known (covers all modes).
+		if (teamsGuard != null && teamsGuard.isSameTeam(challengerUuid, targetUuid)) {
+			messageService.send(challenger, "challenge.same_team");
+			messageService.send(target, "challenge.same_team_target", "%player%", challenger.getName());
+			debug.logChallenge("SAME_TEAM_BLOCKED", null,
+					challenger.getName() + " vs " + target.getName());
 			return;
 		}
 

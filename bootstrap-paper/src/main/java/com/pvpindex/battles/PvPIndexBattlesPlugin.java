@@ -57,6 +57,7 @@ import com.pvpindex.battles.world.SchematicLoader;
 import com.pvpindex.battles.world.SchematicStrategy;
 import com.pvpindex.battles.world.WorldCopyStrategy;
 import com.pvpindex.battles.world.WorldGeneratorService;
+import com.pvpindex.battles.teams.TeamsGuardService;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -342,6 +343,14 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		if (lobbyNetworkService != null && lobbyNetworkService.isActive()) {
 			challengeManager.setLobbyServices(lobbyNetworkService.challengeSync(), networkPlayerCache,
 					lobbyNetworkService.transfers(), configManager.lobbySettings().velocityServerName());
+		}
+
+		// TeamsAPI guard — optional, disabled by default
+		TeamsGuardService teamsGuard = new TeamsGuardService(
+				configManager.settings().teamsGuardEnabled(), getLogger());
+		challengeManager.setTeamsGuard(teamsGuard);
+		if (teamsGuard.isEnabled()) {
+			getLogger().info("TeamsAPI guard enabled: same-team challenges will be blocked.");
 		}
 		battleGuiCommand.setChallengeManager(challengeManager);
 		battleGuiListener.setChallengeManager(challengeManager);

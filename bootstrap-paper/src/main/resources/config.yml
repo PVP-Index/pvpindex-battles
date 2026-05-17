@@ -206,3 +206,11 @@ proxy:
   secret: ""
   # How often (in ticks) to send a heartbeat to the proxy (0 to disable).
   heartbeat_interval_ticks: 200
+
+# ─── TeamsAPI guard ───────────────────────────────────────────────────────────
+# Optional integration with TeamsAPI (https://modrinth.com/plugin/teams-api).
+# When enabled, players on the same team cannot challenge each other.
+# Requires the TeamsAPI plugin and a compatible team plugin on the server.
+# If TeamsAPI is absent or no provider is registered, this setting has no effect.
+teams_guard:
+  block_same_team: false

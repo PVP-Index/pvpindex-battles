@@ -60,6 +60,8 @@ challenge:
   invalid_id: "&cOngeldig uitdaging-ID."
   smp_warning: "&c&lWAARSCHUWING: &eDit is een SMP-gevecht! Als je verliest, &c&ldrop je al je items &een de winnaar kan ze pakken. Wil je doorgaan?"
   gui_hint: "&7Gebruik /battle challenge <speler> om een uitdaging te starten."
+  same_team: "&cJe kunt geen teamgenoot uitdagen."
+  same_team_target: "&c%player% probeerde je uit te dagen, maar jullie zitten in hetzelfde team."
 
 replay:
   exported: "&aReplay geexporteerd: %file%"

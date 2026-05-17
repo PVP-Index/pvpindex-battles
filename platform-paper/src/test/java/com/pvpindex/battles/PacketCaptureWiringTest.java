@@ -175,7 +175,8 @@ class PacketCaptureWiringTest {
                 false, 0.1, 2,
                 false, 40, 20,
                 100,
-                false, "", 0
+                false, "", 0,
+                false
         );
     }
 }

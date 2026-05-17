@@ -1,9 +1,9 @@
 name: PvPIndexBattles
-version: 1.0.2
+version: 1.0.3
 main: com.pvpindex.battles.PvPIndexBattlesPlugin
 api-version: '1.21'
 authors: [PvPIndex]
-softdepend: [PlaceholderAPI]
+softdepend: [PlaceholderAPI, TeamsAPI]
 commands:
   pvpindex:
     description: PvPIndex battle command root
