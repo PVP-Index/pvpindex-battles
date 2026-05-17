@@ -198,6 +198,9 @@ jobs:
           wait "$SERVER_PID" 2>/dev/null || true
 
           echo ""
+          echo "=== Error context in server.log ==="
+          grep -n -B1 -A25 -E "Error occurred while enabling|Error enabling plugin|NoSuchMethodError|NoSuchFieldError" server.log | head -80 || true
+          echo ""
           echo "=== Last 100 lines of server.log ==="
           tail -100 server.log
           echo "====================================="

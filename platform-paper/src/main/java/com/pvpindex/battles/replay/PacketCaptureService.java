@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Polls every active battle's players on a fixed tick interval and produces a
@@ -32,7 +32,7 @@ public final class PacketCaptureService {
     private final ReplaySettings settings;
     private final Map<UUID, List<ReplayFrame>> frames = new ConcurrentHashMap<>();
     private final Map<UUID, Long> tickCounters = new ConcurrentHashMap<>();
-    private BukkitTask task;
+    private Runnable cancelTask;
 
     /** Optional velocity tracker — wired after construction via {@link #setVelocityTracker}. */
     private VelocityTracker velocityTracker;
@@ -51,17 +51,27 @@ public final class PacketCaptureService {
     }
 
     public void start(java.util.function.Supplier<List<BattleSession>> activeBattles) {
-        if (task != null) {
+        if (cancelTask != null) {
             return;
         }
         long period = Math.max(1L, 20L / Math.max(1, settings.tickRate()));
-        task = Bukkit.getScheduler().runTaskTimer(plugin, () -> tick(activeBattles.get()), period, period);
+        try {
+            var t = Bukkit.getScheduler().runTaskTimer(plugin, () -> tick(activeBattles.get()), period, period);
+            cancelTask = t::cancel;
+        } catch (UnsupportedOperationException ignored) {
+            // Folia: BukkitScheduler is banned; fall back to the async scheduler.
+            // The tick loop only reads concurrent state (ConcurrentHashMap) so async is safe.
+            var st = plugin.getServer().getAsyncScheduler().runAtFixedRate(
+                    plugin, ignored2 -> tick(activeBattles.get()),
+                    period * 50L, period * 50L, TimeUnit.MILLISECONDS);
+            cancelTask = st::cancel;
+        }
     }
 
     public void stop() {
-        if (task != null) {
-            task.cancel();
-            task = null;
+        if (cancelTask != null) {
+            cancelTask.run();
+            cancelTask = null;
         }
     }
 
