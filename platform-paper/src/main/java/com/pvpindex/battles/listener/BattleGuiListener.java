@@ -12,8 +12,8 @@ import com.pvpindex.battles.util.MessageService;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -64,12 +64,12 @@ public class BattleGuiListener implements Listener {
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (!(event.getWhoClicked() instanceof Player player)) return;
 
-		if (guiConfig.confirmationTitle().equals(event.getView().title())) {
+		if (guiConfig.confirmationTitle().equals(event.getView().getTitle())) {
 			handleConfirmationClick(event, player);
 			return;
 		}
 
-		if (!guiConfig.battleTitle().equals(event.getView().title())) return;
+		if (!guiConfig.battleTitle().equals(event.getView().getTitle())) return;
 
 		event.setCancelled(true);
 
@@ -80,7 +80,7 @@ public class BattleGuiListener implements Listener {
 
 		if (type == guiConfig.closeMaterial() || type == guiConfig.leaveMaterial()) {
 			String name = plainName(clicked);
-			String closeName = PlainTextComponentSerializer.plainText().serialize(guiConfig.closeName());
+			String closeName = ChatColor.stripColor(guiConfig.closeName());
 			if (closeName.equals(name)) {
 				player.closeInventory();
 			} else {
@@ -135,10 +135,10 @@ public class BattleGuiListener implements Listener {
 
 		String name = plainName(clicked);
 		if (name != null) {
-			String queueLabel = PlainTextComponentSerializer.plainText().serialize(guiConfig.queueTabActive());
-			String challengeLabel = PlainTextComponentSerializer.plainText().serialize(guiConfig.challengeTabActive());
-			String queueInactiveLabel = PlainTextComponentSerializer.plainText().serialize(guiConfig.queueTabInactive());
-			String challengeInactiveLabel = PlainTextComponentSerializer.plainText().serialize(guiConfig.challengeTabInactive());
+			String queueLabel = ChatColor.stripColor(guiConfig.queueTabActive());
+			String challengeLabel = ChatColor.stripColor(guiConfig.challengeTabActive());
+			String queueInactiveLabel = ChatColor.stripColor(guiConfig.queueTabInactive());
+			String challengeInactiveLabel = ChatColor.stripColor(guiConfig.challengeTabInactive());
 
 			if (name.equals(queueLabel) || name.equals(queueInactiveLabel)) {
 				guiCommand.guiStates().put(player.getUniqueId(),
@@ -194,8 +194,8 @@ public class BattleGuiListener implements Listener {
 		ItemStack infoItem = new ItemStack(guiConfig.confirmInfoMaterial());
 		ItemMeta infoMeta = infoItem.getItemMeta();
 		if (infoMeta != null) {
-			infoMeta.displayName(guiConfig.confirmInfoName());
-			infoMeta.lore(guiConfig.confirmInfoLore());
+			infoMeta.setDisplayName(guiConfig.confirmInfoName());
+			infoMeta.setLore(guiConfig.confirmInfoLore());
 			infoItem.setItemMeta(infoMeta);
 		}
 		inv.setItem(guiConfig.confirmInfoSlot(), infoItem);
@@ -204,8 +204,8 @@ public class BattleGuiListener implements Listener {
 		ItemStack yesItem = new ItemStack(guiConfig.confirmYesMaterial());
 		ItemMeta yesMeta = yesItem.getItemMeta();
 		if (yesMeta != null) {
-			yesMeta.displayName(guiConfig.confirmYesName());
-			yesMeta.lore(guiConfig.confirmYesLore());
+			yesMeta.setDisplayName(guiConfig.confirmYesName());
+			yesMeta.setLore(guiConfig.confirmYesLore());
 			yesItem.setItemMeta(yesMeta);
 		}
 		inv.setItem(guiConfig.confirmYesSlot(), yesItem);
@@ -214,8 +214,8 @@ public class BattleGuiListener implements Listener {
 		ItemStack cancelItem = new ItemStack(guiConfig.confirmCancelMaterial());
 		ItemMeta cancelMeta = cancelItem.getItemMeta();
 		if (cancelMeta != null) {
-			cancelMeta.displayName(guiConfig.confirmCancelName());
-			cancelMeta.lore(guiConfig.confirmCancelLore());
+			cancelMeta.setDisplayName(guiConfig.confirmCancelName());
+			cancelMeta.setLore(guiConfig.confirmCancelLore());
 			cancelItem.setItemMeta(cancelMeta);
 		}
 		inv.setItem(guiConfig.confirmCancelSlot(), cancelItem);
@@ -226,14 +226,14 @@ public class BattleGuiListener implements Listener {
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player player)) return;
-		if (guiConfig.battleTitle().equals(event.getView().title())) {
+		if (guiConfig.battleTitle().equals(event.getView().getTitle())) {
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
 			if (state != null && state.pendingConfirmationModeId() != null) {
 				return;
 			}
 			guiCommand.guiStates().remove(player.getUniqueId());
 		}
-		if (guiConfig.confirmationTitle().equals(event.getView().title())) {
+		if (guiConfig.confirmationTitle().equals(event.getView().getTitle())) {
 			guiCommand.guiStates().remove(player.getUniqueId());
 		}
 	}
@@ -241,6 +241,6 @@ public class BattleGuiListener implements Listener {
 	private static String plainName(ItemStack item) {
 		ItemMeta meta = item.getItemMeta();
 		if (meta == null || !meta.hasDisplayName()) return null;
-		return PlainTextComponentSerializer.plainText().serialize(meta.displayName());
+		return ChatColor.stripColor(meta.getDisplayName());
 	}
 }

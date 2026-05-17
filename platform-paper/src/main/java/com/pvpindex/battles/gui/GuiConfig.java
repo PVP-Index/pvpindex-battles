@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
@@ -21,15 +19,17 @@ import org.bukkit.configuration.file.YamlConfiguration;
  */
 public final class GuiConfig {
 
-	private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+	private static final MiniMessage MINI = MiniMessage.miniMessage();
+	private static final LegacyComponentSerializer LEGACY_AMP = LegacyComponentSerializer.legacyAmpersand();
+	private static final LegacyComponentSerializer LEGACY_SECTION = LegacyComponentSerializer.legacySection();
 
 	// ── Battle GUI ──────────────────────────────────────────────────────────
-	private Component battleTitle;
+	private String battleTitle;
 	private int battleRows;
 
 	private Material titleMaterial;
-	private Component titleQueueName;
-	private Component titleChallengeName;
+	private String titleQueueName;
+	private String titleChallengeName;
 	private int titleSlot;
 
 	private int modeSlotStart;
@@ -39,34 +39,34 @@ public final class GuiConfig {
 	private String clickLine;
 
 	private Material queueTabMaterial;
-	private Component queueTabActive;
-	private Component queueTabInactive;
+	private String queueTabActive;
+	private String queueTabInactive;
 	private int queueTabSlot;
 
 	private Material challengeTabMaterial;
-	private Component challengeTabActive;
-	private Component challengeTabInactive;
+	private String challengeTabActive;
+	private String challengeTabInactive;
 	private int challengeTabSlot;
 
 	private Material activeBattlesMaterial;
-	private Component activeBattlesName;
+	private String activeBattlesName;
 	private String activeBattlesLoreFormat;
 	private int activeBattlesSlot;
 
 	private Material leaveMaterial;
-	private Component leaveName;
-	private List<Component> leaveLore;
+	private String leaveName;
+	private List<String> leaveLore;
 	private int leaveSlot;
 
 	private Material closeMaterial;
-	private Component closeName;
+	private String closeName;
 	private int closeSlot;
 
 	private Map<String, Material> modeIcons;
 	private Material defaultIcon;
 
 	// ── Challenge GUI ───────────────────────────────────────────────────────
-	private Component challengeTitle;
+	private String challengeTitle;
 	private int challengeRows;
 
 	private Material acceptMaterial;
@@ -87,22 +87,22 @@ public final class GuiConfig {
 	private int challengeTimeoutSeconds;
 
 	// ── Confirmation GUI (SMP risk warning) ─────────────────────────────────
-	private Component confirmationTitle;
+	private String confirmationTitle;
 	private int confirmationRows;
 
 	private Material confirmInfoMaterial;
-	private Component confirmInfoName;
-	private List<Component> confirmInfoLore;
+	private String confirmInfoName;
+	private List<String> confirmInfoLore;
 	private int confirmInfoSlot;
 
 	private Material confirmYesMaterial;
-	private Component confirmYesName;
-	private List<Component> confirmYesLore;
+	private String confirmYesName;
+	private List<String> confirmYesLore;
 	private int confirmYesSlot;
 
 	private Material confirmCancelMaterial;
-	private Component confirmCancelName;
-	private List<Component> confirmCancelLore;
+	private String confirmCancelName;
+	private List<String> confirmCancelLore;
 	private int confirmCancelSlot;
 
 	private GuiConfig() {}
@@ -125,14 +125,11 @@ public final class GuiConfig {
 
 	public static GuiConfig defaults() {
 		GuiConfig cfg = new GuiConfig();
-		cfg.battleTitle = Component.text()
-				.append(Component.text("\u2694 ", NamedTextColor.DARK_GRAY))
-				.append(Component.text("Battle Queue", NamedTextColor.WHITE))
-				.build();
+		cfg.battleTitle = parse("&8\u2694 &fBattle Queue");
 		cfg.battleRows = 6;
 		cfg.titleMaterial = Material.NETHER_STAR;
-		cfg.titleQueueName = Component.text("Battle Queue", NamedTextColor.GOLD, TextDecoration.BOLD);
-		cfg.titleChallengeName = Component.text("Challenge Mode", NamedTextColor.GOLD, TextDecoration.BOLD);
+		cfg.titleQueueName = parse("&6&lBattle Queue");
+		cfg.titleChallengeName = parse("&6&lChallenge Mode");
 		cfg.titleSlot = 4;
 		cfg.modeSlotStart = 9;
 		cfg.modeSlotEnd = 35;
@@ -141,30 +138,30 @@ public final class GuiConfig {
 		cfg.clickLine = "&aClick to select";
 
 		cfg.queueTabMaterial = Material.GOLD_BLOCK;
-		cfg.queueTabActive = Component.text("Queue", NamedTextColor.GREEN, TextDecoration.BOLD);
-		cfg.queueTabInactive = Component.text("Queue", NamedTextColor.GRAY, TextDecoration.BOLD);
+		cfg.queueTabActive = parse("&a&lQueue");
+		cfg.queueTabInactive = parse("&7&lQueue");
 		cfg.queueTabSlot = 36;
 		cfg.challengeTabMaterial = Material.DIAMOND_SWORD;
-		cfg.challengeTabActive = Component.text("Challenge", NamedTextColor.GREEN, TextDecoration.BOLD);
-		cfg.challengeTabInactive = Component.text("Challenge", NamedTextColor.GRAY, TextDecoration.BOLD);
+		cfg.challengeTabActive = parse("&a&lChallenge");
+		cfg.challengeTabInactive = parse("&7&lChallenge");
 		cfg.challengeTabSlot = 37;
 		cfg.activeBattlesMaterial = Material.RED_WOOL;
-		cfg.activeBattlesName = Component.text("Active Battles", NamedTextColor.RED);
+		cfg.activeBattlesName = parse("&cActive Battles");
 		cfg.activeBattlesLoreFormat = "&7%count% battle(s) running";
 		cfg.activeBattlesSlot = 38;
 
 		cfg.leaveMaterial = Material.BARRIER;
-		cfg.leaveName = Component.text("Leave Queue", NamedTextColor.RED);
-		cfg.leaveLore = List.of(Component.text("Click to leave your current queue.", NamedTextColor.GRAY));
+		cfg.leaveName = parse("&cLeave Queue");
+		cfg.leaveLore = List.of(parse("&7Click to leave your current queue."));
 		cfg.leaveSlot = 49;
 		cfg.closeMaterial = Material.BARRIER;
-		cfg.closeName = Component.text("Close", NamedTextColor.DARK_GRAY);
+		cfg.closeName = parse("&8Close");
 		cfg.closeSlot = 53;
 
 		cfg.modeIcons = defaultModeIcons();
 		cfg.defaultIcon = Material.COMPASS;
 
-		cfg.challengeTitle = Component.text("Challenge", NamedTextColor.GOLD);
+		cfg.challengeTitle = parse("&6Challenge");
 		cfg.challengeRows = 1;
 		cfg.acceptMaterial = Material.LIME_WOOL;
 		cfg.acceptNameFormat = "&a&lAccept";
@@ -182,23 +179,23 @@ public final class GuiConfig {
 		cfg.declineSlot = 6;
 		cfg.challengeTimeoutSeconds = 30;
 
-		cfg.confirmationTitle = Component.text("Risk Warning", NamedTextColor.RED, TextDecoration.BOLD);
+		cfg.confirmationTitle = parse("&c&lRisk Warning");
 		cfg.confirmationRows = 3;
 		cfg.confirmInfoMaterial = Material.BARRIER;
-		cfg.confirmInfoName = Component.text("Warning: Item Risk", NamedTextColor.RED, TextDecoration.BOLD);
+		cfg.confirmInfoName = parse("&c&lWarning: Item Risk");
 		cfg.confirmInfoLore = List.of(
-				Component.text("You are about to enter an SMP battle.", NamedTextColor.GRAY),
-				Component.text("If you lose, the winner can take your items.", NamedTextColor.GRAY),
-				Component.empty(),
-				Component.text("Are you sure you want to proceed?", NamedTextColor.YELLOW));
+				parse("&7You are about to enter an SMP battle."),
+				parse("&7If you lose, the winner can take your items."),
+				parse(""),
+				parse("&eAre you sure you want to proceed?"));
 		cfg.confirmInfoSlot = 4;
 		cfg.confirmYesMaterial = Material.LIME_WOOL;
-		cfg.confirmYesName = Component.text("Yes, I am sure", NamedTextColor.GREEN, TextDecoration.BOLD);
-		cfg.confirmYesLore = List.of(Component.text("Click to join the queue.", NamedTextColor.GRAY));
+		cfg.confirmYesName = parse("&a&lYes, I am sure");
+		cfg.confirmYesLore = List.of(parse("&7Click to join the queue."));
 		cfg.confirmYesSlot = 11;
 		cfg.confirmCancelMaterial = Material.RED_WOOL;
-		cfg.confirmCancelName = Component.text("Cancel", NamedTextColor.RED, TextDecoration.BOLD);
-		cfg.confirmCancelLore = List.of(Component.text("Click to go back.", NamedTextColor.GRAY));
+		cfg.confirmCancelName = parse("&c&lCancel");
+		cfg.confirmCancelLore = List.of(parse("&7Click to go back."));
 		cfg.confirmCancelSlot = 15;
 
 		return cfg;
@@ -241,7 +238,7 @@ public final class GuiConfig {
 		leaveName = parse(strOr(lb, "name", "&cLeave Queue"));
 		leaveLore = lb != null
 				? lb.getStringList("lore").stream().map(GuiConfig::parse).collect(Collectors.toList())
-				: List.of(Component.text("Click to leave your current queue.", NamedTextColor.GRAY));
+				: List.of(parse("&7Click to leave your current queue."));
 		leaveSlot = intOr(lb, "slot", 49);
 
 		ConfigurationSection cb = sec.getConfigurationSection("close_button");
@@ -396,9 +393,17 @@ public final class GuiConfig {
 
 	// ── Utility ─────────────────────────────────────────────────────────────
 
-	private static Component parse(String raw) {
-		if (raw == null || raw.isEmpty()) return Component.empty();
-		return LEGACY.deserialize(raw);
+	/**
+	 * Parses a config string supporting both MiniMessage ({@code <red>text</red>})
+	 * and legacy {@code &} colour codes. Returns a §-prefixed legacy string
+	 * for Bukkit API compatibility on all platforms (Spigot, Paper, Folia).
+	 */
+	private static String parse(String raw) {
+		if (raw == null || raw.isEmpty()) return "";
+		if (raw.indexOf('<') >= 0 && raw.indexOf('>') >= 0) {
+			return LEGACY_SECTION.serialize(MINI.deserialize(raw));
+		}
+		return LEGACY_SECTION.serialize(LEGACY_AMP.deserialize(raw));
 	}
 
 	private static Material mat(ConfigurationSection sec, String key, Material fallback, Logger logger) {
@@ -460,13 +465,13 @@ public final class GuiConfig {
 
 	// ── Public getters: Battle GUI ──────────────────────────────────────────
 
-	public Component battleTitle()          { return battleTitle; }
+	public String battleTitle()          { return battleTitle; }
 	public int battleRows()                 { return battleRows; }
 	public int battleSize()                 { return battleRows * 9; }
 
 	public Material titleMaterial()         { return titleMaterial; }
-	public Component titleQueueName()       { return titleQueueName; }
-	public Component titleChallengeName()   { return titleChallengeName; }
+	public String titleQueueName()       { return titleQueueName; }
+	public String titleChallengeName()   { return titleChallengeName; }
 	public int titleSlot()                  { return titleSlot; }
 
 	public int modeSlotStart()              { return modeSlotStart; }
@@ -476,27 +481,27 @@ public final class GuiConfig {
 	public String clickLine()               { return clickLine; }
 
 	public Material queueTabMaterial()      { return queueTabMaterial; }
-	public Component queueTabActive()       { return queueTabActive; }
-	public Component queueTabInactive()     { return queueTabInactive; }
+	public String queueTabActive()       { return queueTabActive; }
+	public String queueTabInactive()     { return queueTabInactive; }
 	public int queueTabSlot()               { return queueTabSlot; }
 
 	public Material challengeTabMaterial()  { return challengeTabMaterial; }
-	public Component challengeTabActive()   { return challengeTabActive; }
-	public Component challengeTabInactive() { return challengeTabInactive; }
+	public String challengeTabActive()   { return challengeTabActive; }
+	public String challengeTabInactive() { return challengeTabInactive; }
 	public int challengeTabSlot()           { return challengeTabSlot; }
 
 	public Material activeBattlesMaterial()        { return activeBattlesMaterial; }
-	public Component activeBattlesName()           { return activeBattlesName; }
+	public String activeBattlesName()           { return activeBattlesName; }
 	public String activeBattlesLoreFormat()        { return activeBattlesLoreFormat; }
 	public int activeBattlesSlot()                 { return activeBattlesSlot; }
 
 	public Material leaveMaterial()         { return leaveMaterial; }
-	public Component leaveName()            { return leaveName; }
-	public List<Component> leaveLore()      { return leaveLore; }
+	public String leaveName()            { return leaveName; }
+	public List<String> leaveLore()      { return leaveLore; }
 	public int leaveSlot()                  { return leaveSlot; }
 
 	public Material closeMaterial()         { return closeMaterial; }
-	public Component closeName()            { return closeName; }
+	public String closeName()            { return closeName; }
 	public int closeSlot()                  { return closeSlot; }
 
 	public Material iconFor(String modeId) {
@@ -508,7 +513,7 @@ public final class GuiConfig {
 
 	// ── Public getters: Challenge GUI ───────────────────────────────────────
 
-	public Component challengeTitle()       { return challengeTitle; }
+	public String challengeTitle()       { return challengeTitle; }
 	public int challengeRows()              { return challengeRows; }
 	public int challengeSize()              { return challengeRows * 9; }
 
@@ -531,32 +536,32 @@ public final class GuiConfig {
 
 	// ── Public getters: Confirmation GUI ────────────────────────────────────
 
-	public Component confirmationTitle()        { return confirmationTitle; }
+	public String confirmationTitle()        { return confirmationTitle; }
 	public int confirmationRows()               { return confirmationRows; }
 	public int confirmationSize()               { return confirmationRows * 9; }
 
 	public Material confirmInfoMaterial()        { return confirmInfoMaterial; }
-	public Component confirmInfoName()           { return confirmInfoName; }
-	public List<Component> confirmInfoLore()     { return confirmInfoLore; }
+	public String confirmInfoName()           { return confirmInfoName; }
+	public List<String> confirmInfoLore()     { return confirmInfoLore; }
 	public int confirmInfoSlot()                 { return confirmInfoSlot; }
 
 	public Material confirmYesMaterial()         { return confirmYesMaterial; }
-	public Component confirmYesName()            { return confirmYesName; }
-	public List<Component> confirmYesLore()      { return confirmYesLore; }
+	public String confirmYesName()            { return confirmYesName; }
+	public List<String> confirmYesLore()      { return confirmYesLore; }
 	public int confirmYesSlot()                  { return confirmYesSlot; }
 
 	public Material confirmCancelMaterial()      { return confirmCancelMaterial; }
-	public Component confirmCancelName()         { return confirmCancelName; }
-	public List<Component> confirmCancelLore()   { return confirmCancelLore; }
+	public String confirmCancelName()         { return confirmCancelName; }
+	public List<String> confirmCancelLore()   { return confirmCancelLore; }
 	public int confirmCancelSlot()               { return confirmCancelSlot; }
 
-	/** Convenience: parses a raw format string with '&' codes into a Component. */
-	public static Component parseColour(String raw) {
+	/** Convenience: parses a raw format string supporting MiniMessage and {@code &} codes. */
+	public static String parseColour(String raw) {
 		return parse(raw);
 	}
 
 	/** Convenience: replaces placeholders then parses colour codes. */
-	public static Component parseWithReplacements(String format, Map<String, String> replacements) {
+	public static String parseWithReplacements(String format, Map<String, String> replacements) {
 		String result = format;
 		for (var entry : replacements.entrySet()) {
 			result = result.replace(entry.getKey(), entry.getValue());

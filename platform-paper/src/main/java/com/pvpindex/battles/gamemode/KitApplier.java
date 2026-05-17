@@ -1,7 +1,6 @@
 package com.pvpindex.battles.gamemode;
 
 import java.util.List;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -47,12 +46,12 @@ public final class KitApplier {
         ItemStack stack = new ItemStack(material, Math.max(1, item.amount()));
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
-            if (item.displayName() != null) {
-                meta.displayName(Component.text(item.displayName()));
-            }
-            if (!item.lore().isEmpty()) {
-                meta.lore(item.lore().stream().map(Component::text).toList());
-            }
+			if (item.displayName() != null) {
+				meta.setDisplayName(item.displayName());
+			}
+			if (!item.lore().isEmpty()) {
+				meta.setLore(item.lore());
+			}
             stack.setItemMeta(meta);
         }
         item.enchantments().forEach((name, level) -> {

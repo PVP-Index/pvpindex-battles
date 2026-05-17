@@ -1,10 +1,10 @@
 package com.pvpindex.battles.gui;
 
 import java.util.List;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -22,7 +22,7 @@ public final class GUIBuilder {
 		ItemStack item = new ItemStack(glass);
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			meta.displayName(Component.empty());
+			meta.setDisplayName(" ");
 			item.setItemMeta(meta);
 		}
 		return item;
@@ -43,14 +43,18 @@ public final class GUIBuilder {
 		ItemStack item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			NamedTextColor colour = active ? NamedTextColor.GREEN : NamedTextColor.GRAY;
-			meta.displayName(Component.text(name, colour, TextDecoration.BOLD));
+			ChatColor colour = active ? ChatColor.GREEN : ChatColor.GRAY;
+			meta.setDisplayName(colour + "" + ChatColor.BOLD + name);
 			if (active) {
-				meta.lore(List.of(Component.text("Currently viewing", NamedTextColor.GREEN)));
-				meta.setEnchantmentGlintOverride(true);
+				meta.setLore(List.of(ChatColor.GREEN + "Currently viewing"));
 			}
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
 			item.setItemMeta(meta);
+			if (active) {
+				org.bukkit.enchantments.Enchantment glint =
+						Registry.ENCHANTMENT.get(NamespacedKey.minecraft("luck_of_the_sea"));
+				if (glint != null) item.addUnsafeEnchantment(glint, 1);
+			}
 		}
 		return item;
 	}

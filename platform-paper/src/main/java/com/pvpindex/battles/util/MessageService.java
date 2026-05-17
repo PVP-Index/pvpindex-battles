@@ -5,14 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
-import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class MessageService {
-	private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
+	private static final MiniMessage MINI = MiniMessage.miniMessage();
+	private static final LegacyComponentSerializer LEGACY_AMP = LegacyComponentSerializer.legacyAmpersand();
+	private static final LegacyComponentSerializer LEGACY_SECTION = LegacyComponentSerializer.legacySection();
 	private static final String[] BUNDLED_LANGUAGES = {"en", "nl", "de", "pl", "zh", "es"};
 
 	private final JavaPlugin plugin;
@@ -50,16 +52,16 @@ public class MessageService {
 	 * Tokens are pairs: "%key1%", "value1", "%key2%", "value2", ...
 	 */
 	public void send(CommandSender sender, String key, String... tokens) {
-		Component prefix = color(get("prefix"));
-		Component body = color(replace(get(key), tokens));
-		sender.sendMessage(prefix.append(body));
+		String prefix = colorStr(get("prefix"));
+		String body = colorStr(replace(get(key), tokens));
+		sender.sendMessage(prefix + body);
 	}
 
 	/**
 	 * Send a localized message WITHOUT the prefix.
 	 */
 	public void sendRaw(CommandSender sender, String key, String... tokens) {
-		sender.sendMessage(color(replace(get(key), tokens)));
+		sender.sendMessage(colorStr(replace(get(key), tokens)));
 	}
 
 	/**
@@ -70,10 +72,10 @@ public class MessageService {
 	}
 
 	/**
-	 * Get a parsed Component for a key (with token replacement). No prefix.
+	 * Get a translated string for a key (with token replacement). No prefix.
 	 */
-	public Component component(String key, String... tokens) {
-		return color(replace(get(key), tokens));
+	public String component(String key, String... tokens) {
+		return colorStr(replace(get(key), tokens));
 	}
 
 	private String get(String key) {
@@ -93,8 +95,17 @@ public class MessageService {
 		return result;
 	}
 
-	private static Component color(String input) {
-		return LEGACY.deserialize(input);
+	/**
+	 * Parses a string supporting MiniMessage ({@code <red>}) and legacy
+	 * {@code &} colour codes, and returns a §-prefixed string for Bukkit
+	 * legacy API compatibility on all platforms (Spigot, Paper, Folia).
+	 */
+	private static String colorStr(String input) {
+		if (input == null || input.isEmpty()) return "";
+		if (input.indexOf('<') >= 0 && input.indexOf('>') >= 0) {
+			return LEGACY_SECTION.serialize(MINI.deserialize(input));
+		}
+		return LEGACY_SECTION.serialize(LEGACY_AMP.deserialize(input));
 	}
 
 	private void saveLanguageIfAbsent(String code, File langDir) {

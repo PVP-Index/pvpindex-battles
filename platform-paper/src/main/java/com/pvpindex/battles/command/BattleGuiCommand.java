@@ -15,12 +15,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -43,8 +42,6 @@ import org.bukkit.plugin.java.JavaPlugin;
  * </ul>
  */
 public class BattleGuiCommand implements CommandExecutor {
-
-	private static final LegacyComponentSerializer LEGACY = LegacyComponentSerializer.legacyAmpersand();
 
 	private final JavaPlugin plugin;
 	private final GameModeRegistry gameModeRegistry;
@@ -206,10 +203,10 @@ public class BattleGuiCommand implements CommandExecutor {
 		ItemStack item = new ItemStack(guiConfig.titleMaterial());
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			Component name = mode == PlayerGuiState.Mode.CHALLENGE
+			String name = mode == PlayerGuiState.Mode.CHALLENGE
 					? guiConfig.titleChallengeName()
 					: guiConfig.titleQueueName();
-			meta.displayName(name);
+			meta.setDisplayName(name);
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 			item.setItemMeta(meta);
 		}
@@ -220,22 +217,22 @@ public class BattleGuiCommand implements CommandExecutor {
 		ItemStack item = new ItemStack(guiConfig.iconFor(mode.id()));
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			meta.displayName(GuiConfig.parseColour(guiConfig.modeNamePrefix() + mode.displayName()));
+			meta.setDisplayName(GuiConfig.parseColour(guiConfig.modeNamePrefix() + mode.displayName()));
 
-			List<Component> lore = new ArrayList<>();
+			List<String> lore = new ArrayList<>();
 			for (String line : mode.description()) {
-				lore.add(LEGACY.deserialize(line));
+				lore.add(GuiConfig.parseColour(line));
 			}
 			if (!mode.description().isEmpty()) {
-				lore.add(Component.empty());
+				lore.add("");
 			}
 			String countLine = guiConfig.queueCountLine()
 					.replace("%count%", String.valueOf(queueService.queueSize(mode.id())));
 			lore.add(GuiConfig.parseColour(countLine));
-			lore.add(Component.empty());
+			lore.add("");
 			lore.add(GuiConfig.parseColour(guiConfig.clickLine()));
 
-			meta.lore(lore);
+			meta.setLore(lore);
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 			meta.getPersistentDataContainer().set(modeKey, PersistentDataType.STRING, mode.id());
 			item.setItemMeta(meta);
@@ -257,10 +254,10 @@ public class BattleGuiCommand implements CommandExecutor {
 		ItemMeta abMeta = activeBattles.getItemMeta();
 		if (abMeta != null) {
 			int count = battleService != null ? battleService.activeBattles().size() : 0;
-			abMeta.displayName(guiConfig.activeBattlesName());
+			abMeta.setDisplayName(guiConfig.activeBattlesName());
 			String loreLine = guiConfig.activeBattlesLoreFormat()
 					.replace("%count%", String.valueOf(count));
-			abMeta.lore(List.of(GuiConfig.parseColour(loreLine)));
+			abMeta.setLore(List.of(GuiConfig.parseColour(loreLine)));
 			abMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 			activeBattles.setItemMeta(abMeta);
 		}
@@ -270,17 +267,21 @@ public class BattleGuiCommand implements CommandExecutor {
 		inv.setItem(guiConfig.activeBattlesSlot(), activeBattles);
 	}
 
-	private static ItemStack buildTab(Material material, Component name, boolean active) {
+	private static ItemStack buildTab(Material material, String name, boolean active) {
 		ItemStack item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			meta.displayName(name);
+			meta.setDisplayName(name);
 			if (active) {
-				meta.lore(List.of(Component.text("Currently viewing", NamedTextColor.GREEN)));
-				meta.setEnchantmentGlintOverride(true);
+				meta.setLore(List.of(ChatColor.GREEN + "Currently viewing"));
 			}
 			meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS);
 			item.setItemMeta(meta);
+			if (active) {
+				org.bukkit.enchantments.Enchantment glint =
+						Registry.ENCHANTMENT.get(NamespacedKey.minecraft("luck_of_the_sea"));
+				if (glint != null) item.addUnsafeEnchantment(glint, 1);
+			}
 		}
 		return item;
 	}
@@ -289,8 +290,8 @@ public class BattleGuiCommand implements CommandExecutor {
 		ItemStack item = new ItemStack(guiConfig.leaveMaterial());
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			meta.displayName(guiConfig.leaveName());
-			meta.lore(guiConfig.leaveLore());
+			meta.setDisplayName(guiConfig.leaveName());
+			meta.setLore(guiConfig.leaveLore());
 			item.setItemMeta(meta);
 		}
 		return item;
@@ -300,7 +301,7 @@ public class BattleGuiCommand implements CommandExecutor {
 		ItemStack item = new ItemStack(guiConfig.closeMaterial());
 		ItemMeta meta = item.getItemMeta();
 		if (meta != null) {
-			meta.displayName(guiConfig.closeName());
+			meta.setDisplayName(guiConfig.closeName());
 			item.setItemMeta(meta);
 		}
 		return item;
