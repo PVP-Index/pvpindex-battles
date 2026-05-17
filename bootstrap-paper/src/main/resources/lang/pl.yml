@@ -60,6 +60,8 @@ challenge:
   invalid_id: "&cNieprawidlowe ID wyzwania."
   smp_warning: "&c&lUWAGA: &eTo walka SMP! Jesli przegrasz, &c&lupuscisz wszystkie swoje przedmioty &ea zwyciezca moze je zabrac. Czy chcesz kontynuowac?"
   gui_hint: "&7Uzyj /battle challenge <gracz> aby rozpoczac wyzwanie."
+  same_team: "&cNie mozesz wyzwac czlonka swojej druzyny."
+  same_team_target: "&c%player% probował Cie wyzwac, ale jestescie w tym samym zespole."
 
 replay:
   exported: "&aReplay wyeksportowany: %file%"

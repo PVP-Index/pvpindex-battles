@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.pvpindex</groupId>
         <artifactId>pvpindex-parent</artifactId>
-        <version>1.0.2</version>
+        <version>1.0.3</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -39,6 +39,10 @@
         <dependency>
             <groupId>me.clip</groupId>
             <artifactId>placeholderapi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ez-plugins</groupId>
+            <artifactId>teams-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

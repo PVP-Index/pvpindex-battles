@@ -5,7 +5,7 @@
 
     <groupId>com.pvpindex</groupId>
     <artifactId>pvpindex-parent</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
     <packaging>pom</packaging>
 
     <name>PvPIndex Parent</name>
@@ -46,6 +46,10 @@
         <repository>
             <id>extendedclip-repo</id>
             <url>https://repo.extendedclip.com/releases/</url>
+        </repository>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
         </repository>
     </repositories>
 
@@ -142,6 +146,14 @@
                 <groupId>net.md-5</groupId>
                 <artifactId>bungeecord-api</artifactId>
                 <version>1.21-R0.4</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- TeamsAPI (optional soft-dependency) -->
+            <dependency>
+                <groupId>com.github.ez-plugins</groupId>
+                <artifactId>teams-api</artifactId>
+                <version>1.5.0</version>
                 <scope>provided</scope>
             </dependency>
 

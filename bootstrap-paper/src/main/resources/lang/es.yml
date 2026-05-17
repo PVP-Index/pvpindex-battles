@@ -60,6 +60,8 @@ challenge:
   invalid_id: "&cID de desafio no valido."
   smp_warning: "&c&lADVERTENCIA: &eEsta es una batalla SMP! Si pierdes, &c&lsoltaras todos tus objetos &ey el ganador podra tomarlos. Deseas continuar?"
   gui_hint: "&7Usa /battle challenge <jugador> para iniciar un desafio."
+  same_team: "&cNo puedes desafiar a un companero de equipo."
+  same_team_target: "&c%player% intento desafiarte, pero estais en el mismo equipo."
 
 replay:
   exported: "&aReplay exportado: %file%"

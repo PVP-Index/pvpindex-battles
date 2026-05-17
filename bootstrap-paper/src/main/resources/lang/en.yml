@@ -60,6 +60,8 @@ challenge:
   invalid_id: "&cInvalid challenge ID."
   smp_warning: "&c&lWARNING: &eThis is an SMP battle! If you lose, &c&lyou will drop all your items &eand the winner can take them. Do you wish to proceed?"
   gui_hint: "&7Use /battle challenge <player> to start a challenge."
+  same_team: "&cYou cannot challenge a teammate."
+  same_team_target: "&c%player% tried to challenge you, but you are on the same team."
 
 replay:
   exported: "&aReplay exported: %file%"

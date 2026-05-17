@@ -78,7 +78,9 @@ class BattleServiceTest {
                 // cleanup
                 100,
                 // proxy
-                false, "", 0
+                false, "", 0,
+                // teams guard
+                false
         );
         BattleReplayRecorder recorder = new BattleReplayRecorder(plugin, new ObjectMapper(), ReplayDetailLevel.HIGH);
         PvPIndexApiClient apiClient = new PvPIndexApiClient(settings, new ObjectMapper()) {
