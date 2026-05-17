@@ -181,6 +181,18 @@ jobs:
               RESULT=fail
               break
             fi
+            # Server fully started → all plugins have been enabled without errors.
+            # Checking "Done (" is more reliable than "Enabling PvPIndexBattles"
+            # because some server variants (e.g. Paper 26.1) load worlds before
+            # enabling plugins, so "Enabling" can appear late.
+            if grep -qE "Done \([0-9.]" server.log 2>/dev/null; then
+              if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
+                RESULT=fail
+              else
+                RESULT=pass
+              fi
+              break
+            fi
             # "Enabling" logged — wait 5 more seconds for any delayed crash before
             # declaring pass (Folia errors can arrive after the enabling message).
             if grep -q "Enabling PvPIndexBattles" server.log 2>/dev/null; then
@@ -194,7 +206,9 @@ jobs:
             fi
           done
 
-          kill "$SERVER_PID" 2>/dev/null || true
+          # SIGKILL guarantees the JVM exits immediately — SIGTERM can block for
+          # minutes on servers mid-way through world saves or chunk generation.
+          kill -9 "$SERVER_PID" 2>/dev/null || true
           wait "$SERVER_PID" 2>/dev/null || true
 
           echo ""
