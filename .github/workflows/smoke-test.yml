@@ -1,7 +1,8 @@
 name: Smoke Test
 
-# Verify the plugin starts cleanly on Spigot, Paper, and Folia for every PR
-# targeting main. Tests both Java 21 (LTS) and Java 25 (current LTS).
+# Verify the plugin starts cleanly on Paper 1.21.1, Paper 26.1.2, and Folia for
+# every PR targeting main. Tests both Java 21 (LTS) and Java 25 (current LTS);
+# Paper 26.1.2 requires Java 25 and is excluded from the Java 21 matrix row.
 
 on:
   pull_request:
@@ -9,7 +10,8 @@ on:
 
 env:
   MC_VERSION: "1.21.1"
-  FOLIA_VERSION: "1.21.4"  # Folia skipped 1.21.1–1.21.3; earliest 1.21.x Folia release
+  FOLIA_VERSION: "1.21.4"    # Folia skipped 1.21.1–1.21.3; earliest 1.21.x Folia release
+  PAPER_261_VERSION: "26.1.2" # New MC versioning scheme; uses fill.papermc.io API
 
 jobs:
 
@@ -50,7 +52,10 @@ jobs:
       fail-fast: false
       matrix:
         java: [21, 25]
-        server: [paper, folia, spigot]
+        server: [paper, folia, paper-261]
+        exclude:
+          - server: paper-261
+            java: 21  # Paper 26.1.2 requires Java 25+
 
     steps:
       - name: Set up Java ${{ matrix.java }}
@@ -94,46 +99,15 @@ jobs:
             "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${BUILD}/downloads/folia-${FOLIA_VERSION}-${BUILD}.jar"
           echo "Folia build: $BUILD"
 
-      # ── Spigot (built via BuildTools; result cached by MC version) ─────────
-      # BuildTools for 1.21.1 requires Java 21-23; always build with Java 21
-      # regardless of matrix.java, then restore the matrix Java for the actual
-      # smoke test so we validate the plugin runs on the requested JVM.
-      - name: Set up Java 21 for Spigot BuildTools
-        if: matrix.server == 'spigot'
-        uses: actions/setup-java@v4
-        with:
-          java-version: 21
-          distribution: temurin
-
-      - name: Cache Spigot ${{ env.MC_VERSION }}
-        if: matrix.server == 'spigot'
-        id: spigot-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/spigot-jar
-          key: spigot-${{ env.MC_VERSION }}-buildtools-v1
-
-      - name: Build Spigot via BuildTools
-        if: matrix.server == 'spigot' && steps.spigot-cache.outputs.cache-hit != 'true'
-        timeout-minutes: 25
+      # ── Paper 26.1.2 (new MC versioning; uses fill.papermc.io, not api.papermc.io) ─
+      - name: Download Paper ${{ env.PAPER_261_VERSION }}
+        if: matrix.server == 'paper-261'
         run: |
-          mkdir -p ~/spigot-jar buildtools
-          cd buildtools
-          curl -sfLo BuildTools.jar \
-            "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar"
-          "$JAVA_HOME_21_X64/bin/java" -jar BuildTools.jar --rev "$MC_VERSION" --nogui
-          cp "spigot-${MC_VERSION}.jar" "$HOME/spigot-jar/"
-
-      - name: Restore matrix Java ${{ matrix.java }}
-        if: matrix.server == 'spigot'
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ matrix.java }}
-          distribution: temurin
-
-      - name: Use Spigot JAR
-        if: matrix.server == 'spigot'
-        run: cp "$HOME/spigot-jar/spigot-${MC_VERSION}.jar" server.jar
+          URL=$(curl -sf \
+            "https://fill.papermc.io/v3/projects/paper/versions/${PAPER_261_VERSION}/builds" \
+            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url')
+          curl -sfLo server.jar "$URL"
+          echo "Paper 26.1.2 URL: $URL"
 
       # ── Smoke test ────────────────────────────────────────────────────────
       - name: Run smoke test
