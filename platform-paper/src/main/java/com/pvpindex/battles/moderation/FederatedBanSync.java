@@ -3,9 +3,9 @@ package com.pvpindex.battles.moderation;
 import com.pvpindex.battles.api.PvPIndexApiClient;
 import com.pvpindex.battles.config.PluginSettings;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitTask;
 
 /**
  * Background poller that pulls the verified-server federated ban list from
@@ -18,7 +18,7 @@ public final class FederatedBanSync {
     private final PvPIndexApiClient api;
     private final ModerationSettings moderationSettings;
     private final PluginSettings pluginSettings;
-    private BukkitTask task;
+    private Runnable cancelTask;
 
     public FederatedBanSync(Plugin plugin, BanService banService, PvPIndexApiClient api,
                             ModerationSettings moderationSettings, PluginSettings pluginSettings) {
@@ -34,13 +34,21 @@ public final class FederatedBanSync {
             return;
         }
         long ticks = Math.max(20L, moderationSettings.federatedBanSyncIntervalSeconds() * 20L);
-        task = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::sync, 100L, ticks);
+        try {
+            var t = Bukkit.getScheduler().runTaskTimerAsynchronously(plugin, this::sync, 100L, ticks);
+            cancelTask = t::cancel;
+        } catch (UnsupportedOperationException e) {
+            // Folia: BukkitScheduler is not supported; use the async scheduler instead.
+            var st = plugin.getServer().getAsyncScheduler().runAtFixedRate(
+                    plugin, ignored -> sync(), 100L * 50L, ticks * 50L, TimeUnit.MILLISECONDS);
+            cancelTask = st::cancel;
+        }
     }
 
     public void stop() {
-        if (task != null) {
-            task.cancel();
-            task = null;
+        if (cancelTask != null) {
+            cancelTask.run();
+            cancelTask = null;
         }
     }
 
