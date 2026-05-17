@@ -370,7 +370,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		// players no longer in any active battle.
 		int cleanupTicks = configManager.settings().cleanupIntervalTicks();
 		if (cleanupTicks > 0) {
-			getServer().getScheduler().runTaskTimer(this, () -> {
+			// Folia does not support sync global tasks; swallow UnsupportedOperationException
+			// and skip the cleanup timer on that platform (concurrent structures self-manage).
+			try { getServer().getScheduler().runTaskTimer(this, () -> {
 				java.util.List<com.pvpindex.battles.battle.BattleSession> active =
 						battleService.activeBattles();
 				int evicted = 0;
@@ -388,6 +390,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 					getLogger().info("[Cleanup] Evicted " + evicted + " stale tracking entries.");
 				}
 			}, cleanupTicks, cleanupTicks);
+			} catch (UnsupportedOperationException ignored) {
+				getLogger().info("Folia detected: sync cleanup timer not supported, skipping.");
+			}
 		}
 
 		// Commands
