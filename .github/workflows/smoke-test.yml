@@ -160,7 +160,7 @@ jobs:
             sleep 1
             # Hard failures — API incompatibility or onEnable exception
             if grep -qE \
-              "NoSuchMethodError|NoSuchFieldError|Error enabling plugin PvPIndexBattles" \
+              "NoSuchMethodError|NoSuchFieldError|Error enabling plugin PvPIndexBattles|Error occurred while enabling PvPIndexBattles" \
               server.log 2>/dev/null
             then
               RESULT=fail

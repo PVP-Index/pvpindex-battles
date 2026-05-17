@@ -185,7 +185,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		int retryInterval = configManager.settings().persistentRetryIntervalSeconds();
 		if (retryInterval > 0) {
 			long ticks = (long) retryInterval * 20L;
-			getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
+			scheduleAsyncRepeating(() -> {
 				int pending = battleService.pendingFailedSubmissionCount();
 				if (pending > 0) {
 					int recovered = battleService.retryFailedSubmissions();
@@ -202,7 +202,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		// crash / force-kill and never confirmed as received by the API.
 		// Runs 30 s after enable to give the server time to fully start up and
 		// establish a stable API connection before hammering it with old data.
-		getServer().getScheduler().runTaskLaterAsynchronously(this, () -> {
+		scheduleAsyncDelayed(() -> {
 			int queued = battleService.syncUnsubmittedBattles(true);
 			if (queued == 0) {
 				getLogger().info("Local battle sync: all battles already submitted, nothing to do.");
@@ -308,11 +308,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			// Proxy heartbeat timer — lets Velocity know this backend is alive.
 			int hbTicks = configManager.settings().proxyHeartbeatIntervalTicks();
 			if (hbTicks > 0) {
-				getServer().getScheduler().runTaskTimerAsynchronously(this, () ->
-						paperMessenger.sendHeartbeat(
-								configManager.settings().serverId(),
-								battleService.activeBattles().size()),
-						hbTicks, hbTicks);
+				scheduleAsyncRepeating(() -> paperMessenger.sendHeartbeat(
+						configManager.settings().serverId(),
+						battleService.activeBattles().size()), hbTicks, hbTicks);
 			}
 			getLogger().info("Velocity proxy messaging enabled (channel=pvpindex:proxy).");
 		}
@@ -391,7 +389,25 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 				}
 			}, cleanupTicks, cleanupTicks);
 			} catch (UnsupportedOperationException ignored) {
-				getLogger().info("Folia detected: sync cleanup timer not supported, skipping.");
+				// Folia: fall back to async — safe since these are ConcurrentHashMap evictions
+				scheduleAsyncRepeating(() -> {
+					java.util.List<com.pvpindex.battles.battle.BattleSession> active =
+							battleService.activeBattles();
+					int evicted = 0;
+					if (battleEventListener != null) {
+						evicted += battleEventListener.evictStalePlayers(active);
+					}
+					if (velocityTracker != null) {
+						java.util.Set<java.util.UUID> activePlayers = active.stream()
+								.flatMap(s -> s.getParticipants().stream()
+										.map(com.pvpindex.battles.battle.BattleParticipant::getUuid))
+								.collect(java.util.stream.Collectors.toSet());
+						evicted += velocityTracker.evictInactive(activePlayers);
+					}
+					if (configManager.settings().debug() && evicted > 0) {
+						getLogger().info("[Cleanup] Evicted " + evicted + " stale tracking entries.");
+					}
+				}, cleanupTicks, cleanupTicks);
 			}
 		}
 
@@ -536,6 +552,33 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		if (!new java.io.File(getDataFolder(), resourcePath).exists()
 				&& getResource(resourcePath) != null) {
 			saveResource(resourcePath, false);
+		}
+	}
+
+	/**
+	 * Schedule a repeating async task on Spigot/Paper (BukkitScheduler) and fall
+	 * back to the Paper AsyncScheduler on Folia, which bans all BukkitScheduler calls.
+	 */
+	private void scheduleAsyncRepeating(Runnable task, long delayTicks, long periodTicks) {
+		try {
+			getServer().getScheduler().runTaskTimerAsynchronously(this, task, delayTicks, periodTicks);
+		} catch (UnsupportedOperationException e) {
+			getServer().getAsyncScheduler().runAtFixedRate(
+					this, ignored -> task.run(),
+					delayTicks * 50L, periodTicks * 50L, java.util.concurrent.TimeUnit.MILLISECONDS);
+		}
+	}
+
+	/**
+	 * Schedule a one-shot delayed async task, Folia-safe.
+	 */
+	private void scheduleAsyncDelayed(Runnable task, long delayTicks) {
+		try {
+			getServer().getScheduler().runTaskLaterAsynchronously(this, task, delayTicks);
+		} catch (UnsupportedOperationException e) {
+			getServer().getAsyncScheduler().runDelayed(
+					this, ignored -> task.run(),
+					delayTicks * 50L, java.util.concurrent.TimeUnit.MILLISECONDS);
 		}
 	}
 
