@@ -6,6 +6,7 @@ import com.pvpindex.battles.challenge.ChallengeManager;
 import com.pvpindex.battles.gamemode.GameModeDefinition;
 import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gui.GuiConfig;
+import com.pvpindex.battles.gui.LeaderboardGui;
 import com.pvpindex.battles.gui.PlayerGuiState;
 import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.util.MessageService;
@@ -50,6 +51,7 @@ public class BattleGuiCommand implements CommandExecutor {
 	private final GuiConfig guiConfig;
 	private final MessageService messageService;
 	private ChallengeManager challengeManager;
+	private LeaderboardGui leaderboardGui;
 
 	private final Map<UUID, PlayerGuiState> guiStates = new ConcurrentHashMap<>();
 	private final NamespacedKey modeKey;
@@ -69,6 +71,12 @@ public class BattleGuiCommand implements CommandExecutor {
 	public void setChallengeManager(ChallengeManager challengeManager) {
 		this.challengeManager = challengeManager;
 	}
+
+	public void setLeaderboardGui(LeaderboardGui leaderboardGui) {
+		this.leaderboardGui = leaderboardGui;
+	}
+
+	public LeaderboardGui leaderboardGui() { return leaderboardGui; }
 
 	public Map<UUID, PlayerGuiState> guiStates() { return guiStates; }
 	public NamespacedKey modeKey() { return modeKey; }
@@ -91,11 +99,12 @@ public class BattleGuiCommand implements CommandExecutor {
 		}
 
 		return switch (args[0].toLowerCase()) {
-			case "leave"     -> handleLeave(player);
-			case "challenge" -> handleChallenge(player, args);
-			case "accept"    -> handleAccept(player, args);
-			case "decline"   -> handleDecline(player, args);
-			default          -> false;
+			case "leave"        -> handleLeave(player);
+			case "challenge"    -> handleChallenge(player, args);
+			case "accept"       -> handleAccept(player, args);
+			case "decline"      -> handleDecline(player, args);
+			case "leaderboard", "lb", "top" -> handleLeaderboard(player, args);
+			default             -> false;
 		};
 	}
 
@@ -158,6 +167,16 @@ public class BattleGuiCommand implements CommandExecutor {
 		} catch (IllegalArgumentException e) {
 			messageService.send(player, "challenge.invalid_id");
 		}
+		return true;
+	}
+
+	private boolean handleLeaderboard(Player player, String[] args) {
+		if (leaderboardGui == null) {
+			messageService.send(player, "leaderboard.no_data");
+			return true;
+		}
+		String modeId = args.length >= 2 ? args[1] : null;
+		leaderboardGui.open(player, modeId);
 		return true;
 	}
 

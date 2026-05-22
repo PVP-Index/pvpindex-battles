@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  步骤 3 - 重新加载"
   step3_desc: "&7  执行 &f/pvpindex reload&7 应用所有更改。"
   step3_hint: "&7  玩家可以使用 &f/battle&7 打开战斗模式选择界面。"
+
+leaderboard:
+  no_data: "&c排行榜数据不可用。数据库可能未启用。"
+  unknown_mode: "&c未知游戏模式: %mode%"
+  error: "&c加载排行榜失败，请稍后重试。"

@@ -1,5 +1,5 @@
 name: PvPIndexBattles
-version: 1.0.4
+version: 1.0.5
 main: com.pvpindex.battles.PvPIndexBattlesPlugin
 api-version: '1.21'
 folia-supported: true
@@ -15,7 +15,8 @@ commands:
     permission: pvpindex.mod
   battle:
     description: Battle GUI, queue, challenges, and forfeit
-    usage: /battle [leave|challenge <player> [mode]|accept <id>|decline <id>]
+    usage: /battle [leave|challenge <player> [mode]|accept <id>|decline <id>|leaderboard [mode]]
+    aliases: [pvp]
     permission: pvpindex.battle.queue
 permissions:
   pvpindex.admin:

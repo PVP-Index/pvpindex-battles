@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  Paso 3 - Recargar"
   step3_desc: "&7  Ejecuta &f/pvpindex reload&7 para aplicar todos los cambios."
   step3_hint: "&7  Los jugadores pueden usar &f/battle&7 para abrir la GUI de modos de batalla."
+
+leaderboard:
+  no_data: "&cClasificacion no disponible. La base de datos puede estar desactivada."
+  unknown_mode: "&cModo de juego desconocido: %mode%"
+  error: "&cError al cargar la clasificacion. Intentalo mas tarde."

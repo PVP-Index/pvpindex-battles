@@ -18,6 +18,16 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.5] - 2026-05-22
+
+### Added
+- **`/pvp` alias**: `/pvp` now works as an alias for `/battle`, making it easier for players to discover the command.
+- **Leaderboard GUI** (`/battle leaderboard [mode]`): paginated inventory GUI showing player skulls ranked by Elo. Each skull displays wins, losses, K/D, streak, and best streak. Supports per-mode filtering (`/battle leaderboard sword`) or an overall view. Aliases: `/battle lb`, `/battle top`. Requires `database.enabled: true` in config.yml.
+- New `LeaderboardGui` class in `platform-paper` with 28-entry pages, arrow-based pagination, and skull-per-player layout.
+- New lang keys `leaderboard.no_data`, `leaderboard.unknown_mode`, `leaderboard.error` in all bundled language files (en, de, nl, es, pl, zh).
+
+---
+
 ## [1.0.4] - 2026-05-22
 
 ### Added
@@ -159,7 +169,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...HEAD
+[1.0.5]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...v1.0.2

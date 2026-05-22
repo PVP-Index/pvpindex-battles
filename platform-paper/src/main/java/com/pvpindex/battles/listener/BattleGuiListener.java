@@ -6,6 +6,7 @@ import com.pvpindex.battles.gamemode.GameModeDefinition;
 import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gui.GUIBuilder;
 import com.pvpindex.battles.gui.GuiConfig;
+import com.pvpindex.battles.gui.LeaderboardGui;
 import com.pvpindex.battles.gui.PlayerGuiState;
 import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.util.MessageService;
@@ -69,7 +70,13 @@ public class BattleGuiListener implements Listener {
 			return;
 		}
 
-		if (!guiConfig.battleTitle().equals(event.getView().getTitle())) return;
+		String title = event.getView().getTitle();
+		if (title.startsWith(LeaderboardGui.TITLE_PREFIX)) {
+			handleLeaderboardClick(event, player);
+			return;
+		}
+
+		if (!guiConfig.battleTitle().equals(title)) return;
 
 		event.setCancelled(true);
 
@@ -146,6 +153,29 @@ public class BattleGuiListener implements Listener {
 			} else if (name.equals(challengeLabel) || name.equals(challengeInactiveLabel)) {
 				messageService.send(player, "challenge.gui_hint");
 			}
+		}
+	}
+
+	private void handleLeaderboardClick(InventoryClickEvent event, Player player) {
+		event.setCancelled(true);
+		ItemStack clicked = event.getCurrentItem();
+		if (clicked == null || clicked.getType() == Material.AIR) return;
+
+		if (clicked.getType() == Material.BARRIER) {
+			player.closeInventory();
+			return;
+		}
+
+		LeaderboardGui lbGui = guiCommand.leaderboardGui();
+		if (lbGui == null) return;
+
+		ItemMeta meta = clicked.getItemMeta();
+		if (meta == null) return;
+
+		Integer targetPage = meta.getPersistentDataContainer().get(lbGui.pageKey(), PersistentDataType.INTEGER);
+		String modeId = meta.getPersistentDataContainer().get(lbGui.modeKey(), PersistentDataType.STRING);
+		if (targetPage != null && modeId != null) {
+			lbGui.loadPage(player, modeId, targetPage);
 		}
 	}
 
@@ -226,15 +256,22 @@ public class BattleGuiListener implements Listener {
 	@EventHandler
 	public void onInventoryClose(InventoryCloseEvent event) {
 		if (!(event.getPlayer() instanceof Player player)) return;
-		if (guiConfig.battleTitle().equals(event.getView().getTitle())) {
+		String title = event.getView().getTitle();
+		if (guiConfig.battleTitle().equals(title)) {
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
 			if (state != null && state.pendingConfirmationModeId() != null) {
 				return;
 			}
 			guiCommand.guiStates().remove(player.getUniqueId());
 		}
-		if (guiConfig.confirmationTitle().equals(event.getView().getTitle())) {
+		if (guiConfig.confirmationTitle().equals(title)) {
 			guiCommand.guiStates().remove(player.getUniqueId());
+		}
+		if (title.startsWith(LeaderboardGui.TITLE_PREFIX)) {
+			LeaderboardGui lbGui = guiCommand.leaderboardGui();
+			if (lbGui != null) {
+				lbGui.sessions().remove(player.getUniqueId());
+			}
 		}
 	}
 

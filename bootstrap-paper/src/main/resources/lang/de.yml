@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  Schritt 3 - Neu laden"
   step3_desc: "&7  Fuehre &f/pvpindex reload&7 aus um alle Aenderungen anzuwenden."
   step3_hint: "&7  Spieler koennen dann &f/battle&7 verwenden um die Kampfmodus-GUI zu oeffnen."
+
+leaderboard:
+  no_data: "&cBestenliste nicht verfuegbar. Datenbank ist moeglicherweise deaktiviert."
+  unknown_mode: "&cUnbekannter Spielmodus: %mode%"
+  error: "&cFehler beim Laden der Bestenliste. Versuche es spaeter erneut."

@@ -26,9 +26,9 @@ mvn clean package
 
 Output:
 
-- `bootstrap-paper/target/PvPIndexBattles-1.0.4.jar` - drop into Paper `plugins/`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.4.jar` - drop into Velocity `plugins/`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.4.jar` - drop into BungeeCord `plugins/`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.5.jar` - drop into Paper `plugins/`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.5.jar` - drop into Velocity `plugins/`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.5.jar` - drop into BungeeCord `plugins/`
 
 The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No manual configuration needed for version selection.
 
@@ -81,7 +81,7 @@ pvpindex-parent
 - **Moderation** with reports, local bans, and federated network-wide bans
 - **Party system** with create, invite, join, leave, kick, and disband
 - **Persistent database** support (MySQL, SQLite, MongoDB) for player stats, battle history, and leaderboards
-- **Stats and leaderboards**: `/stats`, `/history`, `/leaderboard` commands with per-mode breakdowns
+- **Stats and leaderboards**: `/stats`, `/history`, `/battle leaderboard` GUI with player skulls, Elo, K/D, and pagination
 - **Cross-server coordination** via lobby Redis or proxy plugin messaging with visible error logging
 - **Multi-proxy networking** via Redis Pub/Sub for unlimited proxy instances across regions
 - **PlaceholderAPI** integration for Elo, rank, win/loss, battle state, and battle type

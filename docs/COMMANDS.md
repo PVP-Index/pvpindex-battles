@@ -13,7 +13,7 @@ Root command for PvPIndex administration.
 | `sync` | `pvpindex.admin` | Sync unsubmitted battles to the API |
 | `retryfailed` | `pvpindex.admin` | Retry failed battle submissions |
 
-### /battle
+### /battle (alias: /pvp)
 Player-facing battle queue and challenge commands.
 
 | Subcommand | Permission | Description |
@@ -23,6 +23,7 @@ Player-facing battle queue and challenge commands.
 | `challenge <player> [mode]` | `pvpindex.battle.queue` | Challenge a player to a duel. If mode is omitted, opens the GUI for mode selection |
 | `accept <id>` | `pvpindex.battle.queue` | Accept an incoming challenge |
 | `decline <id>` | `pvpindex.battle.queue` | Decline an incoming challenge |
+| `leaderboard [mode]` | `pvpindex.battle.queue` | Open the leaderboard GUI. Optionally filter by mode (e.g. `sword`, `pot`). Aliases: `lb`, `top`. Requires database. |
 
 ### /pvpmod
 Moderator tools for watching, replaying, reporting, and banning.

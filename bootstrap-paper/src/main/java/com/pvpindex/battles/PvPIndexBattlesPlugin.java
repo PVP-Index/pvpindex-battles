@@ -22,6 +22,7 @@ import com.pvpindex.battles.gamemode.KitApplier;
 import com.pvpindex.battles.identifier.WorldIdentifier;
 import com.pvpindex.battles.identifier.WorldNormalizer;
 import com.pvpindex.battles.battle.BattleBatchScheduler;
+import com.pvpindex.battles.gui.LeaderboardGui;
 import com.pvpindex.battles.listener.BattleCommandBlockListener;
 import com.pvpindex.battles.listener.BattleEventListener;
 import com.pvpindex.battles.listener.BattleGuiListener;
@@ -356,6 +357,12 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		if (teamsGuard.isEnabled()) {
 			getLogger().info("TeamsAPI guard enabled: same-team challenges will be blocked.");
 		}
+		if (dataService != null && dataService.isActive()) {
+			LeaderboardGui leaderboardGui = new LeaderboardGui(this, dataService, gameModeRegistry, messageService);
+			battleGuiCommand.setLeaderboardGui(leaderboardGui);
+			getLogger().info("Leaderboard GUI enabled (database active).");
+		}
+
 		battleGuiCommand.setChallengeManager(challengeManager);
 		battleGuiListener.setChallengeManager(challengeManager);
 		if (proxyMessageListener != null) {

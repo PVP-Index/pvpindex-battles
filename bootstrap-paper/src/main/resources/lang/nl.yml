@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  Stap 3 - Herladen"
   step3_desc: "&7  Voer &f/pvpindex reload&7 uit om alle wijzigingen toe te passen."
   step3_hint: "&7  Spelers kunnen vervolgens &f/battle&7 gebruiken om de gevechtsmodus-GUI te openen."
+
+leaderboard:
+  no_data: "&cRanglijst niet beschikbaar. Database is mogelijk uitgeschakeld."
+  unknown_mode: "&cOnbekende spelmodus: %mode%"
+  error: "&cKan ranglijst niet laden. Probeer het later opnieuw."
