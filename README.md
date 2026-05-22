@@ -26,9 +26,9 @@ mvn clean package
 
 Output:
 
-- `bootstrap-paper/target/PvPIndexBattles-1.0.2.jar` - drop into Paper `plugins/`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.2.jar` - drop into Velocity `plugins/`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.2.jar` - drop into BungeeCord `plugins/`
+- `bootstrap-paper/target/PvPIndexBattles-1.0.4.jar` - drop into Paper `plugins/`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.4.jar` - drop into Velocity `plugins/`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.4.jar` - drop into BungeeCord `plugins/`
 
 The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No manual configuration needed for version selection.
 
@@ -42,7 +42,7 @@ The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No
 | [Multi-Proxy Setup](docs/SETUP-MULTI-PROXY.md) | Running multiple proxies with Redis |
 | [Architecture](docs/ARCHITECTURE.md) | Module map, dependency flow, version detection |
 | [Configuration](docs/CONFIGURATION.md) | Full config.yml and config.properties reference |
-| [Commands](docs/COMMANDS.md) | All commands and permissions for Paper and Velocity |
+| [Commands](docs/COMMANDS.md) | All commands and permissions for Paper, Velocity, and BungeeCord |
 | [Version Support](docs/VERSIONING.md) | Supported Paper versions, what changed, adding new versions |
 | [Development](docs/DEVELOPMENT.md) | Building, testing, code style, contributing |
 
@@ -88,6 +88,7 @@ pvpindex-parent
 - **Configurable GUI** via `gui.yml` for full customisation of materials, slots, titles, and colours
 - **WorldNormalizer** display layer mapping raw mode IDs to friendly names
 - **Multi-language support** (English, Dutch, German, Polish, Chinese, Spanish) with custom language file support
+- **Command blocking** during battles with configurable whitelist and bypass permission
 - **Debug logging** system gated behind config flag
 - **Player state snapshots** with crash recovery and cross-server transfer stabilisation
 - **Custom Bukkit events** for developer integration

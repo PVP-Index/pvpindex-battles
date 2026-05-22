@@ -18,11 +18,22 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.4] - 2026-05-22
+
+### Added
+- **Command blocking during battles**: commands are now blocked by default while a player is in an active battle. Configurable via `battle_commands` in config.yml with a whitelist of allowed commands (`/battle`, `/msg`, `/r`, `/reply`, `/tell` by default). Players with `pvpindex.battle.commands.bypass` permission can still use all commands. Closes [#19](https://github.com/PVP-Index/pvpindex-battles/issues/19).
+- New `BattleCommandBlockListener` in `platform-paper` that intercepts `PlayerCommandPreprocessEvent` at `LOWEST` priority.
+- New config section `battle_commands` in `config.yml` with `block_commands` toggle and `allowed_commands` whitelist.
+- New permission `pvpindex.battle.commands.bypass` (default: op) to bypass command blocking.
+- New lang key `battle.command_blocked` in all bundled language files (en, de, nl, es, pl, zh).
+
+---
+
 ## [1.0.3] - 2026-05-17
 
 ### Added
 - **TeamsAPI guard**: optional integration with [TeamsAPI](https://modrinth.com/plugin/teams-api) that prevents players on the same team from challenging each other. Disabled by default (`teams_guard.block_same_team: false`). Requires TeamsAPI + a compatible team plugin on the server; if either is absent, the feature is silently skipped (fail-open).
-- New `TeamsGuardService` class in `platform-paper` — encapsulates the same-team lookup with graceful `NoClassDefFoundError` handling so the plugin loads cleanly whether or not TeamsAPI is on the classpath.
+- New `TeamsGuardService` class in `platform-paper` that encapsulates the same-team lookup with graceful `NoClassDefFoundError` handling so the plugin loads cleanly whether or not TeamsAPI is on the classpath.
 - `TeamsAPI` added to `softdepend` in `plugin.yml` so Paper loads it before PvPIndex Battles when both plugins are present.
 - New config section `teams_guard` in `config.yml`.
 - New lang keys `challenge.same_team` and `challenge.same_team_target` in all bundled language files (en, de, nl, es, pl, zh).
@@ -148,7 +159,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.0...v1.0.1

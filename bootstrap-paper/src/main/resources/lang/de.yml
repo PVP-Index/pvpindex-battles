@@ -19,6 +19,7 @@ battle:
   disputed: "&cKampf angefochten: %uuid%"
   not_found: "&cKampf nicht gefunden."
   started_good_luck: "&eDer Kampf hat begonnen! Viel Glueck!"
+  command_blocked: "&cBefehle sind waehrend des Kampfes deaktiviert."
 
 queue:
   joined: "&aDer &e%mode%&a-Warteschlange beigetreten. Position: &f%pos%"

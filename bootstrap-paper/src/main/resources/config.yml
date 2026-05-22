@@ -207,6 +207,22 @@ proxy:
   # How often (in ticks) to send a heartbeat to the proxy (0 to disable).
   heartbeat_interval_ticks: 200
 
+# ─── Command blocking during battles ─────────────────────────────────────────
+# Prevents players from running commands while in an active battle.
+# Players with pvpindex.battle.commands.bypass can still use all commands.
+# Required when the API is enabled to prevent abuse.
+battle_commands:
+  # Set to true to block commands during battles (default).
+  block_commands: true
+  # Commands that are always allowed, even during a battle.
+  # Only the root command is checked (e.g. "battle" matches /battle leave).
+  allowed_commands:
+    - "battle"
+    - "msg"
+    - "r"
+    - "reply"
+    - "tell"
+
 # ─── TeamsAPI guard ───────────────────────────────────────────────────────────
 # Optional integration with TeamsAPI (https://modrinth.com/plugin/teams-api).
 # When enabled, players on the same team cannot challenge each other.

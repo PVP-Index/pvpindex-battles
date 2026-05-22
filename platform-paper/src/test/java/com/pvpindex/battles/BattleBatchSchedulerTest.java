@@ -162,7 +162,8 @@ class BattleBatchSchedulerTest {
                 false, 40, 20,
                 100,
                 false, "", 0,
-                false
+                false,
+                true, java.util.List.of("battle")
         );
     }
 

@@ -22,6 +22,7 @@ import com.pvpindex.battles.gamemode.KitApplier;
 import com.pvpindex.battles.identifier.WorldIdentifier;
 import com.pvpindex.battles.identifier.WorldNormalizer;
 import com.pvpindex.battles.battle.BattleBatchScheduler;
+import com.pvpindex.battles.listener.BattleCommandBlockListener;
 import com.pvpindex.battles.listener.BattleEventListener;
 import com.pvpindex.battles.listener.BattleGuiListener;
 import com.pvpindex.battles.listener.ProxyMessageListener;
@@ -240,6 +241,11 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(battleEventListener, this);
 		getServer().getPluginManager().registerEvents(new ModerationListener(moderationService, messageService), this);
 		getServer().getPluginManager().registerEvents(new SetupListener(this, configManager, messageService), this);
+		if (configManager.settings().blockCommandsInBattle()) {
+			getServer().getPluginManager().registerEvents(
+					new BattleCommandBlockListener(battleService, configManager.settings(), messageService), this);
+			getLogger().info("Command blocking during battles enabled.");
+		}
 		getServer().getPluginManager().registerEvents(
 				new WorldCleanupListener(this, battleService, velocityTracker), this);
 

@@ -158,6 +158,15 @@ When `lobby.enabled` is `true`, the server starts `LobbyNetworkService` and its 
 
 When `database.enabled` is `false` (the default), stats, history, and leaderboard data are not persisted.
 
+### Battle Commands
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `battle_commands.block_commands` | boolean | `true` | Block all commands while a player is in an active battle |
+| `battle_commands.allowed_commands` | List | `[battle, msg, r, reply, tell]` | Commands that are always allowed during a battle (root command only, without `/`) |
+
+Players with `pvpindex.battle.commands.bypass` can use all commands regardless of this setting.
+
 ### Debug
 
 | Key | Type | Default | Description |
