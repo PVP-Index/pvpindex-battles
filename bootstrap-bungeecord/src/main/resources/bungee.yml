@@ -1,5 +1,5 @@
 name: PvPIndex-Proxy
 main: com.pvpindex.bungeecord.PvPIndexBungeePlugin
-version: "1.0.4"
+version: "1.0.5"
 author: PvPIndex Team
 description: Cross-server battle tracking and coordination for PvPIndex (BungeeCord)

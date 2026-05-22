@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  Krok 3 - Przeladuj"
   step3_desc: "&7  Wykonaj &f/pvpindex reload&7 aby zastosowac wszystkie zmiany."
   step3_hint: "&7  Gracze moga nastepnie uzyc &f/battle&7 aby otworzyc GUI trybow walki."
+
+leaderboard:
+  no_data: "&cRanking niedostepny. Baza danych moze byc wylaczona."
+  unknown_mode: "&cNieznany tryb gry: %mode%"
+  error: "&cBlad podczas ladowania rankingu. Sprobuj ponownie pozniej."

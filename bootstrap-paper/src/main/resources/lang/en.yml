@@ -136,3 +136,8 @@ setup:
   step3_heading: "&e  Step 3 - Reload"
   step3_desc: "&7  Run &f/pvpindex reload&7 to apply all changes."
   step3_hint: "&7  Players can then use &f/battle&7 to open the battle-mode queue GUI."
+
+leaderboard:
+  no_data: "&cLeaderboard data is not available. Database may be disabled."
+  unknown_mode: "&cUnknown game mode: %mode%"
+  error: "&cFailed to load leaderboard data. Try again later."

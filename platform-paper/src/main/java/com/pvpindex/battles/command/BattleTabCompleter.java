@@ -27,7 +27,7 @@ import org.bukkit.entity.Player;
  */
 public final class BattleTabCompleter implements TabCompleter {
 
-	private static final List<String> SUBS = List.of("leave", "challenge", "accept", "decline");
+	private static final List<String> SUBS = List.of("leave", "challenge", "accept", "decline", "leaderboard");
 
 	private final GameModeRegistry gameModeRegistry;
 	private final ChallengeManager challengeManager;
@@ -77,6 +77,15 @@ public final class BattleTabCompleter implements TabCompleter {
 						.map(m -> m.id())
 						.toList();
 				return filter(modeIds, args[2]);
+			}
+		}
+
+		if (("leaderboard".equals(sub) || "lb".equals(sub) || "top".equals(sub)) && args.length == 2) {
+			if (gameModeRegistry != null) {
+				List<String> modes = new ArrayList<>();
+				modes.add("overall");
+				gameModeRegistry.allModes().stream().map(m -> m.id()).forEach(modes::add);
+				return filter(modes, args[1]);
 			}
 		}
 
