@@ -19,6 +19,7 @@ battle:
   disputed: "&c战斗已申诉: %uuid%"
   not_found: "&c未找到战斗。"
   started_good_luck: "&e战斗开始！祝你好运！"
+  command_blocked: "&c战斗期间不能使用命令。"
 
 queue:
   joined: "&a已加入 &e%mode% &a队列。位置: &f%pos%"

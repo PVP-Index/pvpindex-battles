@@ -73,7 +73,12 @@ public class ConfigManager {
 				cfg.getString("proxy.secret", ""),
 				Math.max(1, cfg.getInt("proxy.heartbeat_interval_ticks", 200)),
 				// TeamsAPI guard
-				cfg.getBoolean("teams_guard.block_same_team", false)
+				cfg.getBoolean("teams_guard.block_same_team", false),
+				// Command blocking during battles
+				cfg.getBoolean("battle_commands.block_commands", true),
+				cfg.getStringList("battle_commands.allowed_commands").stream()
+						.map(s -> s.toLowerCase().startsWith("/") ? s.substring(1).toLowerCase() : s.toLowerCase())
+						.toList()
 		);
 
         replaySettings = new ReplaySettings(

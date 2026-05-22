@@ -19,6 +19,7 @@ battle:
   disputed: "&cBattle disputed: %uuid%"
   not_found: "&cBattle not found."
   started_good_luck: "&eBattle started! Good luck."
+  command_blocked: "&cCommands are disabled during battle."
 
 queue:
   joined: "&aJoined the &e%mode% &aqueue. Position: &f%pos%"

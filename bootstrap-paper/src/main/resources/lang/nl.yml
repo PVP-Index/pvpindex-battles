@@ -19,6 +19,7 @@ battle:
   disputed: "&cGevecht betwist: %uuid%"
   not_found: "&cGevecht niet gevonden."
   started_good_luck: "&eHet gevecht is begonnen! Succes!"
+  command_blocked: "&cCommando's zijn uitgeschakeld tijdens een gevecht."
 
 queue:
   joined: "&aJe bent toegevoegd aan de &e%mode% &awachtrij. Positie: &f%pos%"

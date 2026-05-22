@@ -48,3 +48,6 @@ permissions:
   pvpindex.battle.queue:
     description: Allows players to use /battle to join matchmaking queues
     default: true
+  pvpindex.battle.commands.bypass:
+    description: Bypass command blocking during active battles
+    default: op

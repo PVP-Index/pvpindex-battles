@@ -114,4 +114,5 @@ All permissions default to `op` unless noted otherwise.
 | `pvpindex.mod.ban.federated` | op | Federated cross-server bans |
 | `pvpindex.mod.report` | true | Submit reports |
 | `pvpindex.party` | true | Party commands (create, invite, join, leave, kick, disband) |
+| `pvpindex.battle.commands.bypass` | op | Bypass command blocking during active battles |
 | `pvpindex.stats` | true | View stats, history, and leaderboards |

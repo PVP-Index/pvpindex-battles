@@ -3,6 +3,7 @@ package com.pvpindex.battles.config;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import com.pvpindex.battles.replay.ReplayDetailLevel;
+import java.util.List;
 import java.util.Set;
 
 public record PluginSettings(
@@ -40,5 +41,8 @@ public record PluginSettings(
         String proxySecret,
         int proxyHeartbeatIntervalTicks,
         // TeamsAPI guard
-        boolean teamsGuardEnabled
+        boolean teamsGuardEnabled,
+        // Command blocking during battles
+        boolean blockCommandsInBattle,
+        List<String> allowedBattleCommands
 ) {}

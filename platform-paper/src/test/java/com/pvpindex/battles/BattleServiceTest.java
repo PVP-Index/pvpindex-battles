@@ -80,7 +80,9 @@ class BattleServiceTest {
                 // proxy
                 false, "", 0,
                 // teams guard
-                false
+                false,
+                // command blocking
+                true, java.util.List.of("battle")
         );
         BattleReplayRecorder recorder = new BattleReplayRecorder(plugin, new ObjectMapper(), ReplayDetailLevel.HIGH);
         PvPIndexApiClient apiClient = new PvPIndexApiClient(settings, new ObjectMapper()) {
