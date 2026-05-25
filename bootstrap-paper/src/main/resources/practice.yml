@@ -1,0 +1,34 @@
+# ─── PvPIndex Practice Mode Configuration ──────────────────────────────────────
+
+practice:
+  # Set to false to completely disable the /practice command and Practice tab.
+  enabled: true
+
+  # ── Reaction Training ────────────────────────────────────────────────────────
+  reaction_training:
+    # Maximum number of active targets visible at once.
+    max_targets: 5
+
+    # How often (in ticks) a new target is spawned (40 = 2 seconds).
+    spawn_interval_ticks: 40
+
+    # How long a target stays before counting as a miss (100 = 5 seconds).
+    target_lifetime_ticks: 100
+
+  # ── Bot Duel ─────────────────────────────────────────────────────────────────
+  bot:
+    # Default kit ID from gamemodes.yml to equip the bot (and the player).
+    kit_id: "sword_starter"
+
+    # How often (in ticks) the bot deals melee damage to the player (10 = 0.5 s).
+    attack_interval_ticks: 10
+
+    # Movement speed in blocks per tick (0.28 ≈ a sprinting player).
+    move_speed: 0.28
+
+    # Damage dealt per bot hit (3.0 = 1.5 hearts; equivalent to an iron sword).
+    attack_damage: 3.0
+
+    # When true, attempt to spawn an NMS ServerPlayer for a realistic player model.
+    # Falls back to a Zombie with equipment if NMS reflection fails.
+    use_nms_fake_player: true

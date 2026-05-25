@@ -15,9 +15,13 @@ commands:
     permission: pvpindex.mod
   battle:
     description: Battle GUI, queue, challenges, and forfeit
-    usage: /battle [leave|challenge <player> [mode]|accept <id>|decline <id>|leaderboard [mode]]
+    usage: /battle [leave|challenge <player> [mode]|accept <id>|decline <id>|leaderboard [mode]|practice]
     aliases: [pvp]
     permission: pvpindex.battle.queue
+  practice:
+    description: Enter practice mode (reaction training or bot duel)
+    usage: /practice [reaction|bot|stop] [gameMode]
+    permission: pvpindex.practice
 permissions:
   pvpindex.admin:
     default: op
@@ -52,3 +56,6 @@ permissions:
   pvpindex.battle.commands.bypass:
     description: Bypass command blocking during active battles
     default: op
+  pvpindex.practice:
+    description: Allows players to use the /practice command
+    default: true

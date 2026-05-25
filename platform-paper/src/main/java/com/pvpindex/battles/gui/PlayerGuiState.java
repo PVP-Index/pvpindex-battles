@@ -8,7 +8,8 @@ public final class PlayerGuiState {
 
 	public enum Mode {
 		QUEUE,
-		CHALLENGE
+		CHALLENGE,
+		PRACTICE
 	}
 
 	private Mode mode;

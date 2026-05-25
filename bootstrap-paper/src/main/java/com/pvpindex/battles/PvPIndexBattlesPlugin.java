@@ -24,6 +24,11 @@ import com.pvpindex.battles.identifier.WorldNormalizer;
 import com.pvpindex.battles.battle.BattleBatchScheduler;
 import com.pvpindex.battles.gui.LeaderboardGui;
 import com.pvpindex.battles.listener.BattleCommandBlockListener;
+import com.pvpindex.battles.practice.PracticeCommand;
+import com.pvpindex.battles.practice.PracticeManager;
+import com.pvpindex.battles.practice.PracticeSettings;
+import com.pvpindex.battles.practice.PracticeTabCompleter;
+import com.pvpindex.battles.listener.PracticeListener;
 import com.pvpindex.battles.listener.BattleEventListener;
 import com.pvpindex.battles.listener.BattleGuiListener;
 import com.pvpindex.battles.listener.ProxyMessageListener;
@@ -117,6 +122,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		saveResourceIfAbsent("gui.yml");
 		saveResourceIfAbsent("templates.yml");
 		saveResourceIfAbsent("schematics.yml");
+		saveResourceIfAbsent("practice.yml");
 		// Bundled schematic files — only written once (never overwrite server-owner edits).
 		saveResourceIfAbsent("schematics/arena.schem");
 		saveResourceIfAbsent("schematics/colosseum.schem");
@@ -361,6 +367,27 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			LeaderboardGui leaderboardGui = new LeaderboardGui(this, dataService, gameModeRegistry, messageService);
 			battleGuiCommand.setLeaderboardGui(leaderboardGui);
 			getLogger().info("Leaderboard GUI enabled (database active).");
+		}
+
+		// Practice mode — wired after gameModeRegistry and playerStateService are ready
+		org.bukkit.configuration.file.YamlConfiguration practiceYaml =
+				org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(
+						new java.io.File(getDataFolder(), "practice.yml"));
+		PracticeSettings practiceSettings = PracticeSettings.from(practiceYaml);
+		if (practiceSettings.enabled()) {
+			PracticeManager practiceManager = new PracticeManager(
+					this, playerStateService, new KitApplier(versionAdapter),
+					gameModeRegistry, practiceSettings);
+			var practiceCmd = getCommand("practice");
+			if (practiceCmd != null) {
+				PracticeCommand practiceCommand = new PracticeCommand(practiceManager, messageService);
+				practiceCmd.setExecutor(practiceCommand);
+				practiceCmd.setTabCompleter(new PracticeTabCompleter(gameModeRegistry));
+			}
+			battleGuiCommand.setPracticeManager(practiceManager);
+			getServer().getPluginManager().registerEvents(
+					new PracticeListener(practiceManager, battleGuiCommand), this);
+			getLogger().info("Practice mode enabled (/practice).");
 		}
 
 		battleGuiCommand.setChallengeManager(challengeManager);
