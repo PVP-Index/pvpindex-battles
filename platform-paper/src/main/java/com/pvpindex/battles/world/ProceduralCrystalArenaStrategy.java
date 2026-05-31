@@ -3,16 +3,21 @@ package com.pvpindex.battles.world;
 import com.pvpindex.battles.arena.SpawnPoint;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRule;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
-import org.bukkit.block.Block;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Builds a Crystal PvP arena in a fresh void world, in code, with no asset
@@ -55,7 +60,7 @@ public final class ProceduralCrystalArenaStrategy implements WorldGenerationStra
 		}
 
 		WorldCreator creator = new WorldCreator(worldName)
-				.generator(new VoidWorldGenerator())
+				.generator(new CrystalArenaChunkGenerator())
 				.type(WorldType.NORMAL)
 				.generateStructures(false);
 		World world = Bukkit.createWorld(creator);
@@ -63,8 +68,9 @@ public final class ProceduralCrystalArenaStrategy implements WorldGenerationStra
 			throw new IOException("Failed to create crystal arena world: " + worldName);
 		}
 
+		// Arena structure is embedded in the ChunkGenerator — spawn chunks are
+		// already fully built when createWorld() returns. Only game rules remain.
 		configureWorld(world);
-		buildArena(world);
 
 		plugin.getLogger().info("Built procedural crystal arena " + worldName + " from template " + template.id());
 		return new ArenaInstance(id, template.id(), world.getName(),
@@ -99,26 +105,56 @@ public final class ProceduralCrystalArenaStrategy implements WorldGenerationStra
 		if (rule != null) world.setGameRule(rule, value);
 	}
 
-	private void buildArena(World world) {
-		for (int x = -RADIUS; x <= RADIUS; x++) {
-			for (int z = -RADIUS; z <= RADIUS; z++) {
-				world.getBlockAt(x, FLOOR_Y, z).setType(Material.OBSIDIAN, false);
+	// -------------------------------------------------------------------------
+	// Chunk generator
+	// -------------------------------------------------------------------------
+
+	private static final class CrystalArenaChunkGenerator extends ChunkGenerator {
+
+		@Override
+		public void generateSurface(@NotNull WorldInfo worldInfo, @NotNull Random random,
+									int chunkX, int chunkZ, @NotNull ChunkData chunkData) {
+			int blockMinX = chunkX * 16;
+			int blockMinZ = chunkZ * 16;
+			int startX = Math.max(-RADIUS, blockMinX);
+			int endX   = Math.min( RADIUS, blockMinX + 15);
+			int startZ = Math.max(-RADIUS, blockMinZ);
+			int endZ   = Math.min( RADIUS, blockMinZ + 15);
+			if (startX > endX || startZ > endZ) return;
+
+			for (int wx = startX; wx <= endX; wx++) {
+				int lx = wx - blockMinX;
+				for (int wz = startZ; wz <= endZ; wz++) {
+					int lz = wz - blockMinZ;
+					boolean perimeter = (wx == -RADIUS || wx == RADIUS || wz == -RADIUS || wz == RADIUS);
+					// Floor
+					chunkData.setBlock(lx, FLOOR_Y, lz, Material.OBSIDIAN);
+					// Perimeter wall: WALL_BASE obsidian + WALL_GLASS glass courses
+					if (perimeter) {
+						for (int dy = 1; dy <= WALL_BASE + WALL_GLASS; dy++) {
+							chunkData.setBlock(lx, FLOOR_Y + dy, lz,
+									dy <= WALL_BASE ? Material.OBSIDIAN : Material.GLASS);
+						}
+					}
+				}
 			}
 		}
-		for (int x = -RADIUS; x <= RADIUS; x++) {
-			placeWall(world, x, -RADIUS);
-			placeWall(world, x,  RADIUS);
-		}
-		for (int z = -RADIUS + 1; z <= RADIUS - 1; z++) {
-			placeWall(world, -RADIUS, z);
-			placeWall(world,  RADIUS, z);
-		}
-	}
 
-	private void placeWall(World world, int x, int z) {
-		for (int dy = 1; dy <= WALL_BASE + WALL_GLASS; dy++) {
-			Material mat = (dy <= WALL_BASE) ? Material.OBSIDIAN : Material.GLASS;
-			world.getBlockAt(x, FLOOR_Y + dy, z).setType(mat, false);
+		@Override public boolean shouldGenerateNoise()       { return false; }
+		@Override public boolean shouldGenerateSurface()     { return false; }
+		@Override public boolean shouldGenerateCaves()       { return false; }
+		@Override public boolean shouldGenerateDecorations() { return false; }
+		@Override public boolean shouldGenerateMobs()        { return false; }
+		@Override public boolean shouldGenerateStructures()  { return false; }
+
+		@Override
+		public @NotNull Location getFixedSpawnLocation(@NotNull World world, @NotNull Random random) {
+			return new Location(world, 0, FLOOR_Y + 1, 0);
+		}
+
+		@Override
+		public @NotNull List<BlockPopulator> getDefaultPopulators(@NotNull World world) {
+			return List.of();
 		}
 	}
 

@@ -90,9 +90,27 @@ public final class PracticeManager {
                 gameModeId != null ? gameModeId : settings.botKitId());
         sessions.put(player.getUniqueId(), session);
 
-        // Acquire a practice arena and teleport the player there
-        ArenaInstance arena = acquireAndTeleport(player);
+        // When the arena pool is cold, world generation can take ~300 ms on the
+        // main thread. Schedule the heavy acquire + teleport to the very next
+        // tick so this command handler returns immediately. For a warm pool the
+        // 1-tick deferral is imperceptible.
+        String templateId = settings.practiceTemplateId();
+        boolean poolCold = arenaPool != null
+                && templateId != null && !templateId.isBlank()
+                && arenaPool.poolSize(templateId) == 0;
+        if (poolCold) {
+            player.sendMessage(Component.text("Generating practice arena, one moment...", NamedTextColor.YELLOW));
+        }
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!player.isOnline()) return;
+            ArenaInstance arena = acquireAndTeleport(player);
+            launchMode(player, session, mode, gameModeId, arena);
+        });
+    }
 
+    /** Start the appropriate sub-mode after the arena has been acquired and the player teleported. */
+    private void launchMode(Player player, PracticeSession session, PracticeMode mode,
+            String gameModeId, ArenaInstance arena) {
         switch (mode) {
             case REACTION_TRAINING -> startReactionTraining(player, session);
             case BOT_DUEL          -> {
@@ -275,7 +293,9 @@ public final class PracticeManager {
                 SpawnPoint s0 = spawns.get(0);
                 World world = Bukkit.getWorld(arena.worldName());
                 if (world != null) {
-                    player.teleport(new Location(world, s0.x(), s0.y(), s0.z(), s0.yaw(), s0.pitch()));
+                    // teleportAsync uses Paper's async chunk system to pre-load
+                    // destination chunks before completing the cross-world move.
+                    player.teleportAsync(new Location(world, s0.x(), s0.y(), s0.z(), s0.yaw(), s0.pitch()));
                 }
             }
             return arena;

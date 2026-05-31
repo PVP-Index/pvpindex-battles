@@ -4,7 +4,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
-import java.util.Iterator;
 import java.util.UUID;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
@@ -218,15 +217,12 @@ public final class BotPlayerFactory {
 
             @SuppressWarnings("unchecked")
             java.util.List<Object> players = (java.util.List<Object>) playersField.get(playerList);
-            int removed = 0;
-            Iterator<Object> it = players.iterator();
-            while (it.hasNext()) {
-                Object p = it.next();
-                if (p == null || hasNullConnection(p)) {
-                    it.remove();
-                    removed++;
-                }
-            }
+            int before = players.size();
+            // CopyOnWriteArrayList (used by Paper's PlayerList) does NOT support
+            // Iterator.remove() — it throws UnsupportedOperationException.
+            // removeIf() uses the list's own bulk-remove path, which is safe.
+            players.removeIf(p -> p == null || hasNullConnection(p));
+            int removed = before - players.size();
             if (removed > 0) {
                 logger.warning("[PracticeBot] Purged " + removed
                         + " null-connection player(s) from PlayerList to prevent NPE crash.");
