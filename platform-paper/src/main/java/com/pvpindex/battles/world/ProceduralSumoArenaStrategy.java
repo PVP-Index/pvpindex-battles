@@ -68,6 +68,19 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 		// already fully built when createWorld() returns. Only game rules remain.
 		configureWorld(world);
 
+		// Pre-load every chunk the arena footprint touches. On Paper, spawn-area
+		// chunks are already generated during createWorld(). On Spigot and other
+		// Bukkit implementations only the chunk at the world spawn may be ready —
+		// explicitly calling getChunkAt() triggers generateSurface() for any
+		// remaining chunks, guaranteeing the arena is fully built on all server types.
+		int minC = Math.floorDiv(-HALF, 16);
+		int maxC = Math.floorDiv( HALF, 16);
+		for (int cx = minC; cx <= maxC; cx++) {
+			for (int cz = minC; cz <= maxC; cz++) {
+				world.getChunkAt(cx, cz);
+			}
+		}
+
 		plugin.getLogger().info("Built procedural sumo arena " + worldName + " from template " + template.id());
 		return new ArenaInstance(id, template.id(), world.getName(),
 				spawnsFor(template), template.spectatorSpawn());
@@ -94,6 +107,12 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 		world.setStorm(false);
 		world.setThundering(false);
 		applyRule(world, "fallDamage", true);
+		// Set the world border generously beyond the platform to prevent distant
+		// chunk generation while still leaving room for knockback gameplay.
+		// setWarningDistance(0) suppresses the red vignette during normal play.
+		world.getWorldBorder().setCenter(0, 0);
+		world.getWorldBorder().setSize(HALF * 2 + 1 + 64.0);
+		world.getWorldBorder().setWarningDistance(0);
 	}
 
 	@SuppressWarnings("unchecked")

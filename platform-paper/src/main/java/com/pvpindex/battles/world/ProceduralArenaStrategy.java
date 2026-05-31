@@ -89,6 +89,19 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         // already fully built when createWorld() returns. Only game rules remain.
         configureWorld(world);
 
+        // Pre-load every chunk the arena footprint touches. On Paper, spawn-area
+        // chunks are already generated during createWorld(). On Spigot and other
+        // Bukkit implementations only the chunk at the world spawn may be ready —
+        // explicitly calling getChunkAt() triggers generateSurface() for any
+        // remaining chunks, guaranteeing the arena is fully built on all server types.
+        int minC = Math.floorDiv(-RADIUS, 16);
+        int maxC = Math.floorDiv( RADIUS, 16);
+        for (int cx = minC; cx <= maxC; cx++) {
+            for (int cz = minC; cz <= maxC; cz++) {
+                world.getChunkAt(cx, cz);
+            }
+        }
+
         plugin.getLogger().info("Built procedural arena " + worldName + " from template " + template.id());
         return new ArenaInstance(id, template.id(), world.getName(),
                 spawnsFor(template), template.spectatorSpawn());
@@ -188,6 +201,12 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         world.setTime(6000L); // noon
         world.setStorm(false);
         world.setThundering(false);
+        // Constrain the world border to just outside the arena so the server never
+        // generates chunks beyond the arena footprint. Works on all Bukkit implementations.
+        // setWarningDistance(0) suppresses the red vignette inside the arena walls.
+        world.getWorldBorder().setCenter(0, 0);
+        world.getWorldBorder().setSize(RADIUS * 2 + 1 + 48.0);
+        world.getWorldBorder().setWarningDistance(0);
     }
 
     @SuppressWarnings("unchecked")
