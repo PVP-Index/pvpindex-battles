@@ -136,10 +136,28 @@ public final class NmsSpawnHelper {
                 for (Method m : nmsLevel.getClass().getMethods()) {
                     if ("removePlayerImmediately".equals(m.getName()) && m.getParameterCount() == 2) {
                         m.invoke(nmsLevel, entity, discarded);
-                        return;
+                        // Fall through to the WaypointManager safety net below — on Paper
+                        // 26.1.x the Moonrise EntityLookup may fail to remove the entity
+                        // from null chunk-slices and silently skip the onTrackingEnd
+                        // callback, leaving the fake bot registered as a waypoint
+                        // receiver.  The direct call below ensures cleanup even when
+                        // removePlayerImmediately's internal chain is interrupted.
+                        break;
                     }
                 }
             } catch (Exception ignored) {}
+        }
+
+        // Paper 26.1.x safety net: remove entity from ServerWaypointManager directly.
+        // When Moonrise's EntityLookup cannot find the entity in chunk slices (partial
+        // tracking failure after addFreshEntity), the EntityCallbacks.onTrackingEnd
+        // chain — which normally calls ServerWaypointManager.removePlayer — is never
+        // fired.  Without this explicit call the fake bot stays in the receiver map of
+        // every nearby waypoint and causes a NPE in
+        // WaypointTransmitter$EntityChunkConnection.disconnect() the next time a real
+        // player is teleported.
+        if (nmsLevel != null) {
+            tryDirectWaypointManagerRemove(nmsLevel, entity);
         }
 
         // Fallback: entity.setRemoved(DISCARDED)
@@ -156,5 +174,40 @@ public final class NmsSpawnHelper {
 
         // Last resort: entity.discard() (Paper convenience wrapper for setRemoved)
         try { entity.getClass().getMethod("discard").invoke(entity); } catch (Exception ignored) {}
+    }
+
+    /**
+     * Directly calls {@code ServerWaypointManager.removePlayer(entity)} by locating
+     * the manager field in the level's class hierarchy.
+     *
+     * <p>This is a targeted safety net for Paper 26.1.x.  On builds that do not have
+     * {@code ServerWaypointManager} (e.g. 1.21.x) the field scan silently finds
+     * nothing and returns without side effects.</p>
+     */
+    private static void tryDirectWaypointManagerRemove(Object nmsLevel, Object entity) {
+        try {
+            // Scan the level's class hierarchy for a field whose type is
+            // ServerWaypointManager (class name match is build-stable).
+            Object manager = null;
+            for (Class<?> c = nmsLevel.getClass(); c != null && manager == null;
+                    c = c.getSuperclass()) {
+                for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                    if ("ServerWaypointManager".equals(f.getType().getSimpleName())) {
+                        f.setAccessible(true);
+                        manager = f.get(nmsLevel);
+                        break;
+                    }
+                }
+            }
+            if (manager == null) return;
+
+            // ServerWaypointManager.removePlayer(ServerPlayer) — 1-param, any name
+            for (Method m : manager.getClass().getMethods()) {
+                if ("removePlayer".equals(m.getName()) && m.getParameterCount() == 1) {
+                    m.invoke(manager, entity);
+                    return;
+                }
+            }
+        } catch (Exception ignored) {}
     }
 }

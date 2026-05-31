@@ -83,8 +83,8 @@ class NmsSpawnHelperTest {
 
     @Test
     void tryRemoveEntity_nullLevel_doesNotThrow() {
-        // nmsLevel is null — the method must silently skip removePlayerImmediately
-        // and attempt the entity-level fallbacks.
+        // nmsLevel is null — the method must silently skip removePlayerImmediately,
+        // skip the WaypointManager cleanup, and attempt the entity-level fallbacks.
         assertDoesNotThrow(() -> NmsSpawnHelper.tryRemoveEntity(null, new FakeDiscardable()));
     }
 
@@ -106,9 +106,38 @@ class NmsSpawnHelperTest {
 
     @Test
     void tryRemoveEntity_bothLevelAndEntityPresent_doesNotThrow() {
-        // Exercises the branch where nmsLevel != null but has no removePlayerImmediately.
+        // Exercises the branch where nmsLevel != null but has no removePlayerImmediately
+        // and no ServerWaypointManager field.
         assertDoesNotThrow(
                 () -> NmsSpawnHelper.tryRemoveEntity(new Object(), new FakeDiscardable()));
+    }
+
+    @Test
+    void tryRemoveEntity_levelWithWaypointManager_removePlayerCalled() {
+        // Simulates the Paper 26.1.x scenario: the level has a ServerWaypointManager
+        // field.  The cleanup must call removePlayer() on it directly to unregister
+        // the fake bot as a waypoint receiver, even when EntityLookup fails.
+        FakeLevelWithWaypointManager level = new FakeLevelWithWaypointManager();
+        FakeDiscardable entity = new FakeDiscardable();
+
+        NmsSpawnHelper.tryRemoveEntity(level, entity);
+
+        assertTrue(level.serverWaypointManager.removePlayerCalled,
+                "ServerWaypointManager.removePlayer() must be called as the waypoint cleanup safety net");
+        assertSame(entity, level.serverWaypointManager.removedEntity);
+    }
+
+    @Test
+    void tryRemoveEntity_levelWithWaypointManager_discardStillCalledAsFinalFallback() {
+        // Verifies that the cleanup chain continues past the WaypointManager call
+        // (no early return) and reaches discard() when no setRemoved method exists.
+        FakeLevelWithWaypointManager level = new FakeLevelWithWaypointManager();
+        FakeDiscardable entity = new FakeDiscardable();
+
+        NmsSpawnHelper.tryRemoveEntity(level, entity);
+
+        assertTrue(entity.discardCalled,
+                "discard() should still be called after the WaypointManager safety net");
     }
 
     // ── Helper classes ────────────────────────────────────────────────────────
@@ -157,5 +186,31 @@ class NmsSpawnHelperTest {
         public void discard() {
             discardCalled = true;
         }
+    }
+
+    /**
+     * Simulates a {@code net.minecraft.server.waypoints.ServerWaypointManager}.
+     * The simple class name "ServerWaypointManager" is what the reflective field
+     * scan matches on.
+     */
+    @SuppressWarnings("unused")
+    static class ServerWaypointManager {
+        boolean removePlayerCalled;
+        Object removedEntity;
+
+        public void removePlayer(Object player) {
+            removePlayerCalled = true;
+            removedEntity = player;
+        }
+    }
+
+    /**
+     * Simulates a {@code ServerLevel} that holds a {@code ServerWaypointManager} field.
+     * The field is declared {@code public} so that reflection can access it without
+     * setAccessible in the test JVM's unnamed module.
+     */
+    @SuppressWarnings("unused")
+    static class FakeLevelWithWaypointManager {
+        public final ServerWaypointManager serverWaypointManager = new ServerWaypointManager();
     }
 }
