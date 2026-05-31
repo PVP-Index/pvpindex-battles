@@ -706,7 +706,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 								.getDeclaredConstructor()
 								.newInstance();
 				com.pvpindex.battles.practice.bot.BotPlayerFactory.setNmsAdapter(adapter);
-				getLogger().info("[PracticeBot] NMS bot adapter: BotNmsAdapter2610 (Paper 26.1.x).");
+				getLogger().warning("[PracticeBot] [EXPERIMENTAL] NMS fake-player bot loaded: BotNmsAdapter2610 (Paper 26.1.x). "
+					+ "This feature is experimental — set 'use_nms_fake_player: false' to disable.");
 			} catch (ReflectiveOperationException e) {
 				getLogger().warning("[PracticeBot] Failed to load BotNmsAdapter2610: " + e.getMessage()
 						+ " — NMS bot disabled.");
@@ -722,7 +723,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 							.getDeclaredConstructor()
 							.newInstance();
 			com.pvpindex.battles.practice.bot.BotPlayerFactory.setNmsAdapter(adapter);
-			getLogger().info("[PracticeBot] NMS bot adapter: BotNmsAdapter121 (Paper/Spigot 1.21.x).");
+			getLogger().warning("[PracticeBot] [EXPERIMENTAL] NMS fake-player bot loaded: BotNmsAdapter121 (Paper/Spigot 1.21.x). "
+					+ "This feature is experimental — set 'use_nms_fake_player: false' to disable.");
 		} catch (ReflectiveOperationException e) {
 			getLogger().warning("[PracticeBot] Failed to load BotNmsAdapter121: " + e.getMessage()
 					+ " — NMS bot disabled.");

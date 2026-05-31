@@ -47,9 +47,15 @@ practice:
     # Damage dealt per bot hit (3.0 = 1.5 hearts; equivalent to an iron sword).
     attack_damage: 3.0
 
+    # ── EXPERIMENTAL ─────────────────────────────────────────────────────────
     # When true, attempt to spawn an NMS ServerPlayer for a realistic player model.
     # Falls back to a Zombie with equipment if NMS reflection fails.
-    # WARNING: NMS fake-player support is experimental and may crash the server on
-    # some Paper builds.  Keep false unless you have verified NMS support works on
-    # your specific server version.
+    #
+    # Supported platforms:  Paper 1.21.x, Paper 26.1.x, Spigot 1.21.x
+    # Unsupported:          Folia (always uses Zombie fallback regardless of this flag)
+    #
+    # WARNING: This is an EXPERIMENTAL feature.  NMS internals may change between
+    # builds and could produce unexpected behaviour or errors on your server.
+    # A startup warning is printed when this feature is active.
+    # Keep this set to false unless you have tested NMS bot support on your server.
     use_nms_fake_player: false
