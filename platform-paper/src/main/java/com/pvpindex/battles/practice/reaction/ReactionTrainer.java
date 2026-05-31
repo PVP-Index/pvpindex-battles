@@ -39,6 +39,12 @@ public final class ReactionTrainer {
     // Session data
     private Player player;
     private PracticeSession session;
+    /**
+     * Arena floor centre used when {@code spawn_mode = "arena"}.
+     * {@code null} until set by {@link #setArenaCenter(Location)}, which causes
+     * the trainer to fall back to player-relative spawning.
+     */
+    private Location arenaCenter = null;
 
     // Scheduler tasks
     private BukkitTask spawnTask;
@@ -138,23 +144,44 @@ public final class ReactionTrainer {
 
     private void spawnTarget() {
         if (!player.isOnline()) return;
+        long lifetimeMs = (long) settings.reactionTargetLifetimeTicks() * 50L;
+        if (arenaCenter != null && "arena".equals(settings.reactionSpawnMode())) {
+            spawnTargetArenaRelative(lifetimeMs);
+        } else {
+            spawnTargetPlayerRelative(lifetimeMs);
+        }
+    }
+
+    /** Spawns a target at a random position relative to the arena floor centre. */
+    private void spawnTargetArenaRelative(long lifetimeMs) {
+        double radius      = settings.reactionArenaSpawnRadius();
+        double heightRange = settings.reactionArenaHeightRange();
+        double angle    = random.nextDouble() * Math.PI * 2;
+        double distance = 1.5 + random.nextDouble() * Math.max(0, radius - 1.5);
+        Location spawnLoc = arenaCenter.clone().add(
+                Math.cos(angle) * distance,
+                0.7 + random.nextDouble() * heightRange,
+                Math.sin(angle) * distance);
+        activeTargets.add(new ReactionTarget(plugin, spawnLoc, lifetimeMs));
+    }
+
+    /** Original player-relative spawn (opt-in via {@code spawn_mode: player}). */
+    private void spawnTargetPlayerRelative(long lifetimeMs) {
         Location eye = player.getEyeLocation();
-
-        // Random horizontal offset within a hemisphere in front of the player
-        double angle = random.nextDouble() * Math.PI * 2;
+        double angle    = random.nextDouble() * Math.PI * 2;
         double distance = 2.5 + random.nextDouble() * SPREAD_H;
-        double offsetX = Math.cos(angle) * distance;
-        double offsetZ = Math.sin(angle) * distance;
-        double offsetY = (random.nextDouble() - 0.5) * SPREAD_V * 2;
-
+        double offsetX  = Math.cos(angle) * distance;
+        double offsetZ  = Math.sin(angle) * distance;
+        double offsetY  = (random.nextDouble() - 0.5) * SPREAD_V * 2;
         Location spawnLoc = eye.clone().add(offsetX, offsetY - 0.9, offsetZ);
-        // Keep Y above ground
         spawnLoc.setY(Math.max(spawnLoc.getY(), eye.getY() - 1.2));
-
-        activeTargets.add(new ReactionTarget(plugin, spawnLoc));
+        activeTargets.add(new ReactionTarget(plugin, spawnLoc, lifetimeMs));
     }
 
     // ── Accessors ─────────────────────────────────────────────────────────
+
+    /** Sets the arena floor centre for arena-relative target spawning. */
+    public void setArenaCenter(Location center) { this.arenaCenter = center; }
 
     public boolean isRunning()                      { return running; }
     public ReactionScoreTracker score()             { return score; }

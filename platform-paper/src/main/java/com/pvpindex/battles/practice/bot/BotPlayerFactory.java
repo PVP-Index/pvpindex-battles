@@ -1,8 +1,10 @@
 package com.pvpindex.battles.practice.bot;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
 import java.util.UUID;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
@@ -59,6 +61,10 @@ public final class BotPlayerFactory {
                 plugin.getLogger().warning("[PracticeBot] NMS fake-player spawn failed ("
                         + e.getClass().getSimpleName() + ": " + e.getMessage()
                         + "). Falling back to Zombie bot.");
+                // The ServerPlayer ctor may partially register itself in PlayerList before
+                // throwing, leaving a null-connection entry that causes an NPE inside
+                // PlayerList.broadcastAll() on the very next server tick.  Remove it now.
+                tryPurgeNullConnectionPlayers(plugin.getLogger());
             }
         }
         return spawnZombieFallback(world, location, name);
@@ -184,6 +190,64 @@ public final class BotPlayerFactory {
             }
         }
         throw new NoSuchMethodException("addFreshEntity not found on " + nmsLevel.getClass().getSimpleName());
+    }
+
+    // ── NMS cleanup ───────────────────────────────────────────────────────────
+
+    /**
+     * Reflectively removes any {@code ServerPlayer} with a null {@code connection}
+     * field from the server's {@code PlayerList.players} list.
+     *
+     * <p>This guards against a crash in {@code PlayerList.broadcastAll()} that
+     * occurs when the {@code ServerPlayer} constructor partially registers the
+     * entity before throwing, leaving a disconnected entry behind.</p>
+     */
+    private static void tryPurgeNullConnectionPlayers(Logger logger) {
+        try {
+            Object craftServer = Bukkit.getServer();
+            Object nmsServer   = craftServer.getClass().getMethod("getServer").invoke(craftServer);
+            Object playerList  = nmsServer.getClass().getMethod("getPlayerList").invoke(nmsServer);
+
+            // Walk up the class hierarchy to find the "players" List field
+            Field playersField = null;
+            for (Class<?> c = playerList.getClass(); c != null && playersField == null; c = c.getSuperclass()) {
+                try { playersField = c.getDeclaredField("players"); } catch (NoSuchFieldException ignored) {}
+            }
+            if (playersField == null) return;
+            playersField.setAccessible(true);
+
+            @SuppressWarnings("unchecked")
+            java.util.List<Object> players = (java.util.List<Object>) playersField.get(playerList);
+            int removed = 0;
+            Iterator<Object> it = players.iterator();
+            while (it.hasNext()) {
+                Object p = it.next();
+                if (p == null || hasNullConnection(p)) {
+                    it.remove();
+                    removed++;
+                }
+            }
+            if (removed > 0) {
+                logger.warning("[PracticeBot] Purged " + removed
+                        + " null-connection player(s) from PlayerList to prevent NPE crash.");
+            }
+        } catch (Exception ex) {
+            logger.warning("[PracticeBot] Could not purge null-connection players: " + ex.getMessage());
+        }
+    }
+
+    private static boolean hasNullConnection(Object serverPlayer) {
+        try {
+            Field connField = null;
+            for (Class<?> c = serverPlayer.getClass(); c != null && connField == null; c = c.getSuperclass()) {
+                try { connField = c.getDeclaredField("connection"); } catch (NoSuchFieldException ignored) {}
+            }
+            if (connField == null) return false;
+            connField.setAccessible(true);
+            return connField.get(serverPlayer) == null;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 
     // ── Zombie fallback ───────────────────────────────────────────────────────

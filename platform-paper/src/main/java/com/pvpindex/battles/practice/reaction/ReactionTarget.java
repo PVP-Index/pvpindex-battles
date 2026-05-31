@@ -16,25 +16,33 @@ import org.bukkit.scheduler.BukkitTask;
 /**
  * A single hittable reaction-training target.
  *
- * <p>Visually, each target is a small invisible {@link ArmorStand} surrounded
+ * <p>Visually each target is a small invisible {@link ArmorStand} surrounded
  * by layered particle effects:</p>
  * <ul>
- *   <li>Continuous white {@code END_ROD} glow</li>
- *   <li>Rotating cyan {@code WAX_ON} halo ring (8-point, sin/cos)</li>
- *   <li>Pulsing aqua {@code FIREWORK} core</li>
+ *   <li>Countdown ring — up to {@value #MAX_STARS} fixed END_ROD stars that
+ *       disappear one-by-one as the target ages, giving a clear remaining-time
+ *       indicator.</li>
+ *   <li>Hitbox ring — six DUST dots at the click radius (≈ 0.35 blocks) that
+ *       shift from cyan → orange → red as the target approaches expiry.</li>
+ *   <li>Core glow — a tight GLOW / END_ROD cluster at the exact centre so
+ *       the player always knows where to aim.</li>
  * </ul>
  *
- * <p>When a player sword-hits the ArmorStand, {@link #remove(boolean)} is called
- * with {@code burst=true}, spawning an explosion + confetti particle burst and
- * playing a satisfying sound combination.</p>
+ * <p>When hit, {@link #remove(boolean)} with {@code burst=true} spawns a
+ * confetti explosion and plays a satisfying sound combination.</p>
  */
 public final class ReactionTarget {
 
     /** PDC key placed on every reaction-target ArmorStand. */
     public static final NamespacedKey PDC_KEY = new NamespacedKey("pvpindex", "reaction_target");
 
+    /** Number of countdown stars shown at full lifetime. */
+    private static final int MAX_STARS = 8;
+
     private final ArmorStand stand;
     private final long spawnTimeMs;
+    /** Total lifetime in milliseconds — used to compute the age ratio. */
+    private final long lifetimeMs;
 
     // Either Folia ScheduledTask or legacy BukkitTask – only one will be non-null.
     private ScheduledTask foliaTask;
@@ -45,9 +53,12 @@ public final class ReactionTarget {
     /**
      * Spawns the ArmorStand at {@code location} and immediately starts the
      * particle animation.
+     *
+     * @param lifetimeMs total lifetime in milliseconds; drives the countdown ring
      */
-    public ReactionTarget(Plugin plugin, Location location) {
+    public ReactionTarget(Plugin plugin, Location location, long lifetimeMs) {
         this.spawnTimeMs = System.currentTimeMillis();
+        this.lifetimeMs  = lifetimeMs;
 
         ArmorStand as = (ArmorStand) location.getWorld().spawnEntity(location, EntityType.ARMOR_STAND);
         as.setInvisible(true);
@@ -99,30 +110,51 @@ public final class ReactionTarget {
         World world = stand.getWorld();
         Location center = stand.getLocation().add(0, 0.9, 0); // chest height
 
-        // ─ Continuous white END_ROD glow ─────────────────────────────────
-        world.spawnParticle(Particle.END_ROD, center, 3, 0.12, 0.12, 0.12, 0.008);
+        // Age ratio: 0.0 = just spawned, 1.0 = lifetime exhausted
+        double ageRatio  = lifetimeMs > 0
+                ? Math.min(1.0, (double) (System.currentTimeMillis() - spawnTimeMs) / lifetimeMs)
+                : 0.0;
+        double remaining = 1.0 - ageRatio;
 
-        // ─ Rotating 8-point WAX_ON halo ring (every 4 ticks) ─────────────
-        if (tick % 4 == 0) {
-            double angleMod = tick * 0.18; // slow rotation
-            for (int i = 0; i < 8; i++) {
-                double angle = (Math.PI * 2 / 8) * i + angleMod;
-                double rx = Math.cos(angle) * 0.55;
-                double rz = Math.sin(angle) * 0.55;
-                world.spawnParticle(Particle.WAX_ON, center.clone().add(rx, 0, rz),
+        // ─ Countdown ring: fixed END_ROD stars, disappearing one-by-one ──────
+        // Stars sit at fixed angular positions so the player can watch them vanish.
+        if (tick % 3 == 0) {
+            int litStars = (int) Math.ceil(remaining * MAX_STARS);
+            for (int i = 0; i < litStars; i++) {
+                double angle = (Math.PI * 2.0 / MAX_STARS) * i;
+                world.spawnParticle(Particle.END_ROD,
+                        center.clone().add(Math.cos(angle) * 0.65, 0, Math.sin(angle) * 0.65),
                         1, 0, 0, 0, 0);
             }
         }
 
-        // ─ Pulsing FIREWORK core (every 6 ticks) ─────────────────────────
-        if (tick % 6 == 0) {
-            world.spawnParticle(Particle.FIREWORK, center, 2, 0.06, 0.06, 0.06, 0.015);
+        // ─ Core glow: bright cluster at the exact click point ────────────────
+        if (tick % 4 == 0) {
+            world.spawnParticle(Particle.GLOW, center, 3, 0.05, 0.05, 0.05, 0);
         }
 
-        // ─ Subtle vertical DUST sweep (every 10 ticks) ────────────────────
-        if (tick % 10 == 0) {
-            var dustOptions = new Particle.DustOptions(org.bukkit.Color.fromRGB(0, 200, 255), 0.8f);
-            world.spawnParticle(Particle.DUST, center, 4, 0.2, 0.3, 0.2, 0, dustOptions);
+        // ─ Hitbox ring: DUST dots at click radius, colour = time remaining ───
+        // Cyan (fresh) → orange (half-way) → red (about to expire).
+        if (tick % 6 == 0) {
+            org.bukkit.Color ringColor;
+            if (remaining > 0.6) {
+                ringColor = org.bukkit.Color.fromRGB(0, 200, 255);   // cyan
+            } else if (remaining > 0.3) {
+                ringColor = org.bukkit.Color.fromRGB(255, 140, 0);   // orange
+            } else {
+                ringColor = org.bukkit.Color.fromRGB(255, 40, 40);   // red
+            }
+            var dust = new Particle.DustOptions(ringColor, 0.9f);
+            // Equatorial ring
+            for (int i = 0; i < 6; i++) {
+                double angle = (Math.PI * 2.0 / 6) * i;
+                world.spawnParticle(Particle.DUST,
+                        center.clone().add(Math.cos(angle) * 0.35, 0, Math.sin(angle) * 0.35),
+                        1, 0, 0, 0, 0, dust);
+            }
+            // Top and bottom caps for 3-D depth cue
+            world.spawnParticle(Particle.DUST, center.clone().add(0,  0.35, 0), 1, 0, 0, 0, 0, dust);
+            world.spawnParticle(Particle.DUST, center.clone().add(0, -0.35, 0), 1, 0, 0, 0, 0, dust);
         }
     }
 

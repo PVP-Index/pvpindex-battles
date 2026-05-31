@@ -19,6 +19,20 @@ practice:
     # How long a target stays before counting as a miss (100 = 5 seconds).
     target_lifetime_ticks: 100
 
+    # Spawn mode controls where targets appear:
+    #   arena  (default) — within the flat arena floor; targets stay inside the
+    #                       arena bounds regardless of where the player stands.
+    #   player            — random offsets around the player's eye position
+    #                       (original behaviour; opt-in).
+    spawn_mode: "arena"
+
+    # Radius (blocks) around the arena centre used when spawn_mode is "arena".
+    arena_spawn_radius: 6.0
+
+    # Height range above the arena floor when spawn_mode is "arena" (targets
+    # appear between floor+0.7 and floor+0.7+height_range).
+    arena_spawn_height_range: 1.5
+
   # ── Bot Duel ─────────────────────────────────────────────────────────────────
   bot:
     # Default kit ID from gamemodes.yml to equip the bot (and the player).
@@ -35,4 +49,7 @@ practice:
 
     # When true, attempt to spawn an NMS ServerPlayer for a realistic player model.
     # Falls back to a Zombie with equipment if NMS reflection fails.
-    use_nms_fake_player: true
+    # WARNING: NMS fake-player support is experimental and may crash the server on
+    # some Paper builds.  Keep false unless you have verified NMS support works on
+    # your specific server version.
+    use_nms_fake_player: false

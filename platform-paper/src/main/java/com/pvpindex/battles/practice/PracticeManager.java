@@ -199,6 +199,25 @@ public final class PracticeManager {
                 "Reaction training started! Hit the glowing targets as fast as you can.",
                 NamedTextColor.GREEN));
         ReactionTrainer trainer = new ReactionTrainer(plugin, settings);
+
+        // Pass the arena floor centre so targets spawn within arena bounds
+        ArenaInstance arena = practiceArenas.get(player.getUniqueId());
+        if (arena != null) {
+            World world = Bukkit.getWorld(arena.worldName());
+            List<SpawnPoint> spawns = arena.spawnPoints();
+            if (world != null && spawns != null && !spawns.isEmpty()) {
+                SpawnPoint s0 = spawns.get(0);
+                if (spawns.size() >= 2) {
+                    SpawnPoint s1 = spawns.get(1);
+                    trainer.setArenaCenter(new Location(world,
+                            (s0.x() + s1.x()) / 2.0, s0.y(),
+                            (s0.z() + s1.z()) / 2.0));
+                } else {
+                    trainer.setArenaCenter(new Location(world, s0.x(), s0.y(), s0.z()));
+                }
+            }
+        }
+
         trainers.put(player.getUniqueId(), trainer);
         trainer.start(player, session);
     }
