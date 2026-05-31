@@ -5,7 +5,6 @@ import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-
 /**
  * Tracks per-session reaction-training statistics: hits, misses, combos,
  * and reaction times (in milliseconds).  Pure data — no Bukkit dependency.
@@ -60,6 +59,28 @@ public final class ReactionScoreTracker {
                 .append(Component.text("Best: " + best + "ms  Avg: " + avg + "ms", NamedTextColor.AQUA))
                 .append(Component.newline())
                 .append(Component.text("Best Combo: ×" + bestCombo, NamedTextColor.GOLD));
+    }
+
+    /** Chat-friendly summary: each element is one line to send via {@code player.sendMessage()}. */
+    public List<Component> chatSummaryLines() {
+        long avg = reactionTimes.isEmpty() ? 0L
+                : (long) reactionTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        long best = bestTimeMs == Long.MAX_VALUE ? 0L : bestTimeMs;
+        return List.of(
+                Component.text("─── ", NamedTextColor.DARK_GRAY)
+                        .append(Component.text("Reaction Training Results", NamedTextColor.GOLD, TextDecoration.BOLD))
+                        .append(Component.text(" ───", NamedTextColor.DARK_GRAY)),
+                Component.text("  Hits: ", NamedTextColor.GRAY)
+                        .append(Component.text(String.valueOf(hits), NamedTextColor.GREEN))
+                        .append(Component.text("  Misses: ", NamedTextColor.GRAY))
+                        .append(Component.text(String.valueOf(misses), NamedTextColor.RED)),
+                Component.text("  Best: ", NamedTextColor.GRAY)
+                        .append(Component.text(best + "ms", NamedTextColor.AQUA))
+                        .append(Component.text("  Avg: ", NamedTextColor.GRAY))
+                        .append(Component.text(avg + "ms", NamedTextColor.AQUA)),
+                Component.text("  Best Combo: ", NamedTextColor.GRAY)
+                        .append(Component.text("×" + bestCombo, NamedTextColor.GOLD))
+        );
     }
 
     public int hits()         { return hits; }

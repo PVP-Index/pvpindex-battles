@@ -377,7 +377,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		if (practiceSettings.enabled()) {
 			PracticeManager practiceManager = new PracticeManager(
 					this, playerStateService, new KitApplier(versionAdapter),
-					gameModeRegistry, practiceSettings);
+					gameModeRegistry, practiceSettings, arenaPoolService);
 			var practiceCmd = getCommand("practice");
 			if (practiceCmd != null) {
 				PracticeCommand practiceCommand = new PracticeCommand(practiceManager, messageService);

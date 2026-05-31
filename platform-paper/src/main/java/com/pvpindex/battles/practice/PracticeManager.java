@@ -1,11 +1,15 @@
 package com.pvpindex.battles.practice;
 
+import com.pvpindex.battles.arena.SpawnPoint;
 import com.pvpindex.battles.battle.PlayerStateService;
 import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gamemode.KitApplier;
 import com.pvpindex.battles.gamemode.KitDefinition;
 import com.pvpindex.battles.practice.bot.BotSession;
 import com.pvpindex.battles.practice.reaction.ReactionTrainer;
+import com.pvpindex.battles.world.ArenaInstance;
+import com.pvpindex.battles.world.ArenaPoolService;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,6 +18,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -37,21 +42,25 @@ public final class PracticeManager {
     private final KitApplier kitApplier;
     private final GameModeRegistry gameModeRegistry;
     private final PracticeSettings settings;
+    private final ArenaPoolService arenaPool;
 
-    private final Map<UUID, PracticeSession> sessions  = new ConcurrentHashMap<>();
-    private final Map<UUID, ReactionTrainer> trainers  = new ConcurrentHashMap<>();
+    private final Map<UUID, PracticeSession> sessions    = new ConcurrentHashMap<>();
+    private final Map<UUID, ReactionTrainer> trainers    = new ConcurrentHashMap<>();
     private final Map<UUID, BotSession>       botSessions = new ConcurrentHashMap<>();
+    private final Map<UUID, ArenaInstance>   practiceArenas = new ConcurrentHashMap<>();
 
     public PracticeManager(Plugin plugin,
             PlayerStateService playerStateService,
             KitApplier kitApplier,
             GameModeRegistry gameModeRegistry,
-            PracticeSettings settings) {
+            PracticeSettings settings,
+            ArenaPoolService arenaPool) {
         this.plugin = plugin;
         this.playerStateService = playerStateService;
         this.kitApplier = kitApplier;
         this.gameModeRegistry = gameModeRegistry;
         this.settings = settings;
+        this.arenaPool = arenaPool;
     }
 
     // ── Session lifecycle ─────────────────────────────────────────────────────
@@ -81,9 +90,26 @@ public final class PracticeManager {
                 gameModeId != null ? gameModeId : settings.botKitId());
         sessions.put(player.getUniqueId(), session);
 
+        // Acquire a practice arena and teleport the player there
+        ArenaInstance arena = acquireAndTeleport(player);
+
         switch (mode) {
             case REACTION_TRAINING -> startReactionTraining(player, session);
-            case BOT_DUEL          -> startBotDuel(player, session);
+            case BOT_DUEL          -> {
+                // Determine bot spawn: arena spawn[1] when available, else 4 blocks ahead
+                Location botLoc = null;
+                if (arena != null) {
+                    List<SpawnPoint> spawns = arena.spawnPoints();
+                    if (spawns != null && spawns.size() >= 2) {
+                        SpawnPoint s1 = spawns.get(1);
+                        World world = Bukkit.getWorld(arena.worldName());
+                        if (world != null) {
+                            botLoc = new Location(world, s1.x(), s1.y(), s1.z(), s1.yaw(), s1.pitch());
+                        }
+                    }
+                }
+                startBotDuel(player, session, botLoc);
+            }
         }
     }
 
@@ -103,6 +129,8 @@ public final class PracticeManager {
             }
         }
 
+        releaseArena(player.getUniqueId());
+
         if (player.isOnline()) {
             playerStateService.restore(player);
             player.sendMessage(Component.text("Practice session ended.", NamedTextColor.YELLOW));
@@ -117,6 +145,7 @@ public final class PracticeManager {
         BotSession bs = botSessions.remove(player.getUniqueId());
         sessions.remove(player.getUniqueId());
         if (bs != null) bs.end(true); // shows "Bot Defeated!" title
+        releaseArena(player.getUniqueId());
         if (player.isOnline()) {
             playerStateService.restore(player);
         }
@@ -174,7 +203,7 @@ public final class PracticeManager {
         trainer.start(player, session);
     }
 
-    private void startBotDuel(Player player, PracticeSession session) {
+    private void startBotDuel(Player player, PracticeSession session, Location botSpawn) {
         String kitId = session.gameModeId() != null ? session.gameModeId() : settings.botKitId();
         KitDefinition kit = gameModeRegistry.findKit(kitId)
                 .orElseGet(() -> {
@@ -185,6 +214,7 @@ public final class PracticeManager {
         if (kit == null) {
             player.sendMessage(Component.text("No kit found for practice. Configure gamemodes.yml.", NamedTextColor.RED));
             sessions.remove(player.getUniqueId());
+            releaseArena(player.getUniqueId());
             playerStateService.restore(player);
             return;
         }
@@ -192,15 +222,56 @@ public final class PracticeManager {
         // Apply kit to the player too
         kitApplier.apply(player, kit);
 
-        // Spawn bot 4 blocks in front of the player
-        Location botLoc = player.getLocation().clone().add(
-                player.getLocation().getDirection().setY(0).normalize().multiply(4));
-        botLoc.setYaw(player.getLocation().getYaw() + 180f);
+        // Bot spawn: use arena spawn[1] if available, otherwise 4 blocks ahead
+        Location loc;
+        if (botSpawn != null) {
+            loc = botSpawn;
+        } else {
+            loc = player.getLocation().clone().add(
+                    player.getLocation().getDirection().setY(0).normalize().multiply(4));
+            loc.setYaw(player.getLocation().getYaw() + 180f);
+        }
 
         player.sendMessage(Component.text("Bot duel started! Defeat the practice bot.", NamedTextColor.GREEN));
 
-        BotSession bs = BotSession.spawn(plugin, player, botLoc, kit, kitApplier, settings);
+        BotSession bs = BotSession.spawn(plugin, player, loc, kit, kitApplier, settings);
         botSessions.put(player.getUniqueId(), bs);
+    }
+
+    /**
+     * Acquire a practice arena from the pool and teleport {@code player} to
+     * spawn[0].  Stores the {@link ArenaInstance} in {@code practiceArenas}.
+     *
+     * @return the acquired instance, or {@code null} if none was available
+     */
+    private ArenaInstance acquireAndTeleport(Player player) {
+        String templateId = settings.practiceTemplateId();
+        if (templateId == null || templateId.isBlank() || arenaPool == null) return null;
+        try {
+            ArenaInstance arena = arenaPool.acquire(templateId).orElse(null);
+            if (arena == null) return null;
+            practiceArenas.put(player.getUniqueId(), arena);
+            List<SpawnPoint> spawns = arena.spawnPoints();
+            if (spawns != null && !spawns.isEmpty()) {
+                SpawnPoint s0 = spawns.get(0);
+                World world = Bukkit.getWorld(arena.worldName());
+                if (world != null) {
+                    player.teleport(new Location(world, s0.x(), s0.y(), s0.z(), s0.yaw(), s0.pitch()));
+                }
+            }
+            return arena;
+        } catch (Exception e) {
+            plugin.getLogger().warning("[Practice] Could not acquire arena '" + templateId + "': " + e.getMessage());
+            return null;
+        }
+    }
+
+    /** Release the arena held by {@code uuid} back to the pool. */
+    private void releaseArena(UUID uuid) {
+        ArenaInstance arena = practiceArenas.remove(uuid);
+        if (arena != null && arenaPool != null) {
+            arenaPool.release(arena);
+        }
     }
 
     private static ItemStack buildGuiItem(Material material, String name, String... loreParts) {

@@ -8,6 +8,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 public final class PracticeSettings {
 
     private final boolean enabled;
+    private final String practiceTemplateId;
 
     // ── Reaction training ────────────────────────────────────────────────
     private final int reactionMaxTargets;
@@ -22,6 +23,7 @@ public final class PracticeSettings {
     private final boolean botUseNms;
 
     public PracticeSettings(boolean enabled,
+            String practiceTemplateId,
             int reactionMaxTargets,
             int reactionSpawnIntervalTicks,
             int reactionTargetLifetimeTicks,
@@ -31,6 +33,7 @@ public final class PracticeSettings {
             double botAttackDamage,
             boolean botUseNms) {
         this.enabled = enabled;
+        this.practiceTemplateId = practiceTemplateId;
         this.reactionMaxTargets = reactionMaxTargets;
         this.reactionSpawnIntervalTicks = reactionSpawnIntervalTicks;
         this.reactionTargetLifetimeTicks = reactionTargetLifetimeTicks;
@@ -45,6 +48,7 @@ public final class PracticeSettings {
     public static PracticeSettings from(YamlConfiguration yaml) {
         return new PracticeSettings(
                 yaml.getBoolean("practice.enabled", true),
+                yaml.getString("practice.template_id", "arena_duel"),
                 yaml.getInt("practice.reaction_training.max_targets", 5),
                 yaml.getInt("practice.reaction_training.spawn_interval_ticks", 40),
                 yaml.getInt("practice.reaction_training.target_lifetime_ticks", 100),
@@ -58,10 +62,11 @@ public final class PracticeSettings {
 
     /** @return sensible hard-coded defaults for unit tests / fresh installs. */
     public static PracticeSettings defaults() {
-        return new PracticeSettings(true, 5, 40, 100, "sword_starter", 10, 0.28, 3.0, true);
+        return new PracticeSettings(true, "arena_duel", 5, 40, 100, "sword_starter", 10, 0.28, 3.0, true);
     }
 
     public boolean enabled()                   { return enabled; }
+    public String practiceTemplateId()         { return practiceTemplateId; }
     public int reactionMaxTargets()            { return reactionMaxTargets; }
     public int reactionSpawnIntervalTicks()    { return reactionSpawnIntervalTicks; }
     public int reactionTargetLifetimeTicks()   { return reactionTargetLifetimeTicks; }

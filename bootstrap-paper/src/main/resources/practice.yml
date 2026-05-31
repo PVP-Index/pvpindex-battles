@@ -4,6 +4,10 @@ practice:
   # Set to false to completely disable the /practice command and Practice tab.
   enabled: true
 
+  # Arena template to use for practice sessions (must exist in templates.yml).
+  # Players are teleported to spawn[0]; the bot spawns at spawn[1] for Bot Duel.
+  template_id: "arena_duel"
+
   # ── Reaction Training ────────────────────────────────────────────────────────
   reaction_training:
     # Maximum number of active targets visible at once.

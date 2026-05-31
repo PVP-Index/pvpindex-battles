@@ -80,16 +80,17 @@ public final class BotSession {
 
         if (target.isOnline()) {
             Component title = playerWon
-                    ? Component.text("Bot Defeated!", NamedTextColor.GREEN, TextDecoration.BOLD)
+                    ? Component.text("You Won!", NamedTextColor.GREEN, TextDecoration.BOLD)
                     : Component.text("Practice Ended", NamedTextColor.GRAY, TextDecoration.BOLD);
-            Component subtitle = playerWon
-                    ? Component.text("Well done!", NamedTextColor.WHITE)
-                    : Component.text("Better luck next time.", NamedTextColor.GRAY);
-            target.showTitle(Title.title(title, subtitle,
+            target.showTitle(Title.title(title, Component.empty(),
                     Title.Times.times(
                             Duration.ofMillis(200),
-                            Duration.ofSeconds(3),
-                            Duration.ofMillis(500))));
+                            Duration.ofSeconds(2),
+                            Duration.ofMillis(400))));
+            Component chatMsg = playerWon
+                    ? Component.text("§a§lBot Defeated! §7Well done — use §f/practice bot§7 to go again.")
+                    : Component.text("§e§lPractice Ended. §7Use §f/practice bot§7 to try again.");
+            target.sendMessage(chatMsg);
         }
     }
 

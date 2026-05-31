@@ -2,10 +2,14 @@ package com.pvpindex.battles.practice.reaction;
 
 import com.pvpindex.battles.practice.PracticeSession;
 import com.pvpindex.battles.practice.PracticeSettings;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -98,13 +102,18 @@ public final class ReactionTrainer {
         activeTargets.clear();
         if (player != null && player.isOnline()) {
             player.clearTitle();
+            // Short title notification
             player.showTitle(Title.title(
-                    score.formatSummary(),
-                    net.kyori.adventure.text.Component.empty(),
+                    Component.text("Session Over!", NamedTextColor.GOLD, TextDecoration.BOLD),
+                    Component.text("Results in chat ↓", NamedTextColor.GRAY),
                     Title.Times.times(
-                            java.time.Duration.ofMillis(200),
-                            java.time.Duration.ofSeconds(5),
-                            java.time.Duration.ofMillis(500))));
+                            Duration.ofMillis(200),
+                            Duration.ofSeconds(2),
+                            Duration.ofMillis(400))));
+            // Detailed results sent to chat
+            for (Component line : score.chatSummaryLines()) {
+                player.sendMessage(line);
+            }
         }
     }
 
