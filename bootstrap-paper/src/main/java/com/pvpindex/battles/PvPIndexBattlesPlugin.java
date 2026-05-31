@@ -24,6 +24,11 @@ import com.pvpindex.battles.identifier.WorldNormalizer;
 import com.pvpindex.battles.battle.BattleBatchScheduler;
 import com.pvpindex.battles.gui.LeaderboardGui;
 import com.pvpindex.battles.listener.BattleCommandBlockListener;
+import com.pvpindex.battles.practice.PracticeCommand;
+import com.pvpindex.battles.practice.PracticeManager;
+import com.pvpindex.battles.practice.PracticeSettings;
+import com.pvpindex.battles.practice.PracticeTabCompleter;
+import com.pvpindex.battles.listener.PracticeListener;
 import com.pvpindex.battles.listener.BattleEventListener;
 import com.pvpindex.battles.listener.BattleGuiListener;
 import com.pvpindex.battles.listener.ProxyMessageListener;
@@ -117,6 +122,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		saveResourceIfAbsent("gui.yml");
 		saveResourceIfAbsent("templates.yml");
 		saveResourceIfAbsent("schematics.yml");
+		saveResourceIfAbsent("practice.yml");
 		// Bundled schematic files — only written once (never overwrite server-owner edits).
 		saveResourceIfAbsent("schematics/arena.schem");
 		saveResourceIfAbsent("schematics/colosseum.schem");
@@ -361,6 +367,29 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			LeaderboardGui leaderboardGui = new LeaderboardGui(this, dataService, gameModeRegistry, messageService);
 			battleGuiCommand.setLeaderboardGui(leaderboardGui);
 			getLogger().info("Leaderboard GUI enabled (database active).");
+		}
+
+		// Practice mode — wired after gameModeRegistry and playerStateService are ready
+		org.bukkit.configuration.file.YamlConfiguration practiceYaml =
+				org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(
+						new java.io.File(getDataFolder(), "practice.yml"));
+		// Load the platform-specific NMS bot adapter (Folia → null, stays Zombie fallback)
+		initBotNmsAdapter(detectMinecraftVersion());
+		PracticeSettings practiceSettings = PracticeSettings.from(practiceYaml);
+		if (practiceSettings.enabled()) {
+			PracticeManager practiceManager = new PracticeManager(
+					this, playerStateService, new KitApplier(versionAdapter),
+					gameModeRegistry, practiceSettings, arenaPoolService);
+			var practiceCmd = getCommand("practice");
+			if (practiceCmd != null) {
+				PracticeCommand practiceCommand = new PracticeCommand(practiceManager, messageService);
+				practiceCmd.setExecutor(practiceCommand);
+				practiceCmd.setTabCompleter(new PracticeTabCompleter(gameModeRegistry));
+			}
+			battleGuiCommand.setPracticeManager(practiceManager);
+			getServer().getPluginManager().registerEvents(
+					new PracticeListener(practiceManager, battleGuiCommand), this);
+			getLogger().info("Practice mode enabled (/practice).");
 		}
 
 		battleGuiCommand.setChallengeManager(challengeManager);
@@ -635,5 +664,70 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		} catch (ReflectiveOperationException ignored) {}
 
 		return null;
+	}
+
+	/**
+	 * Loads the correct {@link com.pvpindex.battles.practice.bot.BotNmsAdapter} for the
+	 * running platform and registers it with {@link com.pvpindex.battles.practice.bot.BotPlayerFactory}.
+	 *
+	 * <p>Platform routing:</p>
+	 * <ul>
+	 *   <li><b>Folia</b> — NMS entity creation is not safe across region threads; no adapter
+	 *       loaded; {@code BotPlayerFactory} falls back to Zombie for all sessions.</li>
+	 *   <li><b>Paper / Spigot 26.1.x</b> — loads {@code BotNmsAdapter2610} which handles
+	 *       {@code ServerWaypointManager} cleanup on spawn failure.</li>
+	 *   <li><b>Paper / Spigot 1.21.x</b> — loads {@code BotNmsAdapter121}.</li>
+	 * </ul>
+	 *
+	 * <p>Must be called before the first {@link com.pvpindex.battles.practice.bot.BotSession}
+	 * is started (i.e. before {@code PracticeManager} construction).</p>
+	 *
+	 * @param mcVersion the Minecraft version string, e.g. {@code "26.1.2"} or {@code "1.21.4"}
+	 */
+	private void initBotNmsAdapter(String mcVersion) {
+		// Folia: NMS entity creation is not thread-safe across region boundaries.
+		// Keep nmsAdapter null so BotPlayerFactory always uses the Zombie fallback.
+		boolean isFolia = false;
+		try {
+			Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+			isFolia = true;
+		} catch (ClassNotFoundException ignored) {}
+		if (isFolia) {
+			getLogger().info("[PracticeBot] Folia detected — NMS bot disabled; using Zombie fallback.");
+			return;
+		}
+
+		// Paper / Spigot 26.1.x (new versioning scheme: "26.x.y")
+		if (mcVersion.startsWith("26.")) {
+			try {
+				com.pvpindex.battles.practice.bot.BotNmsAdapter adapter =
+						(com.pvpindex.battles.practice.bot.BotNmsAdapter)
+						Class.forName("com.pvpindex.paper.v1_26_1.BotNmsAdapter2610")
+								.getDeclaredConstructor()
+								.newInstance();
+				com.pvpindex.battles.practice.bot.BotPlayerFactory.setNmsAdapter(adapter);
+				getLogger().warning("[PracticeBot] [EXPERIMENTAL] NMS fake-player bot loaded: BotNmsAdapter2610 (Paper 26.1.x). "
+					+ "This feature is experimental — set 'use_nms_fake_player: false' to disable.");
+			} catch (ReflectiveOperationException e) {
+				getLogger().warning("[PracticeBot] Failed to load BotNmsAdapter2610: " + e.getMessage()
+						+ " — NMS bot disabled.");
+			}
+			return;
+		}
+
+		// Paper / Spigot 1.21.x
+		try {
+			com.pvpindex.battles.practice.bot.BotNmsAdapter adapter =
+					(com.pvpindex.battles.practice.bot.BotNmsAdapter)
+					Class.forName("com.pvpindex.paper.v1_21.BotNmsAdapter121")
+							.getDeclaredConstructor()
+							.newInstance();
+			com.pvpindex.battles.practice.bot.BotPlayerFactory.setNmsAdapter(adapter);
+			getLogger().warning("[PracticeBot] [EXPERIMENTAL] NMS fake-player bot loaded: BotNmsAdapter121 (Paper/Spigot 1.21.x). "
+					+ "This feature is experimental — set 'use_nms_fake_player: false' to disable.");
+		} catch (ReflectiveOperationException e) {
+			getLogger().warning("[PracticeBot] Failed to load BotNmsAdapter121: " + e.getMessage()
+					+ " — NMS bot disabled.");
+		}
 	}
 }

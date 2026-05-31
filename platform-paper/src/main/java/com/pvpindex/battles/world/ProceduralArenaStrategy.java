@@ -3,16 +3,21 @@ package com.pvpindex.battles.world;
 import com.pvpindex.battles.arena.SpawnPoint;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRule;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
-import org.bukkit.block.Block;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Builds a small symmetrical PvP arena in a fresh void world, in code, with
@@ -72,7 +77,7 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         // even when a custom ChunkGenerator is supplied, producing a harmless
         // but noisy "No key layers in MapLike[{}]" error on every world create.
         WorldCreator creator = new WorldCreator(worldName)
-                .generator(new VoidWorldGenerator())
+                .generator(new ArenaChunkGenerator())
                 .type(WorldType.NORMAL)
                 .generateStructures(false);
         World world = Bukkit.createWorld(creator);
@@ -80,8 +85,22 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
             throw new IOException("Failed to create arena world: " + worldName);
         }
 
+        // Arena structure is embedded in the ChunkGenerator — spawn chunks are
+        // already fully built when createWorld() returns. Only game rules remain.
         configureWorld(world);
-        buildArena(world);
+
+        // Pre-load every chunk the arena footprint touches. On Paper, spawn-area
+        // chunks are already generated during createWorld(). On Spigot and other
+        // Bukkit implementations only the chunk at the world spawn may be ready —
+        // explicitly calling getChunkAt() triggers generateSurface() for any
+        // remaining chunks, guaranteeing the arena is fully built on all server types.
+        int minC = Math.floorDiv(-RADIUS, 16);
+        int maxC = Math.floorDiv( RADIUS, 16);
+        for (int cx = minC; cx <= maxC; cx++) {
+            for (int cz = minC; cz <= maxC; cz++) {
+                world.getChunkAt(cx, cz);
+            }
+        }
 
         plugin.getLogger().info("Built procedural arena " + worldName + " from template " + template.id());
         return new ArenaInstance(id, template.id(), world.getName(),
@@ -92,6 +111,73 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
     public void release(ArenaInstance instance) {
         // Pool service handles unload+delete via the generic pvpindex_* path
         // (see ArenaPoolService.unloadAndDelete). Nothing else to do here.
+    }
+
+    // -------------------------------------------------------------------------
+    // Chunk generator — embeds the full arena structure during world creation
+    // -------------------------------------------------------------------------
+
+    /**
+     * Custom {@link ChunkGenerator} that places the duel arena's floor and walls
+     * in {@code generateSurface()} so the structure is ready the moment
+     * {@link Bukkit#createWorld(WorldCreator)} returns — no separate block-loop
+     * pass needed. All other terrain passes are suppressed (void world).
+     */
+    private static final class ArenaChunkGenerator extends ChunkGenerator {
+
+        @Override
+        public void generateSurface(@NotNull WorldInfo worldInfo, @NotNull Random random,
+                                    int chunkX, int chunkZ, @NotNull ChunkData chunkData) {
+            // Clip the arena footprint to this chunk's block range.
+            int blockMinX = chunkX * 16;
+            int blockMinZ = chunkZ * 16;
+            int startX = Math.max(-RADIUS, blockMinX);
+            int endX   = Math.min( RADIUS, blockMinX + 15);
+            int startZ = Math.max(-RADIUS, blockMinZ);
+            int endZ   = Math.min( RADIUS, blockMinZ + 15);
+            if (startX > endX || startZ > endZ) return;
+
+            for (int wx = startX; wx <= endX; wx++) {
+                int lx = wx - blockMinX;
+                for (int wz = startZ; wz <= endZ; wz++) {
+                    int lz = wz - blockMinZ;
+                    boolean perimeter = (wx == -RADIUS || wx == RADIUS || wz == -RADIUS || wz == RADIUS);
+                    boolean spawnPad  = isSpawnPad(wx, wz);
+                    // Floor
+                    chunkData.setBlock(lx, FLOOR_Y, lz,
+                            spawnPad ? Material.IRON_BLOCK : Material.STONE_BRICKS);
+                    // Perimeter wall: 1 stone-brick base + glass courses above
+                    if (perimeter) {
+                        chunkData.setBlock(lx, FLOOR_Y + 1, lz, Material.STONE_BRICKS);
+                        for (int dy = 2; dy <= WALL_HEIGHT; dy++) {
+                            chunkData.setBlock(lx, FLOOR_Y + dy, lz, Material.GLASS);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static boolean isSpawnPad(int x, int z) {
+            if (z < -1 || z > 1) return false;
+            return (x >= -RADIUS && x <= -RADIUS + 2) || (x >= RADIUS - 2 && x <= RADIUS);
+        }
+
+        @Override public boolean shouldGenerateNoise()       { return false; }
+        @Override public boolean shouldGenerateSurface()     { return false; }
+        @Override public boolean shouldGenerateCaves()       { return false; }
+        @Override public boolean shouldGenerateDecorations() { return false; }
+        @Override public boolean shouldGenerateMobs()        { return false; }
+        @Override public boolean shouldGenerateStructures()  { return false; }
+
+        @Override
+        public @NotNull Location getFixedSpawnLocation(@NotNull World world, @NotNull Random random) {
+            return new Location(world, 0, FLOOR_Y + 1, 0);
+        }
+
+        @Override
+        public @NotNull List<BlockPopulator> getDefaultPopulators(@NotNull World world) {
+            return List.of();
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -115,6 +201,12 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         world.setTime(6000L); // noon
         world.setStorm(false);
         world.setThundering(false);
+        // Constrain the world border to just outside the arena so the server never
+        // generates chunks beyond the arena footprint. Works on all Bukkit implementations.
+        // setWarningDistance(0) suppresses the red vignette inside the arena walls.
+        world.getWorldBorder().setCenter(0, 0);
+        world.getWorldBorder().setSize(RADIUS * 2 + 1 + 48.0);
+        world.getWorldBorder().setWarningDistance(0);
     }
 
     @SuppressWarnings("unchecked")
@@ -123,38 +215,6 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         if (rule != null) world.setGameRule(rule, value);
     }
 
-    private void buildArena(World world) {
-        // Floor — 21x21 stone bricks, with iron spawn pads at the ends.
-        for (int x = -RADIUS; x <= RADIUS; x++) {
-            for (int z = -RADIUS; z <= RADIUS; z++) {
-                Block b = world.getBlockAt(x, FLOOR_Y, z);
-                Material mat = isSpawnPad(x, z) ? Material.IRON_BLOCK : Material.STONE_BRICKS;
-                b.setType(mat, false);
-            }
-        }
-        // Perimeter wall — 1 stone-brick base + 4 glass courses above.
-        for (int x = -RADIUS; x <= RADIUS; x++) {
-            placeWall(world, x, -RADIUS);
-            placeWall(world, x,  RADIUS);
-        }
-        for (int z = -RADIUS + 1; z <= RADIUS - 1; z++) {
-            placeWall(world, -RADIUS, z);
-            placeWall(world,  RADIUS, z);
-        }
-    }
-
-    private void placeWall(World world, int x, int z) {
-        for (int dy = 1; dy <= WALL_HEIGHT; dy++) {
-            Material mat = (dy == 1) ? Material.STONE_BRICKS : Material.GLASS;
-            world.getBlockAt(x, FLOOR_Y + dy, z).setType(mat, false);
-        }
-    }
-
-    /** West and east 3x3 spawn pads centred on the floor's z-axis. */
-    private boolean isSpawnPad(int x, int z) {
-        if (z < -1 || z > 1) return false;
-        return (x >= -RADIUS && x <= -RADIUS + 2) || (x >= RADIUS - 2 && x <= RADIUS);
-    }
 
     /**
      * Falls back to two sensible default spawns when the template doesn't

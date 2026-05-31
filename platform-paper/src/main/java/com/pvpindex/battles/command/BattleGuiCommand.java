@@ -3,6 +3,7 @@ package com.pvpindex.battles.command;
 import com.pvpindex.battles.battle.BattleService;
 import com.pvpindex.battles.battle.BattleSession;
 import com.pvpindex.battles.challenge.ChallengeManager;
+import com.pvpindex.battles.practice.PracticeManager;
 import com.pvpindex.battles.gamemode.GameModeDefinition;
 import com.pvpindex.battles.gamemode.GameModeRegistry;
 import com.pvpindex.battles.gui.GuiConfig;
@@ -52,6 +53,7 @@ public class BattleGuiCommand implements CommandExecutor {
 	private final MessageService messageService;
 	private ChallengeManager challengeManager;
 	private LeaderboardGui leaderboardGui;
+	private PracticeManager practiceManager;
 
 	private final Map<UUID, PlayerGuiState> guiStates = new ConcurrentHashMap<>();
 	private final NamespacedKey modeKey;
@@ -77,6 +79,12 @@ public class BattleGuiCommand implements CommandExecutor {
 	}
 
 	public LeaderboardGui leaderboardGui() { return leaderboardGui; }
+
+	public void setPracticeManager(PracticeManager practiceManager) {
+		this.practiceManager = practiceManager;
+	}
+
+	public PracticeManager practiceManager() { return practiceManager; }
 
 	public Map<UUID, PlayerGuiState> guiStates() { return guiStates; }
 	public NamespacedKey modeKey() { return modeKey; }
@@ -104,6 +112,7 @@ public class BattleGuiCommand implements CommandExecutor {
 			case "accept"       -> handleAccept(player, args);
 			case "decline"      -> handleDecline(player, args);
 			case "leaderboard", "lb", "top" -> handleLeaderboard(player, args);
+			case "practice"     -> handlePractice(player);
 			default             -> false;
 		};
 	}
@@ -177,6 +186,15 @@ public class BattleGuiCommand implements CommandExecutor {
 		}
 		String modeId = args.length >= 2 ? args[1] : null;
 		leaderboardGui.open(player, modeId);
+		return true;
+	}
+
+	private boolean handlePractice(Player player) {
+		if (practiceManager != null) {
+			practiceManager.openPracticeGui(player);
+		} else {
+			player.sendMessage("\u00A7cPractice mode is not enabled on this server.");
+		}
 		return true;
 	}
 
@@ -284,6 +302,12 @@ public class BattleGuiCommand implements CommandExecutor {
 		inv.setItem(guiConfig.queueTabSlot(), queueTab);
 		inv.setItem(guiConfig.challengeTabSlot(), challengeTab);
 		inv.setItem(guiConfig.activeBattlesSlot(), activeBattles);
+
+		// Practice tab at slot 39 (only shown when practice mode is enabled)
+		if (practiceManager != null) {
+			ItemStack practiceTab = buildTab(Material.BOOK, "\u00A7b\u00A7lPractice", false);
+			inv.setItem(39, practiceTab);
+		}
 	}
 
 	private static ItemStack buildTab(Material material, String name, boolean active) {

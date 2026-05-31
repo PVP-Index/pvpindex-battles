@@ -3,16 +3,21 @@ package com.pvpindex.battles.world;
 import com.pvpindex.battles.arena.SpawnPoint;
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.Difficulty;
 import org.bukkit.GameRule;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
-import org.bukkit.block.Block;
+import org.bukkit.generator.BlockPopulator;
+import org.bukkit.generator.ChunkGenerator;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Builds a Sumo arena: a small elevated platform surrounded by void.
@@ -51,7 +56,7 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 		}
 
 		WorldCreator creator = new WorldCreator(worldName)
-				.generator(new VoidWorldGenerator())
+				.generator(new SumoArenaChunkGenerator())
 				.type(WorldType.NORMAL)
 				.generateStructures(false);
 		World world = Bukkit.createWorld(creator);
@@ -59,8 +64,22 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 			throw new IOException("Failed to create sumo arena world: " + worldName);
 		}
 
+		// Arena structure is embedded in the ChunkGenerator — spawn chunks are
+		// already fully built when createWorld() returns. Only game rules remain.
 		configureWorld(world);
-		buildArena(world);
+
+		// Pre-load every chunk the arena footprint touches. On Paper, spawn-area
+		// chunks are already generated during createWorld(). On Spigot and other
+		// Bukkit implementations only the chunk at the world spawn may be ready —
+		// explicitly calling getChunkAt() triggers generateSurface() for any
+		// remaining chunks, guaranteeing the arena is fully built on all server types.
+		int minC = Math.floorDiv(-HALF, 16);
+		int maxC = Math.floorDiv( HALF, 16);
+		for (int cx = minC; cx <= maxC; cx++) {
+			for (int cz = minC; cz <= maxC; cz++) {
+				world.getChunkAt(cx, cz);
+			}
+		}
 
 		plugin.getLogger().info("Built procedural sumo arena " + worldName + " from template " + template.id());
 		return new ArenaInstance(id, template.id(), world.getName(),
@@ -88,6 +107,12 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 		world.setStorm(false);
 		world.setThundering(false);
 		applyRule(world, "fallDamage", true);
+		// Set the world border generously beyond the platform to prevent distant
+		// chunk generation while still leaving room for knockback gameplay.
+		// setWarningDistance(0) suppresses the red vignette during normal play.
+		world.getWorldBorder().setCenter(0, 0);
+		world.getWorldBorder().setSize(HALF * 2 + 1 + 64.0);
+		world.getWorldBorder().setWarningDistance(0);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -96,13 +121,49 @@ public final class ProceduralSumoArenaStrategy implements WorldGenerationStrateg
 		if (rule != null) world.setGameRule(rule, value);
 	}
 
-	private void buildArena(World world) {
-		for (int x = -HALF; x <= HALF; x++) {
-			for (int z = -HALF; z <= HALF; z++) {
-				Block b = world.getBlockAt(x, FLOOR_Y, z);
-				boolean isBorder = (x == -HALF || x == HALF || z == -HALF || z == HALF);
-				b.setType(isBorder ? Material.CHISELED_STONE_BRICKS : Material.STONE_BRICKS, false);
+	// -------------------------------------------------------------------------
+	// Chunk generator
+	// -------------------------------------------------------------------------
+
+	private static final class SumoArenaChunkGenerator extends ChunkGenerator {
+
+		@Override
+		public void generateSurface(@NotNull WorldInfo worldInfo, @NotNull Random random,
+									int chunkX, int chunkZ, @NotNull ChunkData chunkData) {
+			int blockMinX = chunkX * 16;
+			int blockMinZ = chunkZ * 16;
+			int startX = Math.max(-HALF, blockMinX);
+			int endX   = Math.min( HALF, blockMinX + 15);
+			int startZ = Math.max(-HALF, blockMinZ);
+			int endZ   = Math.min( HALF, blockMinZ + 15);
+			if (startX > endX || startZ > endZ) return;
+
+			for (int wx = startX; wx <= endX; wx++) {
+				int lx = wx - blockMinX;
+				for (int wz = startZ; wz <= endZ; wz++) {
+					int lz = wz - blockMinZ;
+					boolean border = (wx == -HALF || wx == HALF || wz == -HALF || wz == HALF);
+					chunkData.setBlock(lx, FLOOR_Y, lz,
+							border ? Material.CHISELED_STONE_BRICKS : Material.STONE_BRICKS);
+				}
 			}
+		}
+
+		@Override public boolean shouldGenerateNoise()       { return false; }
+		@Override public boolean shouldGenerateSurface()     { return false; }
+		@Override public boolean shouldGenerateCaves()       { return false; }
+		@Override public boolean shouldGenerateDecorations() { return false; }
+		@Override public boolean shouldGenerateMobs()        { return false; }
+		@Override public boolean shouldGenerateStructures()  { return false; }
+
+		@Override
+		public @NotNull Location getFixedSpawnLocation(@NotNull World world, @NotNull Random random) {
+			return new Location(world, 0, FLOOR_Y + 1, 0);
+		}
+
+		@Override
+		public @NotNull List<BlockPopulator> getDefaultPopulators(@NotNull World world) {
+			return List.of();
 		}
 	}
 

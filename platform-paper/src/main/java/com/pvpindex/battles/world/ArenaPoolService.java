@@ -64,9 +64,14 @@ public final class ArenaPoolService {
     /** Prefill {@code warmSize} instances per known template, asynchronously. */
     public void warmAll(int warmSize) {
         configure(warmSize, this.refillAsync);
+        // Stagger each warm-up task by 2 ticks (≈100 ms) so that multiple
+        // world-creation calls are spread across separate server ticks instead
+        // of all firing on the first tick after onEnable.
+        int delay = 1;
         for (String templateId : generator.templateIds()) {
             for (int i = 0; i < warmSize; i++) {
-                generateAsync(templateId);
+                generateAsync(templateId, delay);
+                delay += 2;
             }
         }
     }
@@ -139,7 +144,12 @@ public final class ArenaPoolService {
         }
     }
 
+    /** Overload used by {@link #release} and the cold-pool path in {@link #acquire} — no startup delay. */
     private void generateAsync(String templateId) {
+        generateAsync(templateId, 0);
+    }
+
+    private void generateAsync(String templateId, int delayTicks) {
         if (brokenTemplates.contains(templateId)) return;
         Runnable task = () -> {
             try {
@@ -171,13 +181,25 @@ public final class ArenaPoolService {
             Optional<ArenaTemplate> tpl = generator.findTemplate(templateId);
             boolean isCopy = tpl.map(t -> "copy".equalsIgnoreCase(t.strategy())).orElse(false);
             if (isCopy) {
-                Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+                if (delayTicks > 0) {
+                    Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, task, delayTicks);
+                } else {
+                    Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+                }
             } else {
                 // Folia does not support sync global tasks; fall back to GlobalRegionScheduler.
                 try {
-                    Bukkit.getScheduler().runTask(plugin, task);
+                    if (delayTicks > 0) {
+                        Bukkit.getScheduler().runTaskLater(plugin, task, delayTicks);
+                    } else {
+                        Bukkit.getScheduler().runTask(plugin, task);
+                    }
                 } catch (UnsupportedOperationException e) {
-                    plugin.getServer().getGlobalRegionScheduler().run(plugin, ignored -> task.run());
+                    if (delayTicks > 0) {
+                        plugin.getServer().getGlobalRegionScheduler().runDelayed(plugin, ignored -> task.run(), delayTicks);
+                    } else {
+                        plugin.getServer().getGlobalRegionScheduler().run(plugin, ignored -> task.run());
+                    }
                 }
             }
         } else {

@@ -1,0 +1,61 @@
+# ─── PvPIndex Practice Mode Configuration ──────────────────────────────────────
+
+practice:
+  # Set to false to completely disable the /practice command and Practice tab.
+  enabled: true
+
+  # Arena template to use for practice sessions (must exist in templates.yml).
+  # Players are teleported to spawn[0]; the bot spawns at spawn[1] for Bot Duel.
+  template_id: "arena_duel"
+
+  # ── Reaction Training ────────────────────────────────────────────────────────
+  reaction_training:
+    # Maximum number of active targets visible at once.
+    max_targets: 5
+
+    # How often (in ticks) a new target is spawned (40 = 2 seconds).
+    spawn_interval_ticks: 40
+
+    # How long a target stays before counting as a miss (100 = 5 seconds).
+    target_lifetime_ticks: 100
+
+    # Spawn mode controls where targets appear:
+    #   arena  (default) — within the flat arena floor; targets stay inside the
+    #                       arena bounds regardless of where the player stands.
+    #   player            — random offsets around the player's eye position
+    #                       (original behaviour; opt-in).
+    spawn_mode: "arena"
+
+    # Radius (blocks) around the arena centre used when spawn_mode is "arena".
+    arena_spawn_radius: 6.0
+
+    # Height range above the arena floor when spawn_mode is "arena" (targets
+    # appear between floor+0.7 and floor+0.7+height_range).
+    arena_spawn_height_range: 1.5
+
+  # ── Bot Duel ─────────────────────────────────────────────────────────────────
+  bot:
+    # Default kit ID from gamemodes.yml to equip the bot (and the player).
+    kit_id: "sword_starter"
+
+    # How often (in ticks) the bot deals melee damage to the player (10 = 0.5 s).
+    attack_interval_ticks: 10
+
+    # Movement speed in blocks per tick (0.28 ≈ a sprinting player).
+    move_speed: 0.28
+
+    # Damage dealt per bot hit (3.0 = 1.5 hearts; equivalent to an iron sword).
+    attack_damage: 3.0
+
+    # ── EXPERIMENTAL ─────────────────────────────────────────────────────────
+    # When true, attempt to spawn an NMS ServerPlayer for a realistic player model.
+    # Falls back to a Zombie with equipment if NMS reflection fails.
+    #
+    # Supported platforms:  Paper 1.21.x, Paper 26.1.x, Spigot 1.21.x
+    # Unsupported:          Folia (always uses Zombie fallback regardless of this flag)
+    #
+    # WARNING: This is an EXPERIMENTAL feature.  NMS internals may change between
+    # builds and could produce unexpected behaviour or errors on your server.
+    # A startup warning is printed when this feature is active.
+    # Keep this set to false unless you have tested NMS bot support on your server.
+    use_nms_fake_player: false
