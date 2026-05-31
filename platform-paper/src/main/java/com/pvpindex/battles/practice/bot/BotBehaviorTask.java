@@ -91,6 +91,13 @@ public final class BotBehaviorTask {
 
         Location botLoc    = bot.location();
         Location targetLoc = target.getLocation();
+
+        // Guard against world mismatch (e.g. player teleported to a different world).
+        if (botLoc.getWorld() == null || !botLoc.getWorld().equals(targetLoc.getWorld())) {
+            stop();
+            return;
+        }
+
         double dist = botLoc.distance(targetLoc);
 
         // ── Attack ────────────────────────────────────────────────────────

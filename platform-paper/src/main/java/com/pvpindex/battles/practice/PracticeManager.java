@@ -12,6 +12,7 @@ import com.pvpindex.battles.world.ArenaPoolService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -103,8 +104,11 @@ public final class PracticeManager {
         }
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (!player.isOnline()) return;
-            ArenaInstance arena = acquireAndTeleport(player);
-            launchMode(player, session, mode, gameModeId, arena);
+            acquireAndTeleport(player).thenAccept(arena -> {
+                if (!player.isOnline()) return;
+                Bukkit.getScheduler().runTask(plugin,
+                        () -> launchMode(player, session, mode, gameModeId, arena));
+            });
         });
     }
 
@@ -281,12 +285,14 @@ public final class PracticeManager {
      *
      * @return the acquired instance, or {@code null} if none was available
      */
-    private ArenaInstance acquireAndTeleport(Player player) {
+    private CompletableFuture<ArenaInstance> acquireAndTeleport(Player player) {
         String templateId = settings.practiceTemplateId();
-        if (templateId == null || templateId.isBlank() || arenaPool == null) return null;
+        if (templateId == null || templateId.isBlank() || arenaPool == null) {
+            return CompletableFuture.completedFuture(null);
+        }
         try {
             ArenaInstance arena = arenaPool.acquire(templateId).orElse(null);
-            if (arena == null) return null;
+            if (arena == null) return CompletableFuture.completedFuture(null);
             practiceArenas.put(player.getUniqueId(), arena);
             List<SpawnPoint> spawns = arena.spawnPoints();
             if (spawns != null && !spawns.isEmpty()) {
@@ -295,13 +301,17 @@ public final class PracticeManager {
                 if (world != null) {
                     // teleportAsync uses Paper's async chunk system to pre-load
                     // destination chunks before completing the cross-world move.
-                    player.teleportAsync(new Location(world, s0.x(), s0.y(), s0.z(), s0.yaw(), s0.pitch()));
+                    // Chain the arena result onto the future so callers wait for
+                    // the teleport to finish before spawning the bot.
+                    return player.teleportAsync(
+                            new Location(world, s0.x(), s0.y(), s0.z(), s0.yaw(), s0.pitch()))
+                            .thenApply(success -> arena);
                 }
             }
-            return arena;
+            return CompletableFuture.completedFuture(arena);
         } catch (Exception e) {
             plugin.getLogger().warning("[Practice] Could not acquire arena '" + templateId + "': " + e.getMessage());
-            return null;
+            return CompletableFuture.completedFuture(null);
         }
     }
 
