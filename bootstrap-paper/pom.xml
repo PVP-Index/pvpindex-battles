@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.pvpindex</groupId>
         <artifactId>pvpindex-parent</artifactId>
-        <version>1.0.6</version>
+        <version>1.0.7</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -87,6 +87,12 @@
             <artifactId>adventure-text-serializer-legacy</artifactId>
             <version>4.17.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.2.1</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -117,6 +123,10 @@
                                     <pattern>com.zaxxer.hikari</pattern>
                                     <shadedPattern>com.pvpindex.shade.hikari</shadedPattern>
                                 </relocation>
+                                <relocation>
+                                    <pattern>org.bstats</pattern>
+                                    <shadedPattern>com.pvpindex.shade.bstats</shadedPattern>
+                                </relocation>
                             </relocations>
                             <artifactSet>
                                 <includes>
@@ -137,6 +147,8 @@
                                     <include>org.json:json</include>
                                     <include>com.pvpindex:pvpindex-database</include>
                                     <include>com.zaxxer:HikariCP</include>
+                                    <include>org.bstats:bstats-bukkit</include>
+                                    <include>org.bstats:bstats-base</include>
                                     <!-- Adventure (Spigot compat) -->
                                     <include>net.kyori:adventure-api</include>
                                     <include>net.kyori:adventure-key</include>

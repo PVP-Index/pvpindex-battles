@@ -18,6 +18,13 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.7] - 2026-06-05
+
+### Added
+- **bStats integration**: anonymous usage metrics via [bStats](https://bstats.org/plugin/bukkit/PvPIndex%20Battle/31131) (plugin ID `31131`). Shaded and relocated to `com.pvpindex.shade.bstats` to avoid conflicts with other plugins. Provides server count, player count, and version distribution data.
+
+---
+
 ## [1.0.6] - 2026-06-05
 
 ### Added
@@ -185,7 +192,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...v1.0.4

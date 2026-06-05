@@ -126,6 +126,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		configManager = new ConfigManager(this);
 		configManager.reload();
 
+		new org.bstats.bukkit.Metrics(this, 31131);
+
 		arenaManager = new ArenaManager(this);
 		arenaManager.reload();
 
