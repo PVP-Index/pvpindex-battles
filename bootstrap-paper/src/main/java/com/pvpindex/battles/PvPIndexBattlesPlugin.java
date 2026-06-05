@@ -490,7 +490,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			try { arenaPoolService.shutdown(); }
 			catch (RuntimeException e) { getLogger().warning("Arena pool shutdown failed: " + e.getMessage()); }
 		}
-		getLogger().info("\u001B[33mPvPIndexBattles disabled.\u001B[0m");
+		getLogger().info("\u001B[31mPVP INDEX \u001B[90mhas been \u001B[31mdisabled\u001B[90m. Goodbye!\u001B[0m");
 	}
 
 	public BattleService battleService() { return battleService; }
@@ -505,15 +505,25 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 	}
 
 	private void printBanner() {
-		String CYAN = "\u001B[36m";
-		String BOLD = "\u001B[1m";
-		String RESET = "\u001B[0m";
-		String GREY = "\u001B[90m";
+		String R = "\u001B[0m";
+		String G = "\u001B[32m";
+		String Y = "\u001B[33m";
+		String RE = "\u001B[31m";
+		String GR = "\u001B[90m";
+		String W = "\u001B[97m";
 		String version = getDescription().getVersion();
 
-		getServer().getConsoleSender().sendMessage("");
-		getServer().getConsoleSender().sendMessage(CYAN + BOLD + "  PvP Index Battles" + RESET + GREY + " v" + version + RESET);
-		getServer().getConsoleSender().sendMessage("");
+		var c = getServer().getConsoleSender();
+		c.sendMessage("");
+		c.sendMessage(G  + "  ██████╗ ██╗   ██╗██████╗    " + Y  + "██╗███╗   ██╗██████╗ ███████╗██╗  ██╗" + R);
+		c.sendMessage(G  + "  ██╔══██╗██║   ██║██╔══██╗   " + Y  + "██║████╗  ██║██╔══██╗██╔════╝╚██╗██╔╝" + R);
+		c.sendMessage(G  + "  ██████╔╝██║   ██║██████╔╝   " + Y  + "██║██╔██╗ ██║██║  ██║█████╗   ╚███╔╝" + R);
+		c.sendMessage(Y  + "  ██╔═══╝ ╚██╗ ██╔╝██╔═══╝    " + RE + "██║██║╚██╗██║██║  ██║██╔══╝   ██╔██╗" + R);
+		c.sendMessage(Y  + "  ██║      ╚████╔╝ ██║        " + RE + "██║██║ ╚████║██████╔╝███████╗██╔╝ ██╗" + R);
+		c.sendMessage(RE + "  ╚═╝       ╚═══╝  ╚═╝        " + RE + "╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝" + R);
+		c.sendMessage("");
+		c.sendMessage("  " + G + "Version: " + W + version + GR + " | " + Y + "Platform: " + W + "Paper" + GR + " | " + RE + "Author: " + W + "PVP Index" + GR + " | " + G + "Maintained by: " + W + "GitEpildev" + R);
+		c.sendMessage("");
 	}
 
 	private void printStartupSummary(com.pvpindex.battles.version.VersionAdapter adapter, boolean papiEnabled) {

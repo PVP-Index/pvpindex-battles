@@ -30,9 +30,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
@@ -167,6 +169,34 @@ public class BattleEventListener implements Listener {
                 event.setCancelled(true);
             }
             return;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        String worldName = event.getLocation().getWorld().getName();
+        for (BattleSession session : battleService.activeBattles()) {
+            Object arenaWorld = session.getMetadata().get("arena_world");
+            if (arenaWorld instanceof String aw && aw.equals(worldName)) {
+                if (!resolveRules(session).allowBlockBreak()) {
+                    event.blockList().clear();
+                }
+                return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        String worldName = event.getBlock().getWorld().getName();
+        for (BattleSession session : battleService.activeBattles()) {
+            Object arenaWorld = session.getMetadata().get("arena_world");
+            if (arenaWorld instanceof String aw && aw.equals(worldName)) {
+                if (!resolveRules(session).allowBlockBreak()) {
+                    event.blockList().clear();
+                }
+                return;
+            }
         }
     }
 

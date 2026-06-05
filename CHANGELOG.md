@@ -11,10 +11,20 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ## [Unreleased]
 
-### Added
 ### Changed
+- **Console banner redesign**: startup banner now displays a large ASCII art "PVP INDEX" with a Green-Yellow-Red gradient. Info line shows version, platform, author (PVP Index), and maintainer (GitEpildev).
+- **Shutdown message**: updated to display "PVP INDEX has been disabled. Goodbye!" in red/grey styling.
+
 ### Fixed
 ### Removed
+
+---
+
+## [1.0.8] - 2026-06-05
+
+### Fixed
+- **Flight exploit before battle** ([#28](https://github.com/PVP-Index/pvpindex-battles/issues/28)): players who jumped while flying before a battle were launched above the arena, causing the battle to be rejected. Flight and velocity are now neutralised before teleport, and again when applying pre-battle state.
+- **Explosions destroying arena blocks** ([#29](https://github.com/PVP-Index/pvpindex-battles/issues/29)): crystal, TNT, and other explosions could break blocks in arena worlds even when `allow_block_break` was `false` in the game mode rules. Added `EntityExplodeEvent` and `BlockExplodeEvent` listeners that clear the block damage list when block breaking is disabled. Explosions still deal damage to players.
 
 ---
 
@@ -192,7 +202,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.7...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...v1.0.5

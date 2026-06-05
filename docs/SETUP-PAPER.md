@@ -7,7 +7,7 @@
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-1.0.7.jar`.
+1. Download or build `PvPIndexBattles-1.0.8.jar`.
 2. Place it in your server's `plugins/` folder.
 
 ## Step 2: First Run
@@ -37,13 +37,13 @@ plugins/PvPIndexBattles/
 
 To change the language, set `language: "nl"` (or any other code) in `config.yml` and run `/pvpindex reload`.
 
-Check the console for:
+Check the console for the PVP INDEX ASCII art banner (Green-Yellow-Red gradient) followed by:
 
 ```
-[PvPIndexBattles] Detected version adapter: Paper121VersionAdapter
+[PvPIndexBattles] Minecraft version: 1.21.x
 ```
 
-(or `Paper2610VersionAdapter` on 1.21.4+ servers)
+The startup summary shows the detected adapter (`Paper121VersionAdapter` or `Paper2610VersionAdapter` on 1.21.4+ servers), game mode count, proxy status, and debug state.
 
 ## Step 3: Configure
 
