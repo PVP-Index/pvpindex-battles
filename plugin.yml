@@ -1,5 +1,5 @@
 name: PvPIndexBattles
-version: ${project.version}
+version: 1.0.8
 main: com.pvpindex.battles.PvPIndexBattlesPlugin
 api-version: '1.21'
 folia-supported: true
