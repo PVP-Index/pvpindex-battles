@@ -7,7 +7,7 @@
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-1.0.2.jar`.
+1. Download or build `PvPIndexBattles-1.0.7.jar`.
 2. Place it in your server's `plugins/` folder.
 
 ## Step 2: First Run
@@ -138,6 +138,12 @@ database:
 When `database.enabled` is `false` (the default), stats and history are not persisted. The plugin operates with in-memory/API-only data.
 
 See [CONFIGURATION.md](CONFIGURATION.md) for the full `database.*` reference.
+
+## Metrics (bStats)
+
+The plugin collects anonymous usage statistics via [bStats](https://bstats.org/plugin/bukkit/PvPIndex%20Battle/31131). This includes server count, player count, Java version, and Minecraft version. No personal or gameplay data is collected.
+
+To disable bStats globally for all plugins, edit `plugins/bStats/config.yml` and set `enabled: false`.
 
 ## Optional: Velocity Proxy
 

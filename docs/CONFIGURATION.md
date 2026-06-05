@@ -174,6 +174,10 @@ When `database.enabled` is `false` (the default), stats, history, and leaderboar
 
 Players with `pvpindex.battle.commands.bypass` can use all commands regardless of this setting.
 
+### Metrics (bStats)
+
+Anonymous usage statistics are collected via [bStats](https://bstats.org/plugin/bukkit/PvPIndex%20Battle/31131). This includes server count, player count, Java version, and Minecraft version. No personal or gameplay data is collected. To disable bStats globally, edit `plugins/bStats/config.yml` and set `enabled: false`.
+
 ### Debug
 
 | Key | Type | Default | Description |
