@@ -117,7 +117,7 @@ public final class ProxyMessageListener implements PluginMessageListener {
 
     /**
      * A player in an active battle has server-switched. Cancel their battle
-     * on this backend — they can no longer fight here.
+     * on this backend. they can no longer fight here.
      */
     private void handlePlayerSwitchedServer(BattleMessage msg) {
         String playerUuidStr = (String) msg.data().get("playerUuid");
@@ -145,7 +145,7 @@ public final class ProxyMessageListener implements PluginMessageListener {
 
         logger.warning("[ProxyMessage] Player " + playerUuidStr
                 + " switched to server '" + (toServer != null ? toServer : "?")
-                + "' mid-battle " + battleUuid + " — cancelling battle.");
+                + "' mid-battle " + battleUuid + ". cancelling battle.");
         battleService.cancelBattle(battleUuid);
     }
 

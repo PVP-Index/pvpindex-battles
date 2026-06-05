@@ -18,6 +18,7 @@ public class ConfigManager {
     private ModerationSettings moderationSettings;
     private LobbySettings lobbySettings;
     private DatabaseSettings databaseSettings;
+    private AfterBattleLocationSettings afterBattleLocationSettings;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -124,6 +125,24 @@ public class ConfigManager {
                 cfg.getString("database.mongodb.uri", "mongodb://localhost:27017"),
                 cfg.getString("database.mongodb.database", "pvpindex")
         );
+
+        AfterBattleLocationSettings.Mode afterBattleMode;
+        try {
+            afterBattleMode = AfterBattleLocationSettings.Mode.valueOf(
+                    cfg.getString("player_state.after_battle_location.mode", "RESTORE").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            plugin.getLogger().warning("Invalid player_state.after_battle_location.mode, falling back to RESTORE.");
+            afterBattleMode = AfterBattleLocationSettings.Mode.RESTORE;
+        }
+        afterBattleLocationSettings = new AfterBattleLocationSettings(
+                afterBattleMode,
+                cfg.getString("player_state.after_battle_location.world", "world"),
+                cfg.getDouble("player_state.after_battle_location.x", 0.0),
+                cfg.getDouble("player_state.after_battle_location.y", 64.0),
+                cfg.getDouble("player_state.after_battle_location.z", 0.0),
+                (float) cfg.getDouble("player_state.after_battle_location.yaw", 0.0),
+                (float) cfg.getDouble("player_state.after_battle_location.pitch", 0.0)
+        );
     }
 
     private <E extends Enum<E>> Set<E> parseEnums(List<String> values, Class<E> type) {
@@ -143,4 +162,5 @@ public class ConfigManager {
     public ModerationSettings moderationSettings() { return moderationSettings == null ? ModerationSettings.defaults() : moderationSettings; }
     public LobbySettings lobbySettings() { return lobbySettings == null ? LobbySettings.defaults() : lobbySettings; }
     public DatabaseSettings databaseSettings() { return databaseSettings == null ? DatabaseSettings.defaults() : databaseSettings; }
+    public AfterBattleLocationSettings afterBattleLocationSettings() { return afterBattleLocationSettings == null ? AfterBattleLocationSettings.defaults() : afterBattleLocationSettings; }
 }

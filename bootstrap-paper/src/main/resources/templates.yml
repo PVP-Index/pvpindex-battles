@@ -6,10 +6,10 @@
 #   strategy: schematic  -> source_path is a .json schematic file under
 #                           templates/, pasted into host_world at paste_origin
 #
-# Drop new entries here and reload with /pvpindex reload — no code changes.
+# Drop new entries here and reload with /pvpindex reload. no code changes.
 
 templates:
-  # Code-built sword-duel arena. Requires no template files on disk —
+  # Code-built sword-duel arena. Requires no template files on disk.
   # ProceduralArenaStrategy spins up a fresh void world per battle and
   # builds a 21x21 stone-brick floor with iron spawn pads + glass walls.
   arena_duel:
@@ -34,7 +34,7 @@ templates:
     spectator_spawn: { x: 0, y: 78, z: 0, yaw: 0, pitch: 30 }
 
   # Code-built Sumo arena. ProceduralSumoArenaStrategy creates a raised 9x9
-  # platform surrounded by void — falling off = elimination.
+  # platform surrounded by void. falling off = elimination.
   arena_sumo:
     display_name: "Sumo Platform"
     strategy: procedural_sumo
@@ -45,7 +45,7 @@ templates:
     spectator_spawn: { x: 0, y: 90, z: 0, yaw: 0, pitch: 45 }
 
   # ---------------------------------------------------------------------------
-  # Optional examples (disabled by default — uncomment after providing assets).
+  # Optional examples (disabled by default. uncomment after providing assets).
   # ---------------------------------------------------------------------------
   #
   # COPY-STRATEGY example: drop a real Minecraft world into

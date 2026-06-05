@@ -2,7 +2,7 @@ package com.pvpindex.battles.identifier;
 
 /**
  * Maps a game-mode's internal raw ID to a human-friendly normalised name.
- * Used exclusively for UX (GUI, placeholders, commands, Velocity messages) —
+ * Used exclusively for UX (GUI, placeholders, commands, Velocity messages).
  * never injected into API payloads.
  *
  * @param rawId        machine identifier (e.g. {@code "sword"})

@@ -224,7 +224,7 @@ public class BattleService {
         }
         session.markFinished();
 
-        // A surrender is a deliberate, valid end — always record it regardless
+        // A surrender is a deliberate, valid end. always record it regardless
         // of how long the battle lasted.
         boolean hasSurrender = session.getParticipants().stream()
                 .anyMatch(p -> p.getResult() == ParticipantResult.LEFT);
@@ -250,7 +250,7 @@ public class BattleService {
                     participant.setElo(null, null);
                 }
             } else {
-                // Preserve LEFT (surrender/forfeit) — do not overwrite with LOSS.
+                // Preserve LEFT (surrender/forfeit). do not overwrite with LOSS.
                 // BattlePayloadFactory maps LEFT -> "surrender" so the API and
                 // website reflect the correct reason for the loss.
                 if (participant.getResult() != ParticipantResult.LEFT) {
@@ -321,7 +321,7 @@ public class BattleService {
      * cancel timeout, restore both players' pre-battle state, release the
      * arena back to the pool, and (if enabled) auto-submit to the API.
      *
-     * <p>Safe to call multiple times — subsequent calls are no-ops once the
+     * <p>Safe to call multiple times. subsequent calls are no-ops once the
      * session has left the active states.</p>
      */
     public void endAndCleanup(UUID battleUuid, Collection<UUID> winners) {
@@ -559,7 +559,7 @@ public class BattleService {
 
             // Non-retryable error (4xx other than 408/429): persist immediately for admin review.
             if (!result.retryable()) {
-                plugin.getLogger().severe("Battle " + uuid + " rejected by API — " + result.describe()
+                plugin.getLogger().severe("Battle " + uuid + " rejected by API. " + result.describe()
                         + ". Payload persisted to failed-submissions/ for admin review.");
                 persistFailed(uuid, payload);
                 return;
@@ -567,7 +567,7 @@ public class BattleService {
 
             if (attempt >= maxAttempts) {
                 plugin.getLogger().severe("Battle " + uuid + " failed after " + maxAttempts
-                        + " attempts — last error: " + result.describe()
+                        + " attempts. last error: " + result.describe()
                         + ". Payload persisted; will retry from disk every "
                         + settings.persistentRetryIntervalSeconds() + "s (or run /pvpindex retryfailed).");
                 persistFailed(uuid, payload);
@@ -602,7 +602,7 @@ public class BattleService {
 
     private void scheduleAsyncDelayed(Runnable task, long delaySeconds) {
         if (Bukkit.getServer() == null) {
-            // Tests / no-server environments — fall back to a daemon thread.
+            // Tests / no-server environments. fall back to a daemon thread.
             Thread t = new Thread(() -> {
                 try { Thread.sleep(delaySeconds * 1000L); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); return; }
                 task.run();
@@ -634,13 +634,13 @@ public class BattleService {
                     successCount++;
                     plugin.getLogger().info("Persisted submission " + path.getFileName() + " accepted (HTTP " + result.statusCode() + ").");
                 } else if (!result.retryable()) {
-                    // 4xx — will never succeed; move to a 'rejected' subdir so admins can inspect.
+                    // 4xx. will never succeed; move to a 'rejected' subdir so admins can inspect.
                     Path rejectedDir = storageService.failedSubmissionsDir().resolve("rejected");
                     java.nio.file.Files.createDirectories(rejectedDir);
                     java.nio.file.Files.move(path, rejectedDir.resolve(path.getFileName()),
                             java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     plugin.getLogger().severe("Persisted submission " + path.getFileName()
-                            + " rejected by API — " + result.describe() + ". Moved to failed-submissions/rejected/.");
+                            + " rejected by API. " + result.describe() + ". Moved to failed-submissions/rejected/.");
                 } else {
                     plugin.getLogger().warning("Persisted submission " + path.getFileName()
                             + " still failing (" + result.describe() + "); leaving on disk for next pass.");
@@ -686,7 +686,7 @@ public class BattleService {
         if (unsubmitted.isEmpty()) return 0;
 
         plugin.getLogger().info("Found " + unsubmitted.size()
-                + " local battle(s) not yet confirmed as submitted — queuing for sync…");
+                + " local battle(s) not yet confirmed as submitted. queuing for sync…");
 
         int queued = 0;
         for (Path path : unsubmitted) {

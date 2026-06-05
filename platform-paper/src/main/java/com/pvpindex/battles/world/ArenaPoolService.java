@@ -38,15 +38,15 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public final class ArenaPoolService {
 
-    /** Prefix every arena world name uses — see {@link WorldCopyStrategy}. */
+    /** Prefix every arena world name uses. see {@link WorldCopyStrategy}. */
     public static final String WORLD_PREFIX = "pvpindex_";
 
     private final JavaPlugin plugin;
     private final WorldGeneratorService generator;
     private final Map<String, Deque<ArenaInstance>> pool = new ConcurrentHashMap<>();
-    /** All instance world names ever produced by the pool — used at shutdown. */
+    /** All instance world names ever produced by the pool. used at shutdown. */
     private final Set<String> trackedWorlds = ConcurrentHashMap.newKeySet();
-    /** Templates whose first warm attempt failed — stop trying to refill. */
+    /** Templates whose first warm attempt failed. stop trying to refill. */
     private final Set<String> brokenTemplates = ConcurrentHashMap.newKeySet();
     private int warmSize = 2;
     private boolean refillAsync = true;
@@ -121,7 +121,7 @@ public final class ArenaPoolService {
             }
         } else {
             // Copy + procedural strategies both produce dedicated pvpindex_*
-            // worlds — the cleanest reset is to unload+delete and warm a
+            // worlds. the cleanest reset is to unload+delete and warm a
             // fresh one. unloadAndDelete handles procedural worlds since the
             // strategy's release() is a no-op.
             try {
@@ -147,7 +147,7 @@ public final class ArenaPoolService {
                 if (fresh == null) {
                     if (brokenTemplates.add(templateId)) {
                         plugin.getLogger().warning("[ArenaPool] Template '" + templateId
-                                + "' is unknown — skipping further warm attempts.");
+                                + "' is unknown. skipping further warm attempts.");
                     }
                     return;
                 }

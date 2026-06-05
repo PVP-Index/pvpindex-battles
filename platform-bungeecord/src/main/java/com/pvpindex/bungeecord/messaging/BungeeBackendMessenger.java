@@ -100,12 +100,12 @@ public final class BungeeBackendMessenger {
     private void send(String targetServerName, MessageType type, Map<String, Object> data) {
         ServerInfo serverInfo = plugin.getProxy().getServerInfo(targetServerName);
         if (serverInfo == null) {
-            logger.warning("[BungeeMessenger] Server '" + targetServerName + "' not found — dropping " + type);
+            logger.warning("[BungeeMessenger] Server '" + targetServerName + "' not found. dropping " + type);
             return;
         }
 
         if (serverInfo.getPlayers().isEmpty()) {
-            logger.warning("[BungeeMessenger] No players on '" + targetServerName + "' — dropping " + type);
+            logger.warning("[BungeeMessenger] No players on '" + targetServerName + "'. dropping " + type);
             return;
         }
 

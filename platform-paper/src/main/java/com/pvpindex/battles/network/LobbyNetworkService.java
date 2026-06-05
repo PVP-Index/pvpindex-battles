@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 /**
  * Central hub for all Redis-based networking on lobby Paper servers.
- * Only initialized when {@code lobby.enabled = true} in config.yml.
+ * Only initialised when {@code lobby.enabled = true} in config.yml.
  */
 public final class LobbyNetworkService {
 

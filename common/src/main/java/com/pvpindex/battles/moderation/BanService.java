@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Inbound federated bans are stored in a separate map and are only
  * enforced when {@link com.pvpindex.battles.moderation.ModerationSettings#enforceInboundFederatedBans()}
- * is true — the user's "optional" cross-server ban toggle.</p>
+ * is true. the user's "optional" cross-server ban toggle.</p>
  */
 public final class BanService {
     private final ObjectMapper mapper;

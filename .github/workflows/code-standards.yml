@@ -1,0 +1,174 @@
+name: Code Standards
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  standards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Banned patterns ──────────────────────────────────────────────
+      - name: No TODO/FIXME/HACK/XXX markers
+        run: |
+          if grep -rn '\bTODO\b\|\bFIXME\b\|\bHACK\b\|\bXXX\b' --include="*.java" . | grep -v '/target/' | grep -v '/.git/'; then
+            echo "::error::TODO/FIXME/HACK/XXX markers found. Resolve them before merging."
+            exit 1
+          fi
+
+      - name: No System.out or System.err
+        run: |
+          if grep -rn 'System\.out\.\|System\.err\.' --include="*.java" . | grep -v '/target/' | grep -v '/.git/' | grep -v '/test/'; then
+            echo "::error::Use a logger instead of System.out/System.err."
+            exit 1
+          fi
+
+      - name: No printStackTrace
+        run: |
+          if grep -rn '\.printStackTrace()' --include="*.java" . | grep -v '/target/' | grep -v '/.git/'; then
+            echo "::error::Use a logger instead of printStackTrace()."
+            exit 1
+          fi
+
+      - name: No @SuppressWarnings("all")
+        run: |
+          if grep -rn '@SuppressWarnings("all")' --include="*.java" . | grep -v '/target/' | grep -v '/.git/'; then
+            echo "::error::Do not suppress all warnings. Suppress specific warnings only."
+            exit 1
+          fi
+
+      - name: No emojis in source code
+        run: |
+          # Reject pictographic emojis but allow standard Unicode symbols (tick, cross, arrows, box-drawing)
+          if grep -rPn '[\x{1F300}-\x{1F5FF}\x{1F600}-\x{1F64F}\x{1F680}-\x{1F6FF}\x{1F900}-\x{1F9FF}\x{1FA00}-\x{1FA6F}\x{1FA70}-\x{1FAFF}]' --include="*.java" --include="*.yml" --include="*.md" --include="*.properties" . | grep -v '/target/' | grep -v '/.git/' | grep -v 'code-standards.yml'; then
+            echo "::error::Emojis found in source files. Use plain text or standard Unicode symbols only."
+            exit 1
+          fi
+
+      - name: No wildcard imports in main sources
+        run: |
+          if grep -rn 'import .*\.\*;' --include="*.java" . | grep -v '/target/' | grep -v '/.git/' | grep -v '/test/' | grep -v 'import static '; then
+            echo "::error::Wildcard imports are not allowed in main sources. Use explicit imports."
+            exit 1
+          fi
+
+      - name: No raw string concatenation for player messages
+        run: |
+          if grep -rn 'player\.sendMessage("' --include="*.java" . | grep -v '/target/' | grep -v '/.git/' | grep -v '/test/' | grep -v 'MessageService\|messageService\|sendQuestReward'; then
+            echo "::warning::Prefer MessageService for player-facing messages instead of raw strings."
+          fi
+
+      # ── Code hygiene ─────────────────────────────────────────────────
+      - name: No trailing whitespace
+        run: |
+          TRAILING=$(grep -rn ' $' --include="*.java" --include="*.yml" --include="*.md" . | grep -v '/target/' | grep -v '/.git/' | head -20)
+          if [ -n "$TRAILING" ]; then
+            echo "$TRAILING"
+            echo "::warning::Trailing whitespace found. Consider cleaning up."
+          fi
+
+      - name: Source files end with newline
+        run: |
+          MISSING=0
+          for f in $(find . -name "*.java" -not -path "*/target/*" -not -path "*/.git/*"); do
+            if [ -n "$(tail -c 1 "$f")" ]; then
+              echo "Missing final newline: $f"
+              MISSING=1
+            fi
+          done
+          if [ "$MISSING" -ne 0 ]; then
+            echo "::error::Java source files must end with a newline."
+            exit 1
+          fi
+
+      # ── Consistency checks ──────────────────────────────────────────
+      - name: Version consistency across modules
+        run: |
+          ROOT_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' ')
+          echo "Root version: $ROOT_VERSION"
+          MISMATCH=0
+          for pom in $(find . -name "pom.xml" -not -path "*/target/*" -not -path "./.git/*" -not -path "./pom.xml"); do
+            PARENT_VER=$(grep -A5 '<parent>' "$pom" | grep '<version>' | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' ')
+            if [ -n "$PARENT_VER" ] && [ "$PARENT_VER" != "$ROOT_VERSION" ]; then
+              echo "Version mismatch in $pom: parent=$PARENT_VER, root=$ROOT_VERSION"
+              MISMATCH=1
+            fi
+          done
+          if [ "$MISMATCH" -ne 0 ]; then
+            echo "::error::Module parent versions do not match root pom version."
+            exit 1
+          fi
+          echo "All module versions consistent."
+
+      - name: README version matches pom version
+        run: |
+          ROOT_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' ')
+          if ! grep -q "PvPIndexBattles-${ROOT_VERSION}.jar" README.md; then
+            echo "::error::README.md JAR filenames do not match pom version ($ROOT_VERSION)."
+            exit 1
+          fi
+          echo "README version matches: $ROOT_VERSION"
+
+      - name: CHANGELOG has entry for current version
+        run: |
+          ROOT_VERSION=$(grep -m1 '<version>' pom.xml | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | tr -d ' ')
+          if ! grep -q "\[${ROOT_VERSION}\]" CHANGELOG.md; then
+            echo "::error::CHANGELOG.md has no entry for version $ROOT_VERSION."
+            exit 1
+          fi
+          echo "CHANGELOG entry found for $ROOT_VERSION"
+
+      # ── YAML validation ─────────────────────────────────────────────
+      - name: Validate YAML files
+        run: |
+          pip install --quiet pyyaml
+          INVALID=0
+          for f in $(find . -name "*.yml" -o -name "*.yaml" | grep -v '/target/' | grep -v '/.git/' | grep -v 'node_modules'); do
+            if ! python3 -c "import yaml; yaml.safe_load(open('$f'))" 2>/dev/null; then
+              echo "Invalid YAML: $f"
+              INVALID=1
+            fi
+          done
+          if [ "$INVALID" -ne 0 ]; then
+            echo "::error::Invalid YAML files found."
+            exit 1
+          fi
+          echo "All YAML files valid."
+
+      # ── Language file parity ─────────────────────────────────────────
+      - name: Language files have same keys as English
+        run: |
+          if [ ! -d bootstrap-paper/src/main/resources/lang ]; then
+            echo "No lang directory found, skipping."
+            exit 0
+          fi
+
+          EN_FILE="bootstrap-paper/src/main/resources/lang/en.yml"
+          if [ ! -f "$EN_FILE" ]; then
+            echo "No en.yml found, skipping."
+            exit 0
+          fi
+
+          EN_KEYS=$(grep -E '^\S+:' "$EN_FILE" | sed 's/:.*//' | sort)
+          MISMATCH=0
+
+          for lang in bootstrap-paper/src/main/resources/lang/*.yml; do
+            [ "$lang" = "$EN_FILE" ] && continue
+            LANG_KEYS=$(grep -E '^\S+:' "$lang" | sed 's/:.*//' | sort)
+            MISSING=$(comm -23 <(echo "$EN_KEYS") <(echo "$LANG_KEYS"))
+            if [ -n "$MISSING" ]; then
+              BASENAME=$(basename "$lang")
+              echo "::warning::$BASENAME is missing keys: $(echo $MISSING | tr '\n' ', ')"
+              MISMATCH=1
+            fi
+          done
+
+          if [ "$MISMATCH" -ne 0 ]; then
+            echo "::warning::Some language files are missing keys present in en.yml."
+          else
+            echo "All language files have matching keys."
+          fi

@@ -9,7 +9,7 @@ import org.bukkit.event.Event;
 
 /**
  * Base class for all PvPIndex battle events. Subclasses must declare their
- * own {@code HandlerList} — Bukkit requires one per concrete event type for
+ * own {@code HandlerList}. Bukkit requires one per concrete event type for
  * {@code @EventHandler} filtering to work correctly.
  */
 public abstract class AbstractPvPIndexBattleEvent extends Event {

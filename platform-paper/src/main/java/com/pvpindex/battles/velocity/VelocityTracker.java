@@ -20,7 +20,7 @@ import org.bukkit.util.Vector;
  * locking is needed beyond the volatile map. A {@code velocity_change} replay
  * event is emitted whenever the speed delta between two consecutive ticks
  * exceeds {@code threshold} (blocks/tick). Sampling is further throttled by
- * {@code intervalTicks} — a value of 2 means "sample every other tick".</p>
+ * {@code intervalTicks}. a value of 2 means "sample every other tick".</p>
  *
  * <p>Entries are evicted on player quit, battle end, and via the periodic
  * cleanup pass in {@link com.pvpindex.battles.PvPIndexBattlesPlugin}.</p>
@@ -39,7 +39,7 @@ public final class VelocityTracker {
      */
     private final ConcurrentHashMap<UUID, Vector> lastVelocity = new ConcurrentHashMap<>();
 
-    /** Tick counter per player — used to honour {@code intervalTicks}. */
+    /** Tick counter per player. used to honour {@code intervalTicks}. */
     private final ConcurrentHashMap<UUID, Long> tickCount = new ConcurrentHashMap<>();
 
     public VelocityTracker(BattleReplayRecorder recorder, double threshold, int intervalTicks) {

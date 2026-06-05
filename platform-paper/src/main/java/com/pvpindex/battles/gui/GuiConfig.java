@@ -112,7 +112,7 @@ public final class GuiConfig {
 	public static GuiConfig load(File dataFolder, Logger logger) {
 		File file = new File(dataFolder, "gui.yml");
 		if (!file.exists()) {
-			logger.warning("gui.yml not found — using built-in defaults.");
+			logger.warning("gui.yml not found. using built-in defaults.");
 			return defaults();
 		}
 		YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
@@ -419,7 +419,7 @@ public final class GuiConfig {
 		try {
 			return Material.valueOf(raw.toUpperCase().trim());
 		} catch (IllegalArgumentException e) {
-			logger.warning("[gui.yml] Unknown material '" + raw + "' — skipping.");
+			logger.warning("[gui.yml] Unknown material '" + raw + "'. skipping.");
 			return null;
 		}
 	}

@@ -19,10 +19,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
  *
  * <h3>Subcommands</h3>
  * <ul>
- *   <li>{@code /pvpindex} (no args) — show help</li>
- *   <li>{@code /pvpindex global} — list all active battles across all backend servers</li>
- *   <li>{@code /pvpindex where <player>} — show which server a player is on</li>
- *   <li>{@code /pvpindex reload} — reload the proxy plugin config (console/op only)</li>
+ *   <li>{@code /pvpindex} (no args). show help</li>
+ *   <li>{@code /pvpindex global}. list all active battles across all backend servers</li>
+ *   <li>{@code /pvpindex where <player>}. show which server a player is on</li>
+ *   <li>{@code /pvpindex reload}. reload the proxy plugin config (console/op only)</li>
  * </ul>
  */
 public final class VelocityPvPIndexCommand implements SimpleCommand {
@@ -80,7 +80,7 @@ public final class VelocityPvPIndexCommand implements SimpleCommand {
                 source.sendMessage(Component.text("    · ", NamedTextColor.GRAY)
                         .append(Component.text(e.battleUuid().toString().substring(0, 8) + "…",
                                 NamedTextColor.DARK_AQUA))
-                        .append(Component.text(" — ", NamedTextColor.GRAY))
+                        .append(Component.text(". ", NamedTextColor.GRAY))
                         .append(Component.text(e.participantUuids().size() + " players",
                                 NamedTextColor.WHITE)));
             }
@@ -127,11 +127,11 @@ public final class VelocityPvPIndexCommand implements SimpleCommand {
     private void showHelp(CommandSource source) {
         source.sendMessage(PREFIX.append(Component.text("Commands:", NamedTextColor.YELLOW)));
         source.sendMessage(Component.text("  /pvpindex global", NamedTextColor.AQUA)
-                .append(Component.text(" — show all active battles across the network", NamedTextColor.GRAY)));
+                .append(Component.text(". show all active battles across the network", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("  /pvpindex where <player>", NamedTextColor.AQUA)
-                .append(Component.text(" — show which server a player is on", NamedTextColor.GRAY)));
+                .append(Component.text(". show which server a player is on", NamedTextColor.GRAY)));
         source.sendMessage(Component.text("  /pvpindex reload", NamedTextColor.AQUA)
-                .append(Component.text(" — reload proxy plugin config (admin only)", NamedTextColor.GRAY)));
+                .append(Component.text(". reload proxy plugin config (admin only)", NamedTextColor.GRAY)));
     }
 
     // -------------------------------------------------------------------------

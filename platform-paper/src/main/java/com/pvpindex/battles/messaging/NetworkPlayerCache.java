@@ -9,9 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Supports two update modes:</p>
  * <ul>
- *   <li><b>Bulk update</b> — periodic {@code NETWORK_PLAYER_LIST} from proxy
+ *   <li><b>Bulk update</b>. periodic {@code NETWORK_PLAYER_LIST} from proxy
  *       (legacy, used by SMP/backend servers without Redis)</li>
- *   <li><b>Incremental update</b> — real-time {@code PLAYER_JOIN/LEAVE/SWITCH}
+ *   <li><b>Incremental update</b>. real-time {@code PLAYER_JOIN/LEAVE/SWITCH}
  *       events via Redis (used by lobby servers with Redis)</li>
  * </ul>
  *

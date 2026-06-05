@@ -13,9 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>Updated by:</p>
  * <ul>
- *   <li>{@code PostLoginEvent} — player connects to the proxy</li>
- *   <li>{@code ServerConnectedEvent} — player moves to a different backend</li>
- *   <li>{@code DisconnectEvent} — player leaves the network</li>
+ *   <li>{@code PostLoginEvent}. player connects to the proxy</li>
+ *   <li>{@code ServerConnectedEvent}. player moves to a different backend</li>
+ *   <li>{@code DisconnectEvent}. player leaves the network</li>
  * </ul>
  */
 public final class PlayerServerRegistry {

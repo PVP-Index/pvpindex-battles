@@ -22,7 +22,7 @@ public class FileStorageService {
     public Path replaysDir() { return dataFolder.resolve("replays"); }
     public Path failedSubmissionsDir() { return dataFolder.resolve("failed-submissions"); }
 
-    public void initialize() throws IOException {
+    public void initialise() throws IOException {
         Files.createDirectories(battlesDir());
         Files.createDirectories(replaysDir());
         Files.createDirectories(failedSubmissionsDir());

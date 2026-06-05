@@ -22,7 +22,7 @@ import org.bukkit.plugin.Plugin;
  * restored, arenas are released, and a warning is logged.</p>
  *
  * <h3>ChunkUnloadEvent</h3>
- * <p>No actionable work is done here for now — chunk unloads within an arena
+ * <p>No actionable work is done here for now. chunk unloads within an arena
  * world are expected (e.g. after a world-copy strategy shrinks the view
  * distance). Debug-level logging is emitted so server owners can correlate
  * chunk unload activity with battle issues.</p>
@@ -47,7 +47,7 @@ public class WorldCleanupListener implements Listener {
         if (affected.isEmpty()) return;
 
         plugin.getLogger().warning("[WorldCleanup] World '" + worldName + "' is unloading with "
-                + affected.size() + " active battle(s) — cancelling them to prevent ghost sessions.");
+                + affected.size() + " active battle(s). cancelling them to prevent ghost sessions.");
 
         for (UUID battleUuid : affected) {
             try {

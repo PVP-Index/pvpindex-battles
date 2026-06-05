@@ -40,7 +40,7 @@ public class BattleSession {
     public UUID getUuid() { return uuid; }
     public BattleType getBattleType() { return battleType; }
     public GameModeType getGameMode() { return gameMode; }
-    /** Derived convenience for UX — returns the lowercased enum name. */
+    /** Derived convenience for UX. returns the lowercased enum name. */
     public String getGameModeId() { return gameMode != null ? gameMode.name().toLowerCase() : ""; }
     public String getServerId() { return serverId; }
     public String getArenaId() { return arenaId; }

@@ -64,7 +64,12 @@ public record PlayerStateSnapshot(
 
     /** Apply this snapshot back onto the (possibly newly-rejoined) player. */
     public void restore(Player player, org.bukkit.attribute.Attribute maxHealthAttr) {
-        restoreInternal(player, maxHealthAttr, true);
+        restoreInternal(player, maxHealthAttr, true, null);
+    }
+
+    /** Apply this snapshot, overriding the teleport destination. */
+    public void restore(Player player, org.bukkit.attribute.Attribute maxHealthAttr, Location overrideLocation) {
+        restoreInternal(player, maxHealthAttr, true, overrideLocation);
     }
 
     /**
@@ -73,10 +78,15 @@ public record PlayerStateSnapshot(
      * where the winner retains looted items.
      */
     public void restoreWithoutInventory(Player player, org.bukkit.attribute.Attribute maxHealthAttr) {
-        restoreInternal(player, maxHealthAttr, false);
+        restoreInternal(player, maxHealthAttr, false, null);
     }
 
-    private void restoreInternal(Player player, org.bukkit.attribute.Attribute maxHealthAttr, boolean includeInventory) {
+    /** Restore without inventory, overriding the teleport destination. */
+    public void restoreWithoutInventory(Player player, org.bukkit.attribute.Attribute maxHealthAttr, Location overrideLocation) {
+        restoreInternal(player, maxHealthAttr, false, overrideLocation);
+    }
+
+    private void restoreInternal(Player player, org.bukkit.attribute.Attribute maxHealthAttr, boolean includeInventory, Location overrideLocation) {
         // Force-respawn dead players so teleport actually works; without
         // this, player.teleport() silently fails on the death screen and
         // the player gets stranded in the (soon-to-be-deleted) arena world.
@@ -118,8 +128,8 @@ public record PlayerStateSnapshot(
         // Potion effects
         potionEffects.forEach(player::addPotionEffect);
 
-        // Teleport last — some clients flicker if state is set after tp
-        player.teleport(location);
+        // Teleport last. Some clients flicker if state is set after tp.
+        player.teleport(overrideLocation != null ? overrideLocation : location);
     }
 
     private static ItemStack[] cloneArray(ItemStack[] src) {

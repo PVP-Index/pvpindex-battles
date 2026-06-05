@@ -17,7 +17,7 @@ import org.bukkit.plugin.Plugin;
 /**
  * Builds a small symmetrical PvP arena in a fresh void world, in code, with
  * no asset files. Designed to make {@code Sword Duel} playable out of the
- * box — drop the plugin into a server and the {@code arena_duel} template
+ * box. drop the plugin into a server and the {@code arena_duel} template
  * "just works" without shipping or generating template world directories.
  *
  * <h3>Arena layout</h3>
@@ -62,12 +62,12 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
         String worldName = "pvpindex_" + template.id() + "_" + id.toString().substring(0, 8);
 
         if (Bukkit.getServer() == null) {
-            // Tests: no real Bukkit available — return a placeholder.
+            // Tests: no real Bukkit available. return a placeholder.
             return new ArenaInstance(id, template.id(), worldName,
                     spawnsFor(template), template.spectatorSpawn());
         }
 
-        // NOTE: deliberately use WorldType.NORMAL (not FLAT) — FLAT makes Paper
+        // NOTE: deliberately use WorldType.NORMAL (not FLAT). FLAT makes Paper
         // try to parse flat-generator settings JSON (expects a "layers" key)
         // even when a custom ChunkGenerator is supplied, producing a harmless
         // but noisy "No key layers in MapLike[{}]" error on every world create.
@@ -101,7 +101,7 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
     private void configureWorld(World world) {
         world.setSpawnLocation(0, FLOOR_Y + 1, 0);
         world.setDifficulty(Difficulty.NORMAL);
-        // PvP must be explicitly enabled — the default for a fresh world is false,
+        // PvP must be explicitly enabled. the default for a fresh world is false,
         // and WorldGuard (+ other protection plugins) respect world.isPVP().
         world.setPVP(true);
         applyRule(world, "doDaylightCycle", false);
@@ -124,7 +124,7 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
     }
 
     private void buildArena(World world) {
-        // Floor — 21x21 stone bricks, with iron spawn pads at the ends.
+        // Floor. 21x21 stone bricks, with iron spawn pads at the ends.
         for (int x = -RADIUS; x <= RADIUS; x++) {
             for (int z = -RADIUS; z <= RADIUS; z++) {
                 Block b = world.getBlockAt(x, FLOOR_Y, z);
@@ -132,7 +132,7 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
                 b.setType(mat, false);
             }
         }
-        // Perimeter wall — 1 stone-brick base + 4 glass courses above.
+        // Perimeter wall. 1 stone-brick base + 4 glass courses above.
         for (int x = -RADIUS; x <= RADIUS; x++) {
             placeWall(world, x, -RADIUS);
             placeWall(world, x,  RADIUS);
@@ -158,7 +158,7 @@ public final class ProceduralArenaStrategy implements WorldGenerationStrategy {
 
     /**
      * Falls back to two sensible default spawns when the template doesn't
-     * declare any — matches the iron pad positions built above. Keeps
+     * declare any. matches the iron pad positions built above. Keeps
      * {@code arena_duel} playable even with a stripped-down templates.yml.
      */
     private List<SpawnPoint> spawnsFor(ArenaTemplate template) {

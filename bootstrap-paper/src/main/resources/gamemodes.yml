@@ -1,7 +1,7 @@
 # All-in-one game mode and kit definitions. Each entry under `modes` is a
 # fully self-contained PvP ruleset; `kits` are reusable loadouts referenced
 # by `kit:` from a mode. The plugin ships with all modes playable out of the
-# box — procedural arenas need no extra files on disk.
+# box. procedural arenas need no extra files on disk.
 
 kits:
   # Classic 1v1 sword-duel loadout: enchanted iron sword + golden apples

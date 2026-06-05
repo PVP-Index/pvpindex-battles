@@ -11,7 +11,7 @@ on:
 
 env:
   MC_VERSION: "1.21.1"
-  FOLIA_VERSION: "1.21.4"    # Folia skipped 1.21.1–1.21.3; earliest 1.21.x Folia release
+  FOLIA_VERSION: "1.21.4"    # Folia skipped 1.21.1-1.21.3; earliest 1.21.x Folia release
   PAPER_261_VERSION: "26.1.2" # New MC versioning scheme; uses fill.papermc.io API
   SPIGOT_VERSION: "1.21.11"   # 1.21.11 is the minimum Spigot version that supports Java 25
 
@@ -176,7 +176,7 @@ jobs:
           RESULT=timeout
           for i in $(seq 1 120); do
             sleep 1
-            # Hard failures — API incompatibility or onEnable exception
+            # Hard failures. API incompatibility or onEnable exception
             if grep -qE "$FAIL_PAT" server.log 2>/dev/null; then
               RESULT=fail
               break
@@ -193,7 +193,7 @@ jobs:
               fi
               break
             fi
-            # "Enabling" logged — wait 5 more seconds for any delayed crash before
+            # "Enabling" logged. wait 5 more seconds for any delayed crash before
             # declaring pass (Folia errors can arrive after the enabling message).
             if grep -q "Enabling PvPIndexBattles" server.log 2>/dev/null; then
               sleep 5
@@ -206,7 +206,7 @@ jobs:
             fi
           done
 
-          # SIGKILL guarantees the JVM exits immediately — SIGTERM can block for
+          # SIGKILL guarantees the JVM exits immediately. SIGTERM can block for
           # minutes on servers mid-way through world saves or chunk generation.
           kill -9 "$SERVER_PID" 2>/dev/null || true
           wait "$SERVER_PID" 2>/dev/null || true
@@ -226,6 +226,6 @@ jobs:
             echo "FAIL: Plugin threw an error during startup"
             exit 1
           else
-            echo "FAIL: Timed out — PvPIndexBattles never appeared in server.log within 120 s"
+            echo "FAIL: Timed out. PvPIndexBattles never appeared in server.log within 120 s"
             exit 1
           fi

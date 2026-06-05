@@ -20,7 +20,7 @@ import org.bukkit.scheduler.BukkitTask;
  * via {@code /battle leave}.
  *
  * <p>Inventory is <strong>not</strong> restored for either player after an SMP
- * battle — the winner keeps whatever they picked up and the loser respawns
+ * battle. the winner keeps whatever they picked up and the loser respawns
  * with whatever remains (typically nothing).</p>
  */
 public final class SmpLootPhaseService {
@@ -88,7 +88,7 @@ public final class SmpLootPhaseService {
     }
 
     /**
-     * End the loot phase — called when the timer expires or the winner
+     * End the loot phase. called when the timer expires or the winner
      * leaves early. Restores both players' locations (but not inventories)
      * and runs the normal battle cleanup pipeline.
      */
@@ -104,7 +104,7 @@ public final class SmpLootPhaseService {
             winner.sendMessage(Component.text("Loot phase ended.", NamedTextColor.YELLOW));
         }
 
-        // Restore location/state for both players but skip inventory — they keep
+        // Restore location/state for both players but skip inventory. they keep
         // whatever they have right now.
         if (playerStateService != null) {
             for (UUID uuid : List.of(phase.winnerUuid, phase.loserUuid)) {

@@ -33,7 +33,7 @@ public final class ServerSwitchListener {
         if (plugin.isChallengeTransfer(playerUuid)) {
             logger.info("[ServerSwitch] Player " + event.getPlayer().getUsername()
                     + " transferred for challenge from '" + previousServer
-                    + "' to '" + targetServer + "' — skipping battle cancellation.");
+                    + "' to '" + targetServer + "'. skipping battle cancellation.");
             return;
         }
 
@@ -45,7 +45,7 @@ public final class ServerSwitchListener {
                 + " (" + playerUuid + ") switched from '" + previousServer
                 + "' to '" + targetServer
                 + "' while in battle " + battle.battleUuid()
-                + " — notifying backend to cancel.");
+                + ". notifying backend to cancel.");
 
         plugin.backendMessenger().sendPlayerSwitchedServer(
                 previousServer, playerUuid, previousServer, targetServer, battle.battleUuid());

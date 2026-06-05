@@ -7,18 +7,20 @@ import com.pvpindex.velocity.PvPIndexVelocityPlugin;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.server.RegisteredServer;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
  * Handles cross-proxy player transfers for battle challenges.
  * Supports two strategies:
  * <ul>
- *   <li><b>shared_server</b> — Route both players to a shared battle server
+ *   <li><b>shared_server</b>. Route both players to a shared battle server
  *       accessible from all proxies.</li>
- *   <li><b>transfer_packet</b> — Use MC 1.20.5+ transfer packets to move
+ *   <li><b>transfer_packet</b>. Use MC 1.20.5+ transfer packets to move
  *       the player to the other proxy.</li>
- *   <li><b>both</b> — Prefer shared_server, fall back to transfer_packet.</li>
+ *   <li><b>both</b>. Prefer shared_server, fall back to transfer_packet.</li>
  * </ul>
  */
 public final class TransferService {

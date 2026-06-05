@@ -147,7 +147,7 @@ public final class ModerationCommand implements CommandExecutor {
         for (ReportEntry entry : open) {
             sender.sendMessage("§7- §f" + entry.reportedPlayerName()
                     + " §7by §f" + entry.reporterName()
-                    + " §7— §f" + entry.reason()
+                    + " §7- §f" + entry.reason()
                     + (entry.battleUuid() != null ? " §8[" + entry.battleUuid() + "]" : ""));
         }
         return true;

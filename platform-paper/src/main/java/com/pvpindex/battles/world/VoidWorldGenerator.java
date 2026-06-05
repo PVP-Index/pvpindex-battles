@@ -13,7 +13,7 @@ import java.util.Random;
 
 /**
  * Empty/void chunk generator used by {@link ProceduralArenaStrategy} so the
- * pool can spin up arena worlds with zero terrain — the arena itself is
+ * pool can spin up arena worlds with zero terrain. the arena itself is
  * placed by the strategy after the world loads.
  */
 public final class VoidWorldGenerator extends ChunkGenerator {
@@ -21,7 +21,7 @@ public final class VoidWorldGenerator extends ChunkGenerator {
     @Override
     public void generateNoise(@NotNull WorldInfo worldInfo, @NotNull Random random,
                               int chunkX, int chunkZ, @NotNull ChunkData chunkData) {
-        // intentionally empty — leaves the chunk full of air
+        // intentionally empty. leaves the chunk full of air
     }
 
     @Override

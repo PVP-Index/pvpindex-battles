@@ -243,7 +243,7 @@ public class BattleQueueService {
 
         // 2) Acquire a pre-generated arena (instant if pool is warm). Pool
         // service falls back to sync generate when the pool is empty so we
-        // always get an instance — at worst with a small delay.
+        // always get an instance. at worst with a small delay.
         Runnable acquireAndLaunch = () -> {
             ArenaInstance instance = null;
             try {
@@ -254,7 +254,7 @@ public class BattleQueueService {
                 }
                 if (instance == null) {
                     plugin.getLogger().warning("[Queue] No template found for '" + templateId
-                            + "' — battle will start without world generation.");
+                            + "'. battle will start without world generation.");
                 }
             } catch (Exception e) {
                 plugin.getLogger().warning("[Queue] Arena acquire failed for '"
@@ -432,7 +432,7 @@ public class BattleQueueService {
         World world = Bukkit.getWorld(instance.worldName());
         if (world == null) {
             plugin.getLogger().warning("[Queue] Arena world '"
-                    + instance.worldName() + "' is not loaded — skipping teleport.");
+                    + instance.worldName() + "' is not loaded. skipping teleport.");
             return;
         }
         List<SpawnPoint> spawns = instance.spawnPoints();

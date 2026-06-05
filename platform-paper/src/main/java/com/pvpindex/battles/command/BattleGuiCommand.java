@@ -35,11 +35,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 /**
  * Handles the {@code /battle} command tree:
  * <ul>
- *   <li>{@code /battle} — opens queue GUI</li>
- *   <li>{@code /battle leave} — leave queue or forfeit</li>
- *   <li>{@code /battle challenge <player> [mode]} — send a challenge</li>
- *   <li>{@code /battle accept <id>} — accept challenge</li>
- *   <li>{@code /battle decline <id>} — decline challenge</li>
+ *   <li>{@code /battle}. opens queue GUI</li>
+ *   <li>{@code /battle leave}. leave queue or forfeit</li>
+ *   <li>{@code /battle challenge <player> [mode]}. send a challenge</li>
+ *   <li>{@code /battle accept <id>}. accept challenge</li>
+ *   <li>{@code /battle decline <id>}. decline challenge</li>
  * </ul>
  */
 public class BattleGuiCommand implements CommandExecutor {

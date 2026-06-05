@@ -67,7 +67,7 @@ public final class WorldGeneratorService {
         plugin.getLogger().info("Loaded " + templates.size() + " arena template(s) from templates.yml");
 
         // Merge schematic-based templates from schematics.yml (may override
-        // templates.yml entries with the same id — schematics.yml wins).
+        // templates.yml entries with the same id. schematics.yml wins).
         if (schematicLoader != null) {
             schematicLoader.reload();
             templates.putAll(schematicLoader.templates());

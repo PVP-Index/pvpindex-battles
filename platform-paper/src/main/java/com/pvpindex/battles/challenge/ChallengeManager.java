@@ -31,10 +31,10 @@ import org.bukkit.plugin.java.JavaPlugin;
  *
  * <p>Supports two modes:</p>
  * <ul>
- *   <li><b>Proxy mode</b> — routes all challenges through Velocity via
+ *   <li><b>Proxy mode</b>. routes all challenges through Velocity via
  *       {@link PaperMessenger}. Supports cross-server challenges with
  *       automatic player transfer.</li>
- *   <li><b>Standalone mode</b> — resolves targets locally with
+ *   <li><b>Standalone mode</b>. resolves targets locally with
  *       {@link Bukkit#getPlayerExact(String)} and handles everything
  *       on the same server.</li>
  * </ul>
@@ -124,7 +124,7 @@ public final class ChallengeManager {
 			return;
 		}
 
-		// TeamsAPI guard — block same-team challenges when enabled (standalone only;
+		// TeamsAPI guard. block same-team challenges when enabled (standalone only;
 		// cross-server challenges are re-checked in startBattle when both UUIDs are known).
 		if (teamsGuard != null && teamsGuard.isEnabled()) {
 			Player localTarget = Bukkit.getPlayerExact(targetName);
@@ -362,7 +362,7 @@ public final class ChallengeManager {
 			return;
 		}
 
-		// TeamsAPI guard — final check with both UUIDs known (covers all modes).
+		// TeamsAPI guard. final check with both UUIDs known (covers all modes).
 		if (teamsGuard != null && teamsGuard.isSameTeam(challengerUuid, targetUuid)) {
 			messageService.send(challenger, "challenge.same_team");
 			messageService.send(target, "challenge.same_team_target", "%player%", challenger.getName());

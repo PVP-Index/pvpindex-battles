@@ -14,7 +14,7 @@ class FileStorageServiceTest {
     void storesAndListsFailedSubmissions() throws Exception {
         Path temp = Files.createTempDirectory("pvpindex-test");
         FileStorageService storage = new FileStorageService(temp, new ObjectMapper());
-        storage.initialize();
+        storage.initialise();
 
         UUID id = UUID.randomUUID();
         storage.saveFailedSubmission(id, Map.of("battle_uuid", id.toString()));

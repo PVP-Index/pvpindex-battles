@@ -20,7 +20,7 @@ import org.bukkit.scheduler.BukkitRunnable;
  * placeholders for the recorded players). Production deployments should
  * register an NMS / PacketEvents bridge that emits real
  * {@code ClientboundAddPlayerPacket} +
- * {@code ClientboundPlayerInfoUpdatePacket} traffic — see
+ * {@code ClientboundPlayerInfoUpdatePacket} traffic. see
  * {@link PacketReplayBridge} javadoc.</p>
  */
 public final class BukkitReplayBridge implements PacketReplayBridge {

@@ -32,7 +32,7 @@ import org.bukkit.NamespacedKey;
  * {@link BattleGuiCommand}. Uses {@link PlayerGuiState} to determine
  * whether a mode click joins a queue or sends a challenge.
  *
- * <p>Also handles the SMP risk confirmation GUI — when a player selects
+ * <p>Also handles the SMP risk confirmation GUI. when a player selects
  * a game mode with {@code use_player_inventory=true}, a confirmation
  * dialog is shown before joining the queue.</p>
  */

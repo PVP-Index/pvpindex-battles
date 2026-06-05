@@ -105,7 +105,7 @@ public final class PvPIndexVelocityPlugin {
                 .repeat(10, TimeUnit.SECONDS)
                 .schedule();
 
-        logger.info("PvPIndex Proxy plugin enabled — monitoring "
+        logger.info("PvPIndex Proxy plugin enabled. monitoring "
                 + (config.monitoredServers().isEmpty()
                         ? "all servers"
                         : config.monitoredServers().size() + " server(s): " + config.monitoredServers())
@@ -153,9 +153,9 @@ public final class PvPIndexVelocityPlugin {
                         rs.getServerInfo().getAddress().toString());
             }
 
-            logger.info("[PvPIndex Network] Multi-proxy network layer initialized successfully.");
+            logger.info("[PvPIndex Network] Multi-proxy network layer initialised successfully.");
         } catch (Exception e) {
-            logger.severe("[PvPIndex Network] Failed to initialize network layer: " + e.getMessage());
+            logger.severe("[PvPIndex Network] Failed to initialise network layer: " + e.getMessage());
             logger.severe("[PvPIndex Network] Cross-proxy features are DISABLED. The plugin will still work in single-proxy mode.");
             networkRouter = null;
             messageBus = null;

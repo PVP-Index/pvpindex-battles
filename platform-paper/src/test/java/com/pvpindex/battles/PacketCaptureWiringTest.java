@@ -49,7 +49,7 @@ class PacketCaptureWiringTest {
                         new BattleParticipant(UUID.randomUUID(), "bob", null)),
                 null, Map.of());
 
-        // Before start — no frame bucket for this session.
+        // Before start. no frame bucket for this session.
         assertNull(rawFrames(capture).get(session.getUuid()),
                 "Frame bucket should not exist before startBattle");
 
@@ -160,7 +160,7 @@ class PacketCaptureWiringTest {
                 };
         Path temp = Files.createTempDirectory("pvp-wiring");
         FileStorageService storage = new FileStorageService(temp, new ObjectMapper());
-        storage.initialize();
+        storage.initialise();
         BattleService service = new BattleService(plugin, settings, recorder, apiClient,
                 new BattlePayloadFactory(), storage);
         service.setPacketCaptureService(capture);

@@ -34,7 +34,7 @@ public final class PacketCaptureService {
     private final Map<UUID, Long> tickCounters = new ConcurrentHashMap<>();
     private Runnable cancelTask;
 
-    /** Optional velocity tracker — wired after construction via {@link #setVelocityTracker}. */
+    /** Optional velocity tracker. wired after construction via {@link #setVelocityTracker}. */
     private VelocityTracker velocityTracker;
 
     public PacketCaptureService(Plugin plugin, ReplaySettings settings) {
@@ -44,7 +44,7 @@ public final class PacketCaptureService {
 
     /**
      * Wire in a {@link VelocityTracker} so the tick loop emits velocity-change
-     * events alongside frame snapshots. Optional — null means no velocity events.
+     * events alongside frame snapshots. Optional. null means no velocity events.
      */
     public void setVelocityTracker(VelocityTracker velocityTracker) {
         this.velocityTracker = velocityTracker;

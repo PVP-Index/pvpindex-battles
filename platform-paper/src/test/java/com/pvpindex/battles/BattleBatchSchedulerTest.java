@@ -86,12 +86,12 @@ class BattleBatchSchedulerTest {
 
         BattleBatchScheduler scheduler = new BattleBatchScheduler(plugin, service, client, 20, true);
 
-        // First flush — hits 404, sets endpointUnavailable.
+        // First flush. hits 404, sets endpointUnavailable.
         invokeFlush(scheduler);
         Thread.sleep(50);
         assertEquals(1, calls.get());
 
-        // Second flush — should be suppressed.
+        // Second flush. should be suppressed.
         invokeFlush(scheduler);
         Thread.sleep(50);
         assertEquals(1, calls.get(), "Second flush should be suppressed after 404");
@@ -181,7 +181,7 @@ class BattleBatchSchedulerTest {
         };
         Path temp = Files.createTempDirectory("pvp-batch");
         FileStorageService storage = new FileStorageService(temp, new ObjectMapper());
-        storage.initialize();
+        storage.initialise();
         return new BattleService(plugin, settings, recorder, apiClient, new BattlePayloadFactory(), storage);
     }
 }

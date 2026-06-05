@@ -75,6 +75,13 @@ Generated at `plugins/PvPIndexBattles/config.yml` on first run.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `player_state.include_ender_chest` | boolean | `true` | Save/restore ender chest in snapshots |
+| `player_state.after_battle_location.mode` | String | `RESTORE` | Where players teleport after a battle: `RESTORE` (pre-battle location), `LOBBY` (fixed coordinates), or `WORLD_SPAWN` (main world spawn) |
+| `player_state.after_battle_location.world` | String | `world` | World name for `LOBBY` mode |
+| `player_state.after_battle_location.x` | double | `0.0` | X coordinate for `LOBBY` mode |
+| `player_state.after_battle_location.y` | double | `64.0` | Y coordinate for `LOBBY` mode |
+| `player_state.after_battle_location.z` | double | `0.0` | Z coordinate for `LOBBY` mode |
+| `player_state.after_battle_location.yaw` | float | `0.0` | Yaw for `LOBBY` mode |
+| `player_state.after_battle_location.pitch` | float | `0.0` | Pitch for `LOBBY` mode |
 
 ### Moderation
 

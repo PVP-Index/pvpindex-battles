@@ -47,7 +47,7 @@ public final class BattleBatchScheduler {
     }
 
     /**
-     * Start the heartbeat timer. Safe to call multiple times — subsequent calls
+     * Start the heartbeat timer. Safe to call multiple times. subsequent calls
      * are no-ops if the scheduler is already running.
      *
      * @param flushIntervalTicks ticks between flushes (20 ticks = 1 second)
@@ -99,7 +99,7 @@ public final class BattleBatchScheduler {
                 endpointUnavailable = true;
                 if (debug) {
                     plugin.getLogger().info("[BattleBatch] Heartbeat endpoint not available (HTTP "
-                            + result.statusCode() + ") — suppressing future requests until next reload.");
+                            + result.statusCode() + "). suppressing future requests until next reload.");
                 }
             } else {
                 if (debug) {

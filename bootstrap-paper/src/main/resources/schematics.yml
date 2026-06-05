@@ -1,5 +1,5 @@
 # =============================================================================
-# schematics.yml — PvPIndex Battles schematic spawn configuration
+# schematics.yml. PvPIndex Battles schematic spawn configuration
 # =============================================================================
 #
 # This file is empty by default. The bundled "Sword Duel" mode uses the
@@ -11,10 +11,10 @@
 #         plugins/PvPIndexBattles/schematics/<name>.json
 #      The bundled SchematicStrategy reads ONLY this format
 #      (a `palette` array + `blocks` list with x/y/z/p indices). WorldEdit
-#      `.schem` / `.schematic` binary files are NOT supported — convert them
+#      `.schem` / `.schematic` binary files are NOT supported. convert them
 #      first or use the `procedural` strategy instead.
 #   2. Add an entry below using the same filename.
-#   3. Run /pvpindex reload — no server restart needed.
+#   3. Run /pvpindex reload. no server restart needed.
 #
 # Each entry is automatically registered as an arena template. The template
 # id (the key, e.g. `colosseum`) can be referenced from gamemodes.yml under
@@ -33,7 +33,7 @@
 
 schematics: {}
 
-# Example entry — uncomment after dropping a JSON schematic into
+# Example entry. uncomment after dropping a JSON schematic into
 # plugins/PvPIndexBattles/schematics/ :
 #
 # arena:

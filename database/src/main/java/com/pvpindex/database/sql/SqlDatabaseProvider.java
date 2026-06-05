@@ -1,13 +1,26 @@
 package com.pvpindex.database.sql;
 
 import com.pvpindex.database.DatabaseProvider;
-import com.pvpindex.database.model.*;
-import com.pvpindex.database.repository.*;
+import com.pvpindex.database.model.BattleRecord;
+import com.pvpindex.database.model.PlayerProfile;
+import com.pvpindex.database.model.PlayerStats;
+import com.pvpindex.database.model.StatsDelta;
+import com.pvpindex.database.repository.BattleRepository;
+import com.pvpindex.database.repository.PartyRepository;
+import com.pvpindex.database.repository.PlayerRepository;
+import com.pvpindex.database.repository.StatsRepository;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

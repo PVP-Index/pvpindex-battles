@@ -33,7 +33,7 @@ public final class PlaceholderUpdateListener implements Listener {
                 case WIN        -> entry.wins.incrementAndGet();
                 case LOSS       -> entry.losses.incrementAndGet();
                 case DRAW       -> entry.draws.incrementAndGet();
-                default         -> { /* ELIMINATED / LEFT / UNKNOWN — not counted */ }
+                default         -> { /* ELIMINATED / LEFT / UNKNOWN. not counted */ }
             }
         }
     }

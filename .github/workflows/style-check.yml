@@ -1,0 +1,89 @@
+name: Style Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Reject em dashes (U+2014)
+        run: |
+          if grep -rn $'\u2014' --include="*.java" --include="*.yml" --include="*.yaml" --include="*.md" --include="*.properties" --include="*.json" . | grep -v '/target/' | grep -v '/.git/'; then
+            echo "::error::Em dashes found. Use full stops, commas, or hyphens instead."
+            exit 1
+          fi
+
+      - name: Reject en dashes (U+2013)
+        run: |
+          if grep -rn $'\u2013' --include="*.java" --include="*.yml" --include="*.yaml" --include="*.md" --include="*.properties" --include="*.json" . | grep -v '/target/' | grep -v '/.git/'; then
+            echo "::error::En dashes found. Use hyphens instead."
+            exit 1
+          fi
+
+      - name: Reject US English spellings
+        run: |
+          VIOLATIONS=0
+          EXCLUDE='grep -v /target/ | grep -v /.git/ | grep -v style-check.yml'
+
+          check() {
+            local pattern="$1"
+            local message="$2"
+            local extra_exclude="${3:-}"
+
+            local cmd="grep -rn '$pattern' --include='*.java' --include='*.yml' --include='*.md' . | grep -v /target/ | grep -v /.git/ | grep -v style-check.yml"
+            if [ -n "$extra_exclude" ]; then
+              cmd="$cmd | $extra_exclude"
+            fi
+
+            if eval "$cmd"; then
+              echo "::error::$message"
+              VIOLATIONS=1
+            fi
+          }
+
+          check '\binitialize[ds]\?\b' \
+            "Use 'initialise' instead of 'initialize'." \
+            "grep -v 'ProxyInitializeEvent\|ProxyInitialize\|InitializeEvent\|onProxyInit\|import '"
+
+          check '\binitializing\b' \
+            "Use 'initialising' instead of 'initializing'."
+
+          check '\bcustomiz' \
+            "Use 'customise/customisation' instead of 'customize/customization'."
+
+          check '\boptimiz' \
+            "Use 'optimise/optimisation' instead of 'optimize/optimization'."
+
+          check '\borganiz' \
+            "Use 'organise/organisation' instead of 'organize/organization'."
+
+          check '\brecogniz' \
+            "Use 'recognise' instead of 'recognize'."
+
+          check '\bcanceled\b' \
+            "Use 'cancelled' instead of 'canceled'."
+
+          check '\bfavor\b' \
+            "Use 'favour' instead of 'favor'."
+
+          check '\bhonor\b' \
+            "Use 'honour' instead of 'honor'."
+
+          check '\bbehavior\b' \
+            "Use 'behaviour' instead of 'behavior'."
+
+          check '\bcolor\b' \
+            "Use 'colour' instead of 'color' (API references excluded)." \
+            "grep -vi 'TextColor\|ChatColor\|BossBar\.Color\|\.color\|color(\|color=\|color:\|import '"
+
+          if [ "$VIOLATIONS" -ne 0 ]; then
+            exit 1
+          fi
+
+          echo "All UK English checks passed."

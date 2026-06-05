@@ -7,7 +7,7 @@ package com.pvpindex.battles.moderation;
  * @param federatedBansEnabled       allow this server to publish bans to the
  *                                   PvPIndex network
  * @param enforceInboundFederatedBans honour bans published by other verified
- *                                    servers (off by default — this is the
+ *                                    servers (off by default. this is the
  *                                    user-requested opt-in)
  * @param federatedBanSyncIntervalSeconds how often to pull the network ban list
  * @param spectatorOnReportPriority  auto-jump moderators into the offender's

@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * {@code plugins/PvPIndexBattles/schematics.yml}. Each entry maps a
  * schematic file in the {@code schematics/} sub-folder to its
  * {@code paste_origin}, player {@code spawn_points}, and
- * {@code spectator_spawn} — all without touching code.</p>
+ * {@code spectator_spawn}. all without touching code.</p>
  *
  * <p>Call {@link #reload()} on startup and whenever {@code /pvpindex reload}
  * is executed. The resulting templates are merged into
@@ -50,7 +50,7 @@ public final class SchematicLoader {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
         ConfigurationSection root = cfg.getConfigurationSection("schematics");
         if (root == null) {
-            plugin.getLogger().warning("schematics.yml has no 'schematics:' section — no schematic arenas loaded");
+            plugin.getLogger().warning("schematics.yml has no 'schematics:' section. no schematic arenas loaded");
             return;
         }
 

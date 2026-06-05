@@ -36,6 +36,7 @@ public final class PlayerStateService {
     private final boolean includeEnderChest;
     private final com.pvpindex.battles.version.VersionAdapter versionAdapter;
     private final Map<UUID, PlayerStateSnapshot> snapshots = new ConcurrentHashMap<>();
+    private volatile Location afterBattleLocation;
 
     public PlayerStateService(Plugin plugin, boolean includeEnderChest, com.pvpindex.battles.version.VersionAdapter versionAdapter) {
         this.plugin = plugin;
@@ -47,6 +48,14 @@ public final class PlayerStateService {
         } catch (IOException e) {
             plugin.getLogger().warning("Could not create state dir: " + e.getMessage());
         }
+    }
+
+    /**
+     * Sets the fixed after-battle location. When non-null, all restores
+     * teleport to this location instead of the snapshot's original position.
+     */
+    public void setAfterBattleLocation(Location location) {
+        this.afterBattleLocation = location;
     }
 
     public boolean hasSnapshot(UUID playerUuid) {
@@ -82,7 +91,7 @@ public final class PlayerStateService {
             }
         }
         if (snap == null) return false;
-        snap.restore(player, versionAdapter.getMaxHealthAttribute());
+        snap.restore(player, versionAdapter.getMaxHealthAttribute(), afterBattleLocation);
         discard(id);
         return true;
     }
@@ -104,7 +113,7 @@ public final class PlayerStateService {
             }
         }
         if (snap == null) return false;
-        snap.restoreWithoutInventory(player, versionAdapter.getMaxHealthAttribute());
+        snap.restoreWithoutInventory(player, versionAdapter.getMaxHealthAttribute(), afterBattleLocation);
         discard(id);
         return true;
     }

@@ -22,7 +22,7 @@ public record GameModeRules(
         int lootCooldownSeconds
 ) {
     public static GameModeRules vanilla() {
-        // allowBlockBreak and allowBlockPlace default to false — arena safety.
+        // allowBlockBreak and allowBlockPlace default to false. arena safety.
         // Server owners can override per game mode in gamemodes.yml.
         return new GameModeRules(0, 5, false, false, true, false, true, true, false, 2, 2, 20.0d, 20, false, 0);
     }

@@ -94,7 +94,7 @@ class BattleServiceTest {
         };
         Path temp = Files.createTempDirectory("pvp-service");
         FileStorageService storage = new FileStorageService(temp, new ObjectMapper());
-        storage.initialize();
+        storage.initialise();
         return new BattleService(plugin, settings, recorder, apiClient, new BattlePayloadFactory(), storage);
     }
 }

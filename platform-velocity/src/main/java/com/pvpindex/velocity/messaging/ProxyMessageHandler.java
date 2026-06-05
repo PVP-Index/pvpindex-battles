@@ -17,7 +17,12 @@ import com.velocitypowered.api.proxy.server.RegisteredServer;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -126,7 +131,7 @@ public final class ProxyMessageHandler {
             if (plc == null) return;
 
             logger.info("[PvPIndex] Redis CHALLENGE_DENY for challenge " + challengeId
-                    + " — forwarding REJECTED to backend '" + plc.senderServer() + "'");
+                    + ". forwarding REJECTED to backend '" + plc.senderServer() + "'");
 
             plugin.backendMessenger().sendChallengeRejected(
                     plc.senderServer(), plc.challengeId(), "declined");
@@ -173,7 +178,7 @@ public final class ProxyMessageHandler {
 
         if (!msg.isValid(plugin.config().paperSecret())) {
             logger.warning("[ProxyMessageHandler] Rejected message from '" + senderServer
-                    + "' — invalid secret (type=" + msg.type() + "). "
+                    + "'. invalid secret (type=" + msg.type() + "). "
                     + "Check that paper_secret matches proxy.secret in Paper's config.yml.");
             return;
         }
@@ -291,7 +296,7 @@ public final class ProxyMessageHandler {
             Optional<RegisteredServer> target = plugin.getServer().getServer(originServer);
             if (target.isEmpty()) {
                 logger.warning("[PvPIndex Return] Origin server '" + originServer
-                        + "' not found for " + playerUuid + " — cannot return.");
+                        + "' not found for " + playerUuid + ". cannot return.");
                 continue;
             }
 
@@ -304,7 +309,7 @@ public final class ProxyMessageHandler {
                     .buildTask(plugin, () -> {
                         if (player.get().isActive()) {
                             player.get().createConnectionRequest(target.get()).fireAndForget();
-                            logger.info("[PvPIndex Return] Battle ended — returning "
+                            logger.info("[PvPIndex Return] Battle ended. returning "
                                     + player.get().getUsername() + " from " + currentServer
                                     + " to origin '" + originServer + "'");
                         }

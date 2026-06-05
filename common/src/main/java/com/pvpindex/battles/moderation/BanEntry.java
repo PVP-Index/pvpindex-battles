@@ -6,8 +6,8 @@ import java.util.UUID;
 /**
  * Single ban record. {@code scope} controls reach:
  * <ul>
- *   <li>{@code LOCAL}     — only this server (default)</li>
- *   <li>{@code FEDERATED} — published to the PvPIndex network and honoured by
+ *   <li>{@code LOCAL}    . only this server (default)</li>
+ *   <li>{@code FEDERATED}. published to the PvPIndex network and honoured by
  *       any other server with {@code moderation.federated_bans.enforce_inbound}
  *       enabled</li>
  * </ul>

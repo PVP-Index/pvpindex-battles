@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 
 /**
  * Lifecycle manager for the optional database layer.
- * Only initialized when {@code database.enabled = true}.
+ * Only initialised when {@code database.enabled = true}.
  */
 public final class DataService {
 

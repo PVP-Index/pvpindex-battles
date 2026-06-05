@@ -81,7 +81,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Damage — force PvP on for active battle participants regardless of world
+    // Damage. force PvP on for active battle participants regardless of world
     // settings or other plugins that may cancel the event.
     // -------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ public class BattleEventListener implements Listener {
                     && contains(session, attackerUuid)) {
                 // Ensure damage is never suppressed by world pvp=false or other plugins
                 event.setCancelled(false);
-                // Hit confirmed — cancel any pending miss detection for this attacker.
+                // Hit confirmed. cancel any pending miss detection for this attacker.
                 pendingMiss.remove(attackerUuid);
                 replayRecorder.record(session, "player_damage", attackerUuid, targetUuid,
                         withPos(attacker, Map.of("damage", event.getFinalDamage())));
@@ -111,7 +111,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Item consumption — ensure gapples / food can never be blocked by world
+    // Item consumption. ensure gapples / food can never be blocked by world
     // settings or other plugins (e.g. WorldGuard respecting world.isPVP=false).
     // -------------------------------------------------------------------------
 
@@ -142,7 +142,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Block protection — respect allowBlockBreak / allowBlockPlace from the
+    // Block protection. respect allowBlockBreak / allowBlockPlace from the
     // game mode rules. Defaults to disallowing both (arena safety).
     // -------------------------------------------------------------------------
 
@@ -313,7 +313,7 @@ public class BattleEventListener implements Listener {
      * Fired for every arm-swing (hit or miss). Records the swing and schedules a
      * 1-tick deferred task: if no {@code EntityDamageByEntityEvent} fires for this
      * player within that tick, the swing is logged as a {@code player_miss}.
-     * {@code ms_since_last_swing} is the primary anti-cheat metric — impossibly
+     * {@code ms_since_last_swing} is the primary anti-cheat metric. impossibly
      * small values (< ~100 ms) indicate an auto-clicker or reach hack.
      */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -334,7 +334,7 @@ public class BattleEventListener implements Listener {
                     withPos(player, Map.of("hand", "main", "ms_since_last_swing", msSinceLast)));
 
             pendingMiss.put(playerUuid, session.getUuid());
-            // Capture position now — deferred miss check runs 1 tick later when
+            // Capture position now. deferred miss check runs 1 tick later when
             // the player may have moved, but the swing origin is what matters.
             final double snapX = Math.round(player.getLocation().getX() * 10.0) / 10.0;
             final double snapY = Math.round(player.getLocation().getY() * 10.0) / 10.0;
@@ -406,7 +406,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Movement — block-granular position log (lightweight; head rotation changes
+    // Movement. block-granular position log (lightweight; head rotation changes
     // are ignored to avoid per-packet overhead on high-frequency look events).
     // -------------------------------------------------------------------------
 
@@ -434,7 +434,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Projectiles — record hits for arrows, tridents, snowballs, etc.
+    // Projectiles. record hits for arrows, tridents, snowballs, etc.
     // -------------------------------------------------------------------------
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -468,7 +468,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Non-player entity death — e.g. replay bridge armor stands or summoned mobs.
+    // Non-player entity death. e.g. replay bridge armor stands or summoned mobs.
     // Only recorded when the entity is inside an arena world.
     // -------------------------------------------------------------------------
 
@@ -492,7 +492,7 @@ public class BattleEventListener implements Listener {
     }
 
     // -------------------------------------------------------------------------
-    // Cleanup — evict stale per-player maps for players not in active battles.
+    // Cleanup. evict stale per-player maps for players not in active battles.
     // Called by the periodic cleanup scheduler in PvPIndexBattlesPlugin.
     // -------------------------------------------------------------------------
 

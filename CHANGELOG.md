@@ -18,6 +18,22 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
+## [1.0.6] - 2026-06-05
+
+### Added
+- **Configurable after-battle location**: players can now be sent to a fixed lobby location or the world spawn after a battle ends, instead of always returning to their pre-battle position. Configured via `player_state.after_battle_location` in config.yml with three modes: `RESTORE` (default, existing behaviour), `LOBBY` (fixed coordinates), or `WORLD_SPAWN`. Closes [#16](https://github.com/PVP-Index/pvpindex-battles/issues/16).
+- New `AfterBattleLocationSettings` config record in `platform-paper`.
+- New config section `player_state.after_battle_location` with `mode`, `world`, `x`, `y`, `z`, `yaw`, `pitch` keys.
+- `PlayerStateService.setAfterBattleLocation()` method for runtime override of the post-battle teleport destination.
+
+### Changed
+- `PlayerStateSnapshot.restore()` and `restoreWithoutInventory()` now accept an optional `Location` override parameter for the teleport destination.
+- Upgraded Jackson from `2.18.2` to `2.21.3` and PlaceholderAPI from `2.11.6` to `2.12.2`.
+- Removed all em dashes from comments, config files, and documentation per coding standards.
+- Corrected US English spellings to UK English throughout the codebase.
+
+---
+
 ## [1.0.5] - 2026-05-22
 
 ### Added
@@ -169,7 +185,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.2...v1.0.3

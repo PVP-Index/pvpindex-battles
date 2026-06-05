@@ -103,7 +103,7 @@ public enum MessageType {
     CHALLENGE_FORWARD,
 
     /**
-     * Velocity → Paper: the target accepted — tells the challenger's (hosting) backend.
+     * Velocity → Paper: the target accepted. tells the challenger's (hosting) backend.
      * Data: {@code {challengeId, challengerUuid, targetUuid, modeId}}
      */
     CHALLENGE_CONFIRMED,
@@ -117,7 +117,7 @@ public enum MessageType {
     /**
      * Velocity → Paper (target's server only, cross-server): the challenge was accepted
      * and the target is being transferred to the host server. The target's server should
-     * just remove the pending challenge — no battle attempt.
+     * just remove the pending challenge. no battle attempt.
      * Data: {@code {challengeId}}
      */
     CHALLENGE_CLEANUP,

@@ -42,7 +42,7 @@ class VelocityTrackerTest {
     @Test
     void noEventOnFirstTick() {
         VelocityTracker tracker = new VelocityTracker(recorder, 0.1, 1);
-        // First tick just stores the baseline — no previous value, so no event.
+        // First tick just stores the baseline. no previous value, so no event.
         tracker.tickDirect(session, playerUuid, 0.0, 0.0, 0.0);
         assertTrue(eventsFor(session).stream().noneMatch(e -> "velocity_change".equals(e.type())));
     }
@@ -74,13 +74,13 @@ class VelocityTrackerTest {
         // intervalTicks=2: only sample on ticks where count%2==0 (ticks 2, 4, …)
         VelocityTracker tracker = new VelocityTracker(recorder, 0.0, 2);
 
-        // tick 1 — skipped (1%2 != 0)
+        // tick 1. skipped (1%2 != 0)
         tracker.tickDirect(session, playerUuid, 0.0, 0.0, 0.0);
-        // tick 2 — sampled, stores baseline (no prev)
+        // tick 2. sampled, stores baseline (no prev)
         tracker.tickDirect(session, playerUuid, 1.0, 0.0, 0.0);
-        // tick 3 — skipped
+        // tick 3. skipped
         tracker.tickDirect(session, playerUuid, 2.0, 0.0, 0.0);
-        // tick 4 — sampled, prev = 1.0 → delta = 2.0 - 1.0 = 1.0 ≥ 0.0 → event fired
+        // tick 4. sampled, prev = 1.0 → delta = 2.0 - 1.0 = 1.0 ≥ 0.0 → event fired
         tracker.tickDirect(session, playerUuid, 3.0, 0.0, 0.0);
 
         long velEventCount = eventsFor(session).stream()

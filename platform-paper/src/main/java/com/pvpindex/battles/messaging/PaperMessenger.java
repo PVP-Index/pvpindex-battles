@@ -152,7 +152,7 @@ public final class PaperMessenger {
         if (!registered) return;
         Optional<Player> conduit = findConduit();
         if (conduit.isEmpty()) {
-            logger.warning("[PaperMessenger] No online player to send " + type + " — message dropped. "
+            logger.warning("[PaperMessenger] No online player to send " + type + ". message dropped. "
                     + "At least one player must be online for plugin messaging to work.");
             return;
         }
@@ -166,7 +166,7 @@ public final class PaperMessenger {
 
     /**
      * Returns any online player to use as the plugin-messaging conduit.
-     * Plugin messages in Bukkit require a connected player — the proxy is only
+     * Plugin messages in Bukkit require a connected player. the proxy is only
      * reachable when at least one player bridges the connection.
      */
     private Optional<Player> findConduit() {

@@ -80,7 +80,7 @@ anti_abuse:
   minimum_battle_duration_seconds: 10
   mark_disputed_on_early_disconnect: true
 
-# Pre-generated arena pool — keeps N warm arenas per template ready so that
+# Pre-generated arena pool. Keeps N warm arenas per template ready so that
 # matchmaking can teleport players immediately when a duel is found.
 arena_pool:
   enabled: true
@@ -92,6 +92,20 @@ arena_pool:
 # a path back to the player's original inventory and location.
 player_state:
   include_ender_chest: true
+
+  # Where players end up after a battle ends.
+  #   RESTORE     - teleport back to the pre-battle location (default)
+  #   LOBBY       - teleport to the fixed location below
+  #   WORLD_SPAWN - teleport to the main world's spawn point
+  after_battle_location:
+    mode: "RESTORE"
+    # Only used when mode is LOBBY:
+    world: "world"
+    x: 0.0
+    y: 64.0
+    z: 0.0
+    yaw: 0.0
+    pitch: 0.0
 
 moderation:
   spectator_on_report: true
@@ -114,7 +128,7 @@ debug: false
 # network. When enabled, the server connects directly to Redis for real-time
 # global features: player list, challenges, presence, invites, parties, routing.
 #
-# SMP/backend servers should leave this DISABLED — they receive players via
+# SMP/backend servers should leave this DISABLED. They receive players via
 # proxy transfers and use existing plugin messaging for battle events.
 lobby:
   enabled: false
@@ -156,7 +170,7 @@ database:
 # ─── Velocity tracking ────────────────────────────────────────────────────────
 # Records velocity_change events in the replay when a player's speed delta
 # exceeds the threshold in a single tick. Runs inside the existing packet
-# capture loop — no extra high-frequency event overhead.
+# capture loop, no extra high-frequency event overhead.
 velocity:
   enabled: true
   # Minimum speed delta (blocks/tick) required to emit a velocity_change event.
@@ -195,7 +209,7 @@ cleanup:
 #            enabled: true
 #            online-mode: true
 #            secret: "<your-velocity-forwarding-secret>"
-#   3. The proxy_secret below is separate from the forwarding secret — it
+#   3. The proxy_secret below is separate from the forwarding secret. It
 #      authenticates plugin messages, not login packets.
 proxy:
   # Set to true if this server is behind a Velocity proxy with the PvPIndex plugin.

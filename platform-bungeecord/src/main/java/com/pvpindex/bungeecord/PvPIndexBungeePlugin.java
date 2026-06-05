@@ -56,7 +56,7 @@ public final class PvPIndexBungeePlugin extends Plugin {
 
         initNetworkLayer();
 
-        getLogger().info("PvPIndex BungeeCord plugin enabled — channel=" + PluginChannel.PROXY
+        getLogger().info("PvPIndex BungeeCord plugin enabled. channel=" + PluginChannel.PROXY
                 + " | auth=" + (!config.paperSecret().isBlank() ? "on" : "OFF")
                 + " | network=" + (config.networkConfig().enabled()
                         ? "ON (" + config.networkConfig().proxyId() + ")" : "off"));
@@ -97,9 +97,9 @@ public final class PvPIndexBungeePlugin extends Plugin {
                         entry.getKey(), entry.getValue().getSocketAddress().toString());
             }
 
-            getLogger().info("[PvPIndex Network] Multi-proxy network layer initialized.");
+            getLogger().info("[PvPIndex Network] Multi-proxy network layer initialised.");
         } catch (Exception e) {
-            getLogger().severe("[PvPIndex Network] Failed to initialize network layer: " + e.getMessage());
+            getLogger().severe("[PvPIndex Network] Failed to initialise network layer: " + e.getMessage());
             getLogger().severe("[PvPIndex Network] Cross-proxy features DISABLED. Single-proxy mode active.");
             networkRouter = null;
             messageBus = null;

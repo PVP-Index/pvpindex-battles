@@ -62,7 +62,7 @@ public final class VelocityPluginConfig {
                 : List.of(raw.split("\\s*,\\s*"));
 
         if (secret.isBlank()) {
-            logger.warning("[PvPIndex] 'paper_secret' is not set — plugin message authentication is DISABLED. "
+            logger.warning("[PvPIndex] 'paper_secret' is not set. plugin message authentication is DISABLED. "
                     + "Set the same secret in both config.properties and Paper's config.yml.");
         }
 

@@ -1,8 +1,14 @@
 package com.pvpindex.database.noop;
 
 import com.pvpindex.database.DatabaseProvider;
-import com.pvpindex.database.model.*;
-import com.pvpindex.database.repository.*;
+import com.pvpindex.database.model.BattleRecord;
+import com.pvpindex.database.model.PlayerProfile;
+import com.pvpindex.database.model.PlayerStats;
+import com.pvpindex.database.model.StatsDelta;
+import com.pvpindex.database.repository.BattleRepository;
+import com.pvpindex.database.repository.PartyRepository;
+import com.pvpindex.database.repository.PlayerRepository;
+import com.pvpindex.database.repository.StatsRepository;
 
 import java.util.List;
 import java.util.Set;

@@ -5,7 +5,7 @@ import org.bukkit.event.HandlerList;
 
 /**
  * Fired when a battle finishes (winners/losers determined, status set to
- * FINISHED). Not cancellable — the battle has already concluded.
+ * FINISHED). Not cancellable. the battle has already concluded.
  */
 public class PvPIndexBattleFinishEvent extends AbstractPvPIndexBattleEvent {
     private static final HandlerList HANDLERS = new HandlerList();

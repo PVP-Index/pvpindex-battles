@@ -117,7 +117,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		saveResourceIfAbsent("gui.yml");
 		saveResourceIfAbsent("templates.yml");
 		saveResourceIfAbsent("schematics.yml");
-		// Bundled schematic files — only written once (never overwrite server-owner edits).
+		// Bundled schematic files. Only written once (never overwrite server-owner edits).
 		saveResourceIfAbsent("schematics/arena.schem");
 		saveResourceIfAbsent("schematics/colosseum.schem");
 		saveResourceIfAbsent("schematics/pvparena.schem");
@@ -135,9 +135,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 		FileStorageService fileStorageService = new FileStorageService(getDataFolder().toPath(), objectMapper);
 		try {
-			fileStorageService.initialize();
+			fileStorageService.initialise();
 		} catch (IOException e) {
-			getLogger().severe("Failed to initialize storage: " + e.getMessage());
+			getLogger().severe("Failed to initialise storage: " + e.getMessage());
 		}
 
 		// Configurable game modes / kits
@@ -155,7 +155,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		worldGeneratorService.register(new ProceduralArenaStrategy(this));
 		worldGeneratorService.register(new ProceduralCrystalArenaStrategy(this));
 		worldGeneratorService.register(new ProceduralSumoArenaStrategy(this));
-		// Schematic spawn metadata — loaded from schematics.yml, editable by server owners.
+		// Schematic spawn metadata, loaded from schematics.yml. Editable by server owners.
 		SchematicLoader schematicLoader = new SchematicLoader(this);
 		worldGeneratorService.setSchematicLoader(schematicLoader);
 		worldGeneratorService.reload(templatesDir);
@@ -165,7 +165,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		packetCaptureService = new PacketCaptureService(this, configManager.replaySettings());
 		replayBridge = new BukkitReplayBridge(this, messageService);
 
-		// Velocity tracker — wire into the capture loop if enabled.
+		// Velocity tracker. Wire into the capture loop if enabled.
 		if (configManager.settings().velocityEnabled()) {
 			velocityTracker = new VelocityTracker(
 					recorder,
@@ -182,7 +182,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 				new BattlePayloadFactory(), fileStorageService);
 		battleService.setPacketCaptureService(packetCaptureService);
 
-		// Periodic background retry of failed-submissions/ — keeps the queue draining
+		// Periodic background retry of failed-submissions/. Keeps the queue draining
 		// even if the API was offline when the battle finished.
 		int retryInterval = configManager.settings().persistentRetryIntervalSeconds();
 		if (retryInterval > 0) {
@@ -226,7 +226,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 				configManager.moderationSettings(), configManager.settings());
 		federatedBanSync.start();
 
-		// Battle heartbeat batch scheduler — fire-and-forget async POSTs.
+		// Battle heartbeat batch scheduler. Fire-and-forget async POSTs.
 		if (configManager.settings().battleBatchEnabled()) {
 			battleBatchScheduler = new BattleBatchScheduler(
 					this, battleService, apiClient,
@@ -253,11 +253,21 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		// Player state save/restore (snapshot before battle, restore on end / on rejoin after crash)
 		boolean includeEnderChest = getConfig().getBoolean("player_state.include_ender_chest", true);
 		playerStateService = new PlayerStateService(this, includeEnderChest, versionAdapter);
+		var afterBattleSettings = configManager.afterBattleLocationSettings();
+		var afterBattleLoc = afterBattleSettings.resolveLocation();
+		if (afterBattleLoc != null) {
+			playerStateService.setAfterBattleLocation(afterBattleLoc);
+			getLogger().info("After-battle location set to " + afterBattleSettings.mode()
+					+ " (" + afterBattleLoc.getWorld().getName()
+					+ " " + afterBattleLoc.getBlockX()
+					+ " " + afterBattleLoc.getBlockY()
+					+ " " + afterBattleLoc.getBlockZ() + ")");
+		}
 		battleService.setPlayerStateService(playerStateService);
 		getServer().getPluginManager().registerEvents(
 				new StateRestoreListener(this, playerStateService, messageService), this);
 
-		// Arena pool — pre-generates worlds so matchmaking gets an instance instantly.
+		// Arena pool. Pre-generates worlds so matchmaking gets an instance instantly.
 		arenaPoolService = new ArenaPoolService(this, worldGeneratorService);
 		battleService.setArenaPoolService(arenaPoolService);
 		// Sweep any orphan pvpindex_* world folders from a prior crash *before* warming.
@@ -280,7 +290,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		}
 		debugLogger = new DebugLogger(getLogger(), configManager.settings().debug());
 
-		// SMP loot phase service — handles post-death item collection cooldown.
+		// SMP loot phase service. Handles post-death item collection cooldown.
 		smpLootPhaseService = new com.pvpindex.battles.battle.SmpLootPhaseService(this, battleService, playerStateService);
 		battleEventListener.setSmpLootPhaseService(smpLootPhaseService);
 
@@ -298,7 +308,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		BattleGuiListener battleGuiListener = new BattleGuiListener(gameModeRegistry, battleQueueService, battleGuiCommand, guiConfig, messageService);
 		getServer().getPluginManager().registerEvents(battleGuiListener, this);
 
-		// Velocity proxy messaging — only active when proxy.enabled = true.
+		// Velocity proxy messaging. Only active when proxy.enabled = true.
 		if (configManager.settings().proxyEnabled()) {
 			paperMessenger = new PaperMessenger(this, objectMapper,
 					configManager.settings().proxySecret());
@@ -312,7 +322,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			proxyMessageListener.setNetworkPlayerCache(networkPlayerCache);
 			proxyMessageListener.register();
 
-			// Proxy heartbeat timer — lets Velocity know this backend is alive.
+			// Proxy heartbeat timer. Lets Velocity know this backend is alive.
 			int hbTicks = configManager.settings().proxyHeartbeatIntervalTicks();
 			if (hbTicks > 0) {
 				scheduleAsyncRepeating(() -> paperMessenger.sendHeartbeat(
@@ -322,13 +332,13 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			getLogger().info("Velocity proxy messaging enabled (channel=pvpindex:proxy).");
 		}
 
-		// Optional database service — only active when database.enabled = true.
+		// Optional database service. Only active when database.enabled = true.
 		if (configManager.databaseSettings().enabled()) {
 			dataService = new com.pvpindex.battles.data.DataService(this, configManager.databaseSettings());
 			dataService.start();
 		}
 
-		// Lobby network service — only active when lobby.enabled = true.
+		// Lobby network service. Only active when lobby.enabled = true.
 		if (configManager.lobbySettings().enabled()) {
 			networkPlayerCache = networkPlayerCache != null ? networkPlayerCache : new NetworkPlayerCache();
 			lobbyNetworkService = new com.pvpindex.battles.network.LobbyNetworkService(this, configManager.lobbySettings());
@@ -341,7 +351,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			}
 		}
 
-		// ChallengeManager — works in proxy, lobby, and standalone modes
+		// ChallengeManager. Works in proxy, lobby, and standalone modes.
 		challengeManager = new ChallengeManager(this, paperMessenger,
 				battleQueueService, gameModeRegistry, debugLogger, guiConfig,
 				configManager.settings().proxyEnabled(), messageService);
@@ -350,7 +360,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 					lobbyNetworkService.transfers(), configManager.lobbySettings().velocityServerName());
 		}
 
-		// TeamsAPI guard — optional, disabled by default
+		// TeamsAPI guard. Optional, disabled by default.
 		TeamsGuardService teamsGuard = new TeamsGuardService(
 				configManager.settings().teamsGuardEnabled(), getLogger());
 		challengeManager.setTeamsGuard(teamsGuard);
@@ -374,7 +384,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		getServer().getPluginManager().registerEvents(arrivalListener, this);
 		challengeManager.setArrivalListener(arrivalListener);
 
-		// Frame capture loop — only active when there's a battle running
+		// Frame capture loop. Only active when there is a battle running.
 		packetCaptureService.start(battleService::activeBattles);
 
 		// Periodic stale-data cleanup: evict swing timers + velocity cache for
@@ -402,7 +412,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 				}
 			}, cleanupTicks, cleanupTicks);
 			} catch (UnsupportedOperationException ignored) {
-				// Folia: fall back to async — safe since these are ConcurrentHashMap evictions
+				// Folia: fall back to async. Safe since these are ConcurrentHashMap evictions.
 				scheduleAsyncRepeating(() -> {
 					java.util.List<com.pvpindex.battles.battle.BattleSession> active =
 							battleService.activeBattles();

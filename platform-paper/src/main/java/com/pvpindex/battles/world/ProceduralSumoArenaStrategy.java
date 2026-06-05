@@ -22,7 +22,7 @@ import org.bukkit.plugin.Plugin;
  * <pre>
  *   - 9x9 stone-brick platform at Y=80
  *   - Chiselled stone brick border as a visual edge indicator
- *   - No walls — players fall into the void on knockback
+ *   - No walls. players fall into the void on knockback
  *   - Fall damage ON so void kills register cleanly
  * </pre>
  */

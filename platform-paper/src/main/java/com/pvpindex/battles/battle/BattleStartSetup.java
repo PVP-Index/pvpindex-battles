@@ -11,10 +11,10 @@ import org.bukkit.potion.PotionEffect;
 
 /**
  * Immutable snapshot of a player's equipment and vital stats at the moment a
- * battle starts — captured after kit application and countdown completion.
+ * battle starts. captured after kit application and countdown completion.
  *
- * <p>Slots 0–8 of the player's storage contents (the hotbar) are stored
- * separately from slots 9–35 (the main inventory) to make anti-cheat
+ * <p>Slots 0-8 of the player's storage contents (the hotbar) are stored
+ * separately from slots 9-35 (the main inventory) to make anti-cheat
  * comparisons and API display straightforward.
  *
  * <p>Used for:

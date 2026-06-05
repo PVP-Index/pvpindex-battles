@@ -204,7 +204,7 @@ public final class BungeeProxyMessageHandler implements Listener {
             ServerInfo target = plugin.getProxy().getServerInfo(originServer);
             if (target == null) {
                 logger.warning("[PvPIndex Return] Origin server '" + originServer
-                        + "' not found for " + playerUuid + " — cannot return.");
+                        + "' not found for " + playerUuid + ". cannot return.");
                 continue;
             }
 
@@ -216,7 +216,7 @@ public final class BungeeProxyMessageHandler implements Listener {
             plugin.getProxy().getScheduler().schedule(plugin, () -> {
                 if (player.isConnected()) {
                     player.connect(target);
-                    logger.info("[PvPIndex Return] Battle ended — returning "
+                    logger.info("[PvPIndex Return] Battle ended. returning "
                             + player.getName() + " from " + currentServer
                             + " to origin '" + originServer + "'");
                 }

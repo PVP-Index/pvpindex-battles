@@ -2,7 +2,8 @@ package com.pvpindex.bungeecord.config;
 
 import com.pvpindex.network.NetworkConfig;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -57,7 +58,7 @@ public final class BungeePluginConfig {
         List<String> monitored = raw.isEmpty() ? List.of() : List.of(raw.split("\\s*,\\s*"));
 
         if (secret.isBlank()) {
-            logger.warning("[PvPIndex] 'paper_secret' is not set — authentication DISABLED.");
+            logger.warning("[PvPIndex] 'paper_secret' is not set. authentication DISABLED.");
         }
 
         NetworkConfig netCfg = parseNetworkConfig(props, logger);

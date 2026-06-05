@@ -54,7 +54,7 @@ public class PvPIndexApiClient {
             if (ok) return "HTTP " + statusCode;
             if (error != null) return error;
             String snippet = body == null ? "" : (body.length() > 200 ? body.substring(0, 200) + "…" : body);
-            return "HTTP " + statusCode + (snippet.isEmpty() ? "" : " — " + snippet);
+            return "HTTP " + statusCode + (snippet.isEmpty() ? "" : ". " + snippet);
         }
     }
 
@@ -67,7 +67,7 @@ public class PvPIndexApiClient {
      * Used by {@link com.pvpindex.battles.battle.BattleBatchScheduler} so the
      * backend can detect crashes mid-battle.
      *
-     * <p>If the server returns 404 the endpoint is not yet deployed — callers
+     * <p>If the server returns 404 the endpoint is not yet deployed. callers
      * should treat this as a graceful no-op rather than an error.</p>
      */
     public CompletableFuture<PostResult> sendHeartbeat(List<Map<String, Object>> battles) {

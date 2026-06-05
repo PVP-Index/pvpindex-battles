@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * backend servers over the {@link PluginChannel#PROXY} channel.
  *
  * <p>Velocity plugin messaging requires routing messages through a connected
- * player — the same limitation as the Paper side. This class picks any player
+ * player. the same limitation as the Paper side. This class picks any player
  * currently on the target server as the conduit. If the server has no
  * connected players the message is silently dropped (the server is effectively
  * unreachable for plugin messaging purposes).</p>
@@ -196,7 +196,7 @@ public final class BackendMessenger {
         Optional<RegisteredServer> registeredServer = server.getServer(targetServerName);
         if (registeredServer.isEmpty()) {
             logger.warning("[BackendMessenger] Server '" + targetServerName
-                    + "' not registered on this proxy — dropping " + type
+                    + "' not registered on this proxy. dropping " + type
                     + ". Check your Velocity server configuration.");
             return;
         }
@@ -215,7 +215,7 @@ public final class BackendMessenger {
         }
         if (conduit.isEmpty()) {
             logger.warning("[BackendMessenger] No players on '" + targetServerName
-                    + "' — dropping " + type
+                    + "'. dropping " + type
                     + ". Plugin messaging requires at least one player on the target server.");
             return;
         }
@@ -223,7 +223,7 @@ public final class BackendMessenger {
         var serverConn = conduit.get().getCurrentServer();
         if (serverConn.isEmpty()) {
             logger.warning("[BackendMessenger] Conduit player on '" + targetServerName
-                    + "' has no active server connection — dropping " + type);
+                    + "' has no active server connection. dropping " + type);
             return;
         }
 

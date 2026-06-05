@@ -83,7 +83,7 @@ public final class PlayerStatCache {
     }
 
     // -------------------------------------------------------------------------
-    // Entry — one per UUID
+    // Entry. one per UUID
     // -------------------------------------------------------------------------
 
     static final class Entry {

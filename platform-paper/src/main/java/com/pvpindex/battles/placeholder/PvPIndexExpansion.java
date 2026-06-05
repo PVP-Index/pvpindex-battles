@@ -18,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
  * <pre>
  *  Live state
  *  ──────────
- *  %pvpindex_in_battle%          true/false — player is in an active battle
- *  %pvpindex_queued%             true/false — player is in matchmaking queue
+ *  %pvpindex_in_battle%          true/false. player is in an active battle
+ *  %pvpindex_queued%             true/false. player is in matchmaking queue
  *  %pvpindex_queued_mode%        mode id they are queued for, or "none"
  *
  *  Elo (populated from battle results; refreshed from API every 5 min)
@@ -28,7 +28,7 @@ import org.jetbrains.annotations.NotNull;
  *  %pvpindex_elo_<mode>%         elo for a specific mode  (e.g. elo_sword)
  *  %pvpindex_elo_change%         signed delta from last battle (e.g. +18, -12)
  *
- *  Ladder rank (fetched from API; — until first result)
+ *  Ladder rank (fetched from API;. until first result)
  *  ─────────────────────────────────────────────────────
  *  %pvpindex_rank%               OVERALL rank position (e.g. #42)
  *  %pvpindex_rank_<mode>%        rank for a specific mode
@@ -141,7 +141,7 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
             return rankStr(entry, params.substring(5).toUpperCase());
         }
 
-        return null; // unrecognised — let PAPI show the raw placeholder
+        return null; // unrecognised. let PAPI show the raw placeholder
     }
 
     // -------------------------------------------------------------------------
