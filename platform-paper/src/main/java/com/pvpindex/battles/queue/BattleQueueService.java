@@ -294,17 +294,26 @@ public class BattleQueueService {
         }
         if (instance != null) battleService.attachArena(session.getUuid(), instance);
 
-        // 3) Teleport to arena spawn points.
+        // 3) Neutralise flight and velocity before teleporting so players
+        //    cannot exploit momentum to launch above the arena.
+        for (Player p : List.of(p1, p2)) {
+            p.setFlying(false);
+            p.setAllowFlight(false);
+            p.setVelocity(p.getVelocity().zero());
+            p.setFallDistance(0.0f);
+        }
+
+        // 4) Teleport to arena spawn points.
         if (instance != null) {
             teleportToArena(p1, p2, instance);
         }
 
-        // 4) Apply kit + initial rules state.
+        // 5) Apply kit + initial rules state.
         GameModeRules rules = mode.rules() != null ? mode.rules() : GameModeRules.vanilla();
         applyPreBattleState(p1, mode, rules);
         applyPreBattleState(p2, mode, rules);
 
-        // 5) Run countdown, then activate the battle and freeze-release.
+        // 6) Run countdown, then activate the battle and freeze-release.
         int countdown = Math.max(0, rules.countdownSeconds());
         runCountdown(session.getUuid(), p1, p2, countdown, rules);
     }
@@ -317,6 +326,11 @@ public class BattleQueueService {
         }
         // Rules
         player.setGameMode(GameMode.SURVIVAL);
+        // Disable flight before anything else to prevent momentum-based
+        // height exploits when a player jumps right before the battle.
+        player.setFlying(false);
+        player.setAllowFlight(false);
+        player.setVelocity(player.getVelocity().zero());
         var maxAttr = player.getAttribute(versionAdapter.getMaxHealthAttribute());
         if (maxAttr != null) maxAttr.setBaseValue(Math.max(1.0, rules.startHealth()));
         player.setHealth(Math.max(1.0, rules.startHealth()));
