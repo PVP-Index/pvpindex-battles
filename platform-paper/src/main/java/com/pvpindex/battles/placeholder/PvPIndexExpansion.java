@@ -5,6 +5,7 @@ import com.pvpindex.battles.battle.BattleSession;
 import com.pvpindex.battles.identifier.WorldIdentifier;
 import com.pvpindex.battles.identifier.WorldNormalizer;
 import com.pvpindex.battles.queue.BattleQueueService;
+import com.pvpindex.battles.reward.VaultRewardService;
 import java.util.Optional;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
@@ -47,6 +48,7 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
     private final BattleService battleService;
     private final BattleQueueService queueService;
     private WorldNormalizer worldNormalizer;
+    private VaultRewardService vaultRewardService;
 
     public PvPIndexExpansion(
             PlayerStatCache statCache,
@@ -59,6 +61,10 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
 
     public void setWorldNormalizer(WorldNormalizer worldNormalizer) {
         this.worldNormalizer = worldNormalizer;
+    }
+
+    public void setVaultRewardService(VaultRewardService vaultRewardService) {
+        this.vaultRewardService = vaultRewardService;
     }
 
     @Override public @NotNull String getIdentifier() { return "pvpindex"; }
@@ -141,7 +147,18 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
             return rankStr(entry, params.substring(5).toUpperCase());
         }
 
-        return null; // unrecognised. let PAPI show the raw placeholder
+        // -- Vault reward placeholders --
+
+        if (p.equals("reward_last")) {
+            if (vaultRewardService == null) return "0.00";
+            return String.format("%.2f", vaultRewardService.getLastReward(offlinePlayer.getUniqueId()));
+        }
+        if (p.equals("streak")) {
+            if (vaultRewardService == null) return "0";
+            return String.valueOf(vaultRewardService.getStreak(offlinePlayer.getUniqueId()));
+        }
+
+        return null;
     }
 
     // -------------------------------------------------------------------------
@@ -150,12 +167,12 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
 
     private static String eloStr(PlayerStatCache.Entry entry, String mode) {
         Integer v = entry.elo.get(mode);
-        return v != null ? String.valueOf(v) : "\u2014"; // em-dash until data arrives
+        return v != null ? String.valueOf(v) : "-";
     }
 
     private static String rankStr(PlayerStatCache.Entry entry, String mode) {
         Integer v = entry.rank.get(mode);
-        return v != null ? "#" + v : "\u2014";
+        return v != null ? "#" + v : "-";
     }
 
     private String resolveBattleType(java.util.UUID playerUuid, boolean normalized) {

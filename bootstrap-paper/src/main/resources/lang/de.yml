@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&cBestenliste nicht verfuegbar. Datenbank ist moeglicherweise deaktiviert."
   unknown_mode: "&cUnbekannter Spielmodus: %mode%"
   error: "&cFehler beim Laden der Bestenliste. Versuche es spaeter erneut."
+
+reward:
+  received: "&a+$%amount% &7fuer den Sieg in &f%mode%&7!"
+  received_streak: "&a+$%amount% &7fuer den Sieg in &f%mode%&7! &6(%multiplier% Serie x%streak%)"

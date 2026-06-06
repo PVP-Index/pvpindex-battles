@@ -2,6 +2,7 @@ package com.pvpindex.battles.network;
 
 import com.pvpindex.network.NetworkMessageType;
 import com.pvpindex.network.NetworkRouter;
+import com.pvpindex.network.node.NetworkNode;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -58,6 +59,30 @@ public final class ChallengeSyncService {
                 "targetName", targetName,
                 "modeId", modeId != null ? modeId : "",
                 "originNodeId", nodeId
+        ));
+    }
+
+    /**
+     * Broadcasts a challenge via Redis to all proxies. Used when the target
+     * player is not in the lobby Redis cache (i.e. on a non-lobby backend
+     * server). Each Velocity proxy checks its own connected players and
+     * forwards if the target is found.
+     */
+    public void broadcastChallengeToProxies(UUID challengeId, UUID challengerUuid,
+                                            String challengerName, String targetName,
+                                            String modeId, String velocityServerName) {
+        pending.put(challengeId, new PendingRedisChallenge(
+                challengeId, challengerUuid, challengerName,
+                null, targetName, null, modeId, Instant.now(), false));
+
+        router.broadcast(NetworkMessageType.CHALLENGE_SEND, Map.of(
+                "challengeId", challengeId.toString(),
+                "challengerUuid", challengerUuid.toString(),
+                "challengerName", challengerName,
+                "targetName", targetName,
+                "modeId", modeId != null ? modeId : "",
+                "originNodeId", nodeId,
+                "velocityServerName", velocityServerName != null ? velocityServerName : ""
         ));
     }
 
@@ -183,4 +208,21 @@ public final class ChallengeSyncService {
     }
 
     public ConcurrentHashMap<UUID, PendingRedisChallenge> pendingChallenges() { return pending; }
+
+    /** This lobby's network node id. */
+    public String nodeId() { return nodeId; }
+
+    /**
+     * Returns true if {@code candidateNodeId} is a currently online LOBBY node
+     * other than this one. Used to decide whether a challenge can be routed
+     * directly lobby-to-lobby via Redis, or must go through a proxy.
+     */
+    public boolean isOnlineRemoteLobby(String candidateNodeId) {
+        if (candidateNodeId == null || candidateNodeId.isBlank()) return false;
+        if (candidateNodeId.equals(nodeId)) return false;
+        return router.getNode(candidateNodeId)
+                .filter(n -> n.nodeType() == com.pvpindex.network.node.NodeType.LOBBY)
+                .filter(NetworkNode::isOnline)
+                .isPresent();
+    }
 }

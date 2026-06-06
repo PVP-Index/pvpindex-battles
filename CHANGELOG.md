@@ -11,12 +11,35 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ## [Unreleased]
 
+### Added
 ### Changed
-- **Console banner redesign**: startup banner now displays a large ASCII art "PVP INDEX" with a Green-Yellow-Red gradient. Info line shows version, platform, author (PVP Index), and maintainer (GitEpildev).
-- **Shutdown message**: updated to display "PVP INDEX has been disabled. Goodbye!" in red/grey styling.
-
 ### Fixed
 ### Removed
+
+---
+
+## [1.1.0] - 2026-06-06
+
+### Added
+- **Vault economy rewards** ([#15](https://github.com/PVP-Index/pvpindex-battles/issues/15)): battle winners now receive configurable currency payouts via the Vault API. Fully configured through `vault-rewards.yml` with per-game-mode base amounts and an optional win streak multiplier. Vault is a soft dependency: if not installed, rewards are silently disabled. Closes [#15](https://github.com/PVP-Index/pvpindex-battles/issues/15).
+- New `vault-rewards.yml` configuration file. All settings live under a top-level `economy:` key with `enabled`, `rewards` (per-mode amounts), and `streak_multiplier` (enabled, increment, max, min_streak) sections. The bundled default ships with `economy.enabled: false` so a fresh install does not pay out until opted in.
+- New `VaultRewardService` in `platform-paper` that hooks into Vault, listens for `PvPIndexBattleFinishEvent`, and deposits rewards.
+- New `VaultRewardConfig` record for parsing and validating reward configuration from the `economy` section.
+- New PlaceholderAPI placeholders: `%pvpindex_reward_last%` (last reward received) and `%pvpindex_streak%` (current win streak).
+- New lang keys `reward.received` and `reward.received_streak` in all 6 bundled locale files (en, de, nl, es, pl, zh).
+- Vault status line in the startup summary showing whether economy rewards are active.
+
+### Changed
+- **Console banner redesign**: startup banner now displays a large ASCII art "PVP INDEX" with a Green-Yellow-Red gradient. Info line shows version, platform, and author (PVP Index).
+- **Shutdown message**: updated to display "PVP INDEX has been disabled. Goodbye!" in red/grey styling.
+- **Paper 26.1.x adapter build**: the `paper.26.1.x` version module now compiles against the stable Paper API `26.1.2.build.57-stable` using the Java 25 toolchain, so the adapter builds cleanly across the supported 1.21.x to 26.1.x range.
+- Upgraded `maven-shade-plugin` to `3.6.2` (bundles ASM 9.8+) so the relocated bStats and Jackson dependencies shade correctly against Java 25 bytecode.
+
+### Fixed
+- **Cross-server challenges from a lobby**: challenging a player who was on a backend server (or behind another proxy) from a lobby silently timed out. Lobby servers relied on a player-location cache that went stale once a player moved to a non-lobby backend, so the challenge was routed to a node where the target was not present. The lobby now only uses the direct lobby-to-lobby Redis path when the cache confirms the target is on a live lobby node; otherwise it broadcasts the challenge over Redis to the proxies, which authoritatively resolve the target's current server and forward it. Challenges now work from any server to any server.
+- **Proxy challenge routing over Redis**: Velocity proxies now handle inbound `CHALLENGE_SEND` messages over Redis (not only plugin messaging), resolving the target across all connected backends and forwarding the challenge. This removes the dependency on plugin messaging channels, which could break after a backend restarted independently of the proxy.
+- **SMP challenge confirmation**: accepting an SMP-mode challenge through the risk-confirmation dialog did nothing because closing the inventory cleared the pending GUI state before it was read. The mode and challenge target are now captured before the inventory closes.
+- **Return-to-origin after a cross-server battle**: players transferred to another server for a battle were left waiting on the host server for two seconds before being returned, which looked like a double teleport. They are now sent straight back to the server they came from once the battle ends.
 
 ---
 
@@ -202,7 +225,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.8...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.8...v1.1.0
 [1.0.8]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.5...v1.0.6

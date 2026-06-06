@@ -240,3 +240,65 @@ See [SETUP-VELOCITY.md](SETUP-VELOCITY.md) for single-proxy setup and [SETUP-MUL
 ## BungeeCord Plugin
 
 Generated at `plugins/PvPIndex-Proxy/config.properties` on first run. Uses the same config format as the Velocity plugin (all keys above apply). See [SETUP-BUNGEECORD.md](SETUP-BUNGEECORD.md) for setup instructions.
+
+---
+
+## Vault Economy Rewards
+
+Economy rewards are configured in `vault-rewards.yml`, generated on first run. Vault must be installed as a soft dependency; if absent, rewards are silently disabled. All settings live under a single top-level `economy:` key.
+
+```yaml
+economy:
+  enabled: false
+
+  # Base reward per game mode (given to the winner).
+  # Modes not listed here give 0.
+  rewards:
+    sword: 500
+    axe: 500
+    mace: 500
+    boxing: 400
+    sumo: 400
+    nodebuff: 500
+    soup: 500
+    pot: 600
+    uhc: 750
+    crystal: 800
+    smp: 1000
+    nethop: 600
+    vanilla: 500
+
+  # Win streak multiplier. Rewards scale up for consecutive wins.
+  streak_multiplier:
+    enabled: false
+    increment: 0.5
+    max: 2.0
+    min_streak: 2
+```
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `economy.enabled` | boolean | `false` | Master toggle for economy rewards |
+| `economy.rewards.<mode>` | double | varies | Base reward amount for each game mode |
+| `economy.streak_multiplier.enabled` | boolean | `false` | Enable win streak scaling |
+| `economy.streak_multiplier.increment` | double | `0.5` | Multiplier increase per consecutive win |
+| `economy.streak_multiplier.max` | double | `2.0` | Maximum multiplier cap |
+| `economy.streak_multiplier.min_streak` | int | `2` | Minimum streak before multiplier applies |
+
+The bundled default ships with `economy.enabled: false` so a fresh install does not pay out until you opt in. If the `economy` section is missing entirely, rewards default to disabled.
+
+### Streak Multiplier Formula
+
+```
+multiplier = min(1.0 + (streak - 1) * increment, max)
+payout     = round(base_reward * multiplier, 2)
+```
+
+Example with defaults: 1 win = 1.0x, 2 wins = 1.5x, 3 wins = 2.0x (capped).
+
+### PlaceholderAPI Placeholders
+
+| Placeholder | Description |
+|-------------|-------------|
+| `%pvpindex_reward_last%` | The last reward amount received (e.g. `500.00`) |
+| `%pvpindex_streak%` | Current win streak count |

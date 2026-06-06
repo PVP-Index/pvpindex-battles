@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&c排行榜数据不可用。数据库可能未启用。"
   unknown_mode: "&c未知游戏模式: %mode%"
   error: "&c加载排行榜失败，请稍后重试。"
+
+reward:
+  received: "&a+$%amount% &7赢得 &f%mode% &7的奖励!"
+  received_streak: "&a+$%amount% &7赢得 &f%mode% &7的奖励! &6(%multiplier% 连胜 x%streak%)"

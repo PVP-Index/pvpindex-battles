@@ -22,7 +22,7 @@ This guide covers setting up the PvPIndex Velocity proxy plugin and linking it t
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-velocity-1.0.2.jar`.
+1. Download or build `PvPIndexBattles-velocity-1.1.0.jar`.
 2. Place it in your Velocity proxy's `plugins/` folder.
 
 ## Step 2: First Run

@@ -18,7 +18,7 @@ Do **not** use lobby mode on dedicated battle/arena servers. Those servers recei
 | Requirement | Details |
 |-------------|---------|
 | Redis | 6.x+ (shared across all lobby servers) |
-| Paper plugin | `PvPIndexBattles-1.0.2.jar` on every lobby server |
+| Paper plugin | `PvPIndexBattles-1.1.0.jar` on every lobby server |
 | Network access | All lobby servers must reach the same Redis instance |
 
 ## Step 1: Enable Lobby Mode

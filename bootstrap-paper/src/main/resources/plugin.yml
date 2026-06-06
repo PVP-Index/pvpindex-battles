@@ -4,7 +4,7 @@ main: com.pvpindex.battles.PvPIndexBattlesPlugin
 api-version: '1.21'
 folia-supported: true
 authors: [PvPIndex]
-softdepend: [PlaceholderAPI, TeamsAPI]
+softdepend: [PlaceholderAPI, TeamsAPI, Vault]
 commands:
   pvpindex:
     description: PvPIndex battle command root

@@ -151,22 +151,38 @@ public final class ChallengeManager {
 				return;
 			}
 
-			// Not local - look up remote player in the network cache
+			// Not local. Fast path: if the cache confirms the target is on
+			// another live LOBBY node, route the challenge directly to that
+			// lobby via Redis (lobby-to-lobby, lowest latency).
 			NetworkPlayerCache.NetworkPlayer target = lobbyPlayerCache.findByName(targetName);
-			if (target == null) {
-				messageService.send(challenger, "general.player_not_found");
+			if (target != null && challengeSyncService.isOnlineRemoteLobby(target.server())) {
+				LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
+						challenger.getName(), target.uuid(), targetName, modeId, Instant.now(), false);
+				pending.put(challengeId, lc);
+
+				challengeSyncService.sendChallenge(challengeId, challenger.getUniqueId(),
+						challenger.getName(), targetName, target.uuid(), target.server(), modeId);
+				messageService.send(challenger, "challenge.sent", "%target%", targetName);
+				debug.logChallenge("SEND_REDIS_LOBBY", challengeId,
+						challenger.getName() + " -> " + targetName + " node=" + target.server() + " mode=" + modeId);
 				return;
 			}
 
+			// Target is not on a live lobby (on a backend server, on another
+			// proxy, or the cache entry is stale). Broadcast the challenge over
+			// Redis so every Velocity proxy can resolve the target's real
+			// location and forward it. The proxy is the authoritative source of
+			// truth for player locations, so this works for anyone, anywhere.
 			LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
-					challenger.getName(), target.uuid(), targetName, modeId, Instant.now(), false);
+					challenger.getName(), target != null ? target.uuid() : null, targetName, modeId, Instant.now(), false);
 			pending.put(challengeId, lc);
 
-			String targetNodeId = target.server();
-			challengeSyncService.sendChallenge(challengeId, challenger.getUniqueId(),
-					challenger.getName(), targetName, target.uuid(), targetNodeId, modeId);
+			challengeSyncService.broadcastChallengeToProxies(challengeId, challenger.getUniqueId(),
+					challenger.getName(), targetName, modeId, velocityServerName);
 			messageService.send(challenger, "challenge.sent", "%target%", targetName);
-			debug.logChallenge("SEND_REDIS", challengeId, challenger.getName() + " -> " + targetName + " mode=" + modeId);
+			debug.logChallenge("SEND_REDIS_PROXY_BROADCAST", challengeId,
+					challenger.getName() + " -> " + targetName + " mode=" + modeId);
+			return;
 		} else if (proxyEnabled && paperMessenger != null) {
 			LocalChallenge lc = new LocalChallenge(challengeId, challenger.getUniqueId(),
 					challenger.getName(), null, targetName, modeId, Instant.now(), false);

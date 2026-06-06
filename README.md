@@ -15,6 +15,7 @@ Paper servers can run in **lobby mode** (connecting directly to Redis for global
 | Redis (optional) | 6.x+ (required for lobby mode and multi-proxy networks) |
 | Database (optional) | MySQL 8+, SQLite, or MongoDB 6+ (persistent stats/history) |
 | PlaceholderAPI (optional) | 2.11+ |
+| Vault (optional) | 1.7+ (for economy rewards) |
 
 ## Quick Start
 
@@ -26,9 +27,9 @@ mvn clean package
 
 Output:
 
-- `bootstrap-paper/target/PvPIndexBattles-1.0.8.jar` - drop into Paper `plugins/`
-- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.0.8.jar` - drop into Velocity `plugins/`
-- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.0.8.jar` - drop into BungeeCord `plugins/`
+- `bootstrap-paper/target/PvPIndexBattles-1.1.0.jar` - drop into Paper `plugins/`
+- `bootstrap-velocity/target/PvPIndexBattles-velocity-1.1.0.jar` - drop into Velocity `plugins/`
+- `bootstrap-bungeecord/target/PvPIndexBattles-bungeecord-1.1.0.jar` - drop into BungeeCord `plugins/`
 
 The Paper JAR auto-detects your server version (1.21.x or 26.1.x) at startup. No manual configuration needed for version selection.
 
@@ -84,7 +85,8 @@ pvpindex-parent
 - **Stats and leaderboards**: `/stats`, `/history`, `/battle leaderboard` GUI with player skulls, Elo, K/D, and pagination
 - **Cross-server coordination** via lobby Redis or proxy plugin messaging with visible error logging
 - **Multi-proxy networking** via Redis Pub/Sub for unlimited proxy instances across regions
-- **PlaceholderAPI** integration for Elo, rank, win/loss, battle state, and battle type
+- **Vault economy rewards**: configurable per-mode payouts for battle winners with optional win streak multiplier
+- **PlaceholderAPI** integration for Elo, rank, win/loss, battle state, battle type, and reward data
 - **Configurable GUI** via `gui.yml` for full customisation of materials, slots, titles, and colours
 - **WorldNormalizer** display layer mapping raw mode IDs to friendly names
 - **Multi-language support** (English, Dutch, German, Polish, Chinese, Spanish) with custom language file support

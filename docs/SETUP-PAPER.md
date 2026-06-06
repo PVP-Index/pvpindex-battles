@@ -7,7 +7,7 @@
 
 ## Step 1: Install
 
-1. Download or build `PvPIndexBattles-1.0.8.jar`.
+1. Download or build `PvPIndexBattles-1.1.0.jar`.
 2. Place it in your server's `plugins/` folder.
 
 ## Step 2: First Run
@@ -144,6 +144,12 @@ See [CONFIGURATION.md](CONFIGURATION.md) for the full `database.*` reference.
 The plugin collects anonymous usage statistics via [bStats](https://bstats.org/plugin/bukkit/PvPIndex%20Battle/31131). This includes server count, player count, Java version, and Minecraft version. No personal or gameplay data is collected.
 
 To disable bStats globally for all plugins, edit `plugins/bStats/config.yml` and set `enabled: false`.
+
+## Optional: Vault Economy Rewards
+
+If [Vault](https://www.spigotmc.org/resources/vault.34315/) and an economy provider (e.g. EssentialsX, EzEconomy) are installed, battle winners receive currency rewards automatically. Edit `vault-rewards.yml` to configure per-mode amounts and optional win streak multipliers. See [CONFIGURATION.md](CONFIGURATION.md#vault-economy-rewards) for full details.
+
+If Vault is not installed, rewards are silently disabled. No configuration changes are needed.
 
 ## Optional: Velocity Proxy
 

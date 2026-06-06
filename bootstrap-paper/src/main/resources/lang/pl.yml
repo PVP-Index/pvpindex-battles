@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&cRanking niedostepny. Baza danych moze byc wylaczona."
   unknown_mode: "&cNieznany tryb gry: %mode%"
   error: "&cBlad podczas ladowania rankingu. Sprobuj ponownie pozniej."
+
+reward:
+  received: "&a+$%amount% &7za wygrana w &f%mode%&7!"
+  received_streak: "&a+$%amount% &7za wygrana w &f%mode%&7! &6(%multiplier% seria x%streak%)"

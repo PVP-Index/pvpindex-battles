@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&cClasificacion no disponible. La base de datos puede estar desactivada."
   unknown_mode: "&cModo de juego desconocido: %mode%"
   error: "&cError al cargar la clasificacion. Intentalo mas tarde."
+
+reward:
+  received: "&a+$%amount% &7por ganar en &f%mode%&7!"
+  received_streak: "&a+$%amount% &7por ganar en &f%mode%&7! &6(%multiplier% racha x%streak%)"

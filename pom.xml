@@ -5,7 +5,7 @@
 
     <groupId>com.pvpindex</groupId>
     <artifactId>pvpindex-parent</artifactId>
-    <version>1.0.8</version>
+    <version>1.1.0</version>
     <packaging>pom</packaging>
 
     <name>PvPIndex Parent</name>
@@ -34,7 +34,7 @@
         <jackson.version>2.21.3</jackson.version>
         <mockito.version>5.15.2</mockito.version>
         <paper.api.121.version>1.21.1-R0.1-SNAPSHOT</paper.api.121.version>
-        <paper.api.261.version>26.1.2.build.52-beta</paper.api.261.version>
+        <paper.api.261.version>26.1.2.build.57-stable</paper.api.261.version>
         <velocity.api.version>3.5.0-SNAPSHOT</velocity.api.version>
     </properties>
 
@@ -157,6 +157,14 @@
                 <scope>provided</scope>
             </dependency>
 
+            <!-- Vault (optional soft-dependency for economy rewards) -->
+            <dependency>
+                <groupId>com.github.MilkBowl</groupId>
+                <artifactId>VaultAPI</artifactId>
+                <version>1.7.1</version>
+                <scope>provided</scope>
+            </dependency>
+
             <!-- Test -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
@@ -198,7 +206,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>3.6.2</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

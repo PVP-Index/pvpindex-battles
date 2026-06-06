@@ -9,8 +9,8 @@ This guide covers running PvPIndex across **multiple Velocity and/or BungeeCord 
 | Requirement | Details |
 |-------------|---------|
 | Redis | 6.x+ (used for cross-proxy messaging) |
-| Proxy plugin | `PvPIndexBattles-velocity-1.0.2.jar` or `PvPIndexBattles-bungeecord-1.0.2.jar` on every proxy |
-| Paper plugin | `PvPIndexBattles-1.0.2.jar` on every backend server |
+| Proxy plugin | `PvPIndexBattles-velocity-1.1.0.jar` or `PvPIndexBattles-bungeecord-1.1.0.jar` on every proxy |
+| Paper plugin | `PvPIndexBattles-1.1.0.jar` on every backend server |
 | Network access | All proxies must be able to reach the same Redis instance |
 
 ## Architecture

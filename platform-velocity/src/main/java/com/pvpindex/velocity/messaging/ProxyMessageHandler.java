@@ -123,6 +123,44 @@ public final class ProxyMessageHandler {
             transferTargetToBackend(targetUuid, plc.senderServer(), challengeId);
         });
 
+        router.addHandler(NetworkMessageType.CHALLENGE_SEND, msg -> {
+            String originNodeId = msg.payloadString("originNodeId");
+            UUID challengeId = msg.payloadUuid("challengeId");
+            UUID challengerUuid = msg.payloadUuid("challengerUuid");
+            String challengerName = msg.payloadString("challengerName");
+            String targetName = msg.payloadString("targetName");
+            String modeId = msg.payloadString("modeId");
+
+            if (challengeId == null || challengerUuid == null || targetName == null) return;
+
+            String senderServer = originNodeId != null ? originNodeId : msg.sourceProxyId();
+            String velocityServerName = msg.payloadString("velocityServerName");
+            if (velocityServerName != null && !velocityServerName.isBlank()) {
+                senderServer = velocityServerName;
+            }
+
+            Optional<Player> target = plugin.getServer().getPlayer(targetName);
+            if (target.isEmpty() || target.get().getCurrentServer().isEmpty()) {
+                logger.info("[PvPIndex] Redis CHALLENGE_SEND: target '" + targetName
+                        + "' not found on this proxy. ignoring.");
+                return;
+            }
+
+            String targetServer = target.get().getCurrentServer().get().getServerInfo().getName();
+            UUID targetUuid = target.get().getUniqueId();
+
+            pendingChallenges.put(challengeId, new PendingLegacyChallenge(
+                    senderServer, challengeId, challengerUuid, challengerName,
+                    targetUuid, targetServer, modeId, Instant.now()));
+
+            plugin.backendMessenger().sendChallengeForward(
+                    targetServer, challengeId, challengerName, challengerUuid, modeId, targetUuid);
+
+            logger.info("[PvPIndex] Redis CHALLENGE_SEND: tracked " + challengeId
+                    + " from " + senderServer + " -> " + targetServer
+                    + " (target=" + targetName + ")");
+        });
+
         router.addHandler(NetworkMessageType.CHALLENGE_DENY, msg -> {
             UUID challengeId = msg.payloadUuid("challengeId");
             if (challengeId == null) return;
@@ -305,6 +343,12 @@ public final class ProxyMessageHandler {
             if (currentServer.equals(originServer)) continue;
 
             plugin.markChallengeTransfer(playerUuid);
+            // Return the player to their origin server as quickly as possible.
+            // The host has already moved them out of the arena before sending
+            // BATTLE_END, so a short delay is enough to let that settle. A long
+            // delay makes the player visibly land on the host first, which feels
+            // like a double teleport. they should go straight back to where they
+            // came from.
             plugin.getServer().getScheduler()
                     .buildTask(plugin, () -> {
                         if (player.get().isActive()) {
@@ -314,7 +358,7 @@ public final class ProxyMessageHandler {
                                     + " to origin '" + originServer + "'");
                         }
                     })
-                    .delay(2, TimeUnit.SECONDS)
+                    .delay(250, TimeUnit.MILLISECONDS)
                     .schedule();
         }
     }

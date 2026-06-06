@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&cLeaderboard data is not available. Database may be disabled."
   unknown_mode: "&cUnknown game mode: %mode%"
   error: "&cFailed to load leaderboard data. Try again later."
+
+reward:
+  received: "&a+$%amount% &7for winning &f%mode%&7!"
+  received_streak: "&a+$%amount% &7for winning &f%mode%&7! &6(%multiplier% streak x%streak%)"

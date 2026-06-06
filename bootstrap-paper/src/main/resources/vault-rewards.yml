@@ -1,0 +1,34 @@
+# Economy rewards for battle winners.
+# Requires the Vault plugin to be installed. If Vault not
+# present, rewards are silently disabled.
+economy:
+  enabled: false
+
+  # Base reward per game mode (given to the winner).
+  # Modes not listed here give 0.
+  rewards:
+    sword: 500
+    axe: 500
+    mace: 500
+    boxing: 400
+    sumo: 400
+    nodebuff: 500
+    soup: 500
+    pot: 600
+    uhc: 750
+    crystal: 800
+    smp: 1000
+    nethop: 600
+    vanilla: 500
+
+  # Win streak multiplier. Rewards scale up for consecutive wins.
+  # Set enabled to false to always pay the base amount.
+  streak_multiplier:
+    enabled: false
+    # Multiplier = 1.0 + (streak - 1) * increment, capped at max.
+    # Example with defaults: 1 win = 1.0x, 2 wins = 1.5x, 3 wins = 2.0x, 4+ wins = 2.0x
+    increment: 0.5
+    max: 2.0
+    # Minimum streak length before the multiplier kicks in.
+    # 2 means the multiplier starts on the second consecutive win.
+    min_streak: 2

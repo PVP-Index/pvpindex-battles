@@ -188,13 +188,17 @@ public class BattleGuiListener implements Listener {
 		int slot = event.getRawSlot();
 
 		if (slot == guiConfig.confirmYesSlot()) {
-			player.closeInventory();
+			// Read state BEFORE closeInventory(), because the close event
+			// removes the PlayerGuiState from the map synchronously.
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
-			if (state != null && state.pendingConfirmationModeId() != null) {
-				String modeId = state.pendingConfirmationModeId();
-				String challengeTarget = state.pendingChallengeTarget();
+			String modeId = state != null ? state.pendingConfirmationModeId() : null;
+			String challengeTarget = state != null ? state.pendingChallengeTarget() : null;
+			if (state != null) {
 				state.setPendingConfirmationModeId(null);
 				state.setPendingChallengeTarget(null);
+			}
+			player.closeInventory();
+			if (modeId != null) {
 				if (challengeTarget != null && challengeManager != null) {
 					challengeManager.sendChallenge(player, challengeTarget, modeId);
 				} else {
@@ -202,12 +206,12 @@ public class BattleGuiListener implements Listener {
 				}
 			}
 		} else if (slot == guiConfig.confirmCancelSlot()) {
-			player.closeInventory();
 			PlayerGuiState state = guiCommand.guiStates().get(player.getUniqueId());
 			if (state != null) {
 				state.setPendingConfirmationModeId(null);
 				state.setPendingChallengeTarget(null);
 			}
+			player.closeInventory();
 		}
 	}
 

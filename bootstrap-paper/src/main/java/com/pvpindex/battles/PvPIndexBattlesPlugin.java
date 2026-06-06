@@ -97,6 +97,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 	private com.pvpindex.battles.battle.SmpLootPhaseService smpLootPhaseService;
 	private com.pvpindex.battles.network.LobbyNetworkService lobbyNetworkService;
 	private com.pvpindex.battles.data.DataService dataService;
+	private com.pvpindex.battles.reward.VaultRewardService vaultRewardService;
 
 	@Override
 	public void onEnable() {
@@ -459,6 +460,13 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			battleCmd.setTabCompleter(battleTabCompleter);
 		}
 
+		// Vault economy rewards - registered only when Vault is present
+		vaultRewardService = new com.pvpindex.battles.reward.VaultRewardService(this, messageService);
+		boolean vaultEnabled = vaultRewardService.initialise();
+		if (vaultEnabled) {
+			getServer().getPluginManager().registerEvents(vaultRewardService, this);
+		}
+
 		// PlaceholderAPI expansion - registered only when PAPI is present
 		boolean papiEnabled = false;
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -466,11 +474,14 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 			getServer().getPluginManager().registerEvents(new PlaceholderUpdateListener(statCache), this);
 			PvPIndexExpansion expansion = new PvPIndexExpansion(statCache, battleService, battleQueueService);
 			expansion.setWorldNormalizer(worldNormalizer);
+			if (vaultRewardService != null && vaultRewardService.isActive()) {
+				expansion.setVaultRewardService(vaultRewardService);
+			}
 			expansion.register();
 			papiEnabled = true;
 		}
 
-		printStartupSummary(versionAdapter, papiEnabled);
+		printStartupSummary(versionAdapter, papiEnabled, vaultEnabled);
 		printSecurityWarnings();
 	}
 
@@ -522,11 +533,11 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		c.sendMessage(Y  + "  ██║      ╚████╔╝ ██║        " + RE + "██║██║ ╚████║██████╔╝███████╗██╔╝ ██╗" + R);
 		c.sendMessage(RE + "  ╚═╝       ╚═══╝  ╚═╝        " + RE + "╚═╝╚═╝  ╚═══╝╚═════╝ ╚══════╝╚═╝  ╚═╝" + R);
 		c.sendMessage("");
-		c.sendMessage("  " + G + "Version: " + W + version + GR + " | " + Y + "Platform: " + W + "Paper" + GR + " | " + RE + "Author: " + W + "PVP Index" + GR + " | " + G + "Maintained by: " + W + "GitEpildev" + R);
+		c.sendMessage("  " + G + "Version: " + W + version + GR + " | " + Y + "Platform: " + W + "Paper" + GR + " | " + RE + "Author: " + W + "PVP Index" + R);
 		c.sendMessage("");
 	}
 
-	private void printStartupSummary(com.pvpindex.battles.version.VersionAdapter adapter, boolean papiEnabled) {
+	private void printStartupSummary(com.pvpindex.battles.version.VersionAdapter adapter, boolean papiEnabled, boolean vaultEnabled) {
 		String GREEN = "\u001B[32m";
 		String CYAN = "\u001B[36m";
 		String YELLOW = "\u001B[33m";
@@ -546,6 +557,7 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 		console.sendMessage("  " + WHITE + "Kits        " + GREY + "│ " + GREEN + gameModeRegistry.allKits().size() + RESET);
 		console.sendMessage("  " + WHITE + "Proxy       " + GREY + "│ " + (configManager.settings().proxyEnabled() ? TICK + " Enabled" : CROSS + GREY + " Disabled") + RESET);
 		console.sendMessage("  " + WHITE + "PAPI        " + GREY + "│ " + (papiEnabled ? TICK + " Registered" : CROSS + GREY + " Not found") + RESET);
+		console.sendMessage("  " + WHITE + "Vault       " + GREY + "│ " + (vaultEnabled ? TICK + " Economy rewards active" : CROSS + GREY + " Not found") + RESET);
 		console.sendMessage("  " + WHITE + "Debug       " + GREY + "│ " + (configManager.settings().debug() ? YELLOW + "ON" : GREY + "OFF") + RESET);
 		console.sendMessage("");
 	}

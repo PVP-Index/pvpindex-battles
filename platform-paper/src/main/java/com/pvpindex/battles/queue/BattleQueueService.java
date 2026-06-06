@@ -296,9 +296,11 @@ public class BattleQueueService {
 
         // 3) Neutralise flight and velocity before teleporting so players
         //    cannot exploit momentum to launch above the arena.
+        //    Keep AllowFlight true until after teleport to prevent the
+        //    server's anti-fly kick from triggering while the player is
+        //    mid-air between worlds.
         for (Player p : List.of(p1, p2)) {
             p.setFlying(false);
-            p.setAllowFlight(false);
             p.setVelocity(p.getVelocity().zero());
             p.setFallDistance(0.0f);
         }
@@ -308,12 +310,18 @@ public class BattleQueueService {
             teleportToArena(p1, p2, instance);
         }
 
-        // 5) Apply kit + initial rules state.
+        // 5) Now that players are on the ground in the arena, disable flight.
+        for (Player p : List.of(p1, p2)) {
+            p.setAllowFlight(false);
+            p.setFallDistance(0.0f);
+        }
+
+        // 6) Apply kit + initial rules state.
         GameModeRules rules = mode.rules() != null ? mode.rules() : GameModeRules.vanilla();
         applyPreBattleState(p1, mode, rules);
         applyPreBattleState(p2, mode, rules);
 
-        // 6) Run countdown, then activate the battle and freeze-release.
+        // 7) Run countdown, then activate the battle and freeze-release.
         int countdown = Math.max(0, rules.countdownSeconds());
         runCountdown(session.getUuid(), p1, p2, countdown, rules);
     }

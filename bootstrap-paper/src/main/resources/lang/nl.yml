@@ -141,3 +141,7 @@ leaderboard:
   no_data: "&cRanglijst niet beschikbaar. Database is mogelijk uitgeschakeld."
   unknown_mode: "&cOnbekende spelmodus: %mode%"
   error: "&cKan ranglijst niet laden. Probeer het later opnieuw."
+
+reward:
+  received: "&a+$%amount% &7voor het winnen van &f%mode%&7!"
+  received_streak: "&a+$%amount% &7voor het winnen van &f%mode%&7! &6(%multiplier% reeks x%streak%)"
