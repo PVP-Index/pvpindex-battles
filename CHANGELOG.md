@@ -25,6 +25,9 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ### Fixed
 - Pot PvP and NoDebuff starter kits no longer give empty splash potions. The default `SPLASH_POTION` entries in `gamemodes.yml` now include explicit potion effects (Healing II, Strength II, Speed II, and Regeneration II where applicable).
+- Kit item display names and lore now translate legacy `&` colour codes when applied, so potion names like `&aHealing II` render with colours in-game instead of raw ampersand codes.
+- Network node timeout boundary handling is now inclusive, fixing `proxyNodeTimeoutDetection` for `isTimedOut(0)` and preventing zero-second timeout edge-case mismatches.
+- README build output examples now reference `1.1.1` JAR filenames to match the current Maven project version.
 
 ---
 

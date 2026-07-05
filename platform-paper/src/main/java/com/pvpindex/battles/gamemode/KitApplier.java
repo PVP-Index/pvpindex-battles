@@ -1,6 +1,8 @@
 package com.pvpindex.battles.gamemode;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -48,10 +50,10 @@ public final class KitApplier {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
 			if (item.displayName() != null) {
-				meta.setDisplayName(item.displayName());
+                meta.setDisplayName(colorize(item.displayName()));
 			}
 			if (!item.lore().isEmpty()) {
-				meta.setLore(item.lore());
+                meta.setLore(item.lore().stream().map(KitApplier::colorize).collect(Collectors.toList()));
 			}
             if (meta instanceof PotionMeta potionMeta) {
                 for (String effectSpec : item.potionEffects()) {
@@ -114,5 +116,9 @@ public final class KitApplier {
 
     private static int safeInt(String s, int fallback) {
         try { return Integer.parseInt(s); } catch (NumberFormatException ex) { return fallback; }
+    }
+
+    private static String colorize(String input) {
+        return ChatColor.translateAlternateColorCodes('&', input);
     }
 }
