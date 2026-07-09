@@ -83,6 +83,8 @@ See [CONFIGURATION.md](CONFIGURATION.md) for the full reference.
 | `%pvpindex_battle_type%` | Display name of current battle mode (or `none`) |
 | `%pvpindex_battle_type_raw%` | Raw mode ID of current battle |
 | `%pvpindex_battle_type_normalized%` | Alias for `battle_type` |
+| `%pvpindex_battle_id%` | Mode + full battle UUID (e.g. `mace-550e8400-e29b-41d4-a716-446655440000`) |
+| `%pvpindex_short_battle_id%` | Mode + first segment of battle UUID (e.g. `mace-550e8400`) |
 | `%pvpindex_wins%` | Session win count |
 | `%pvpindex_losses%` | Session loss count |
 | `%pvpindex_kd%` | Win/loss ratio |
