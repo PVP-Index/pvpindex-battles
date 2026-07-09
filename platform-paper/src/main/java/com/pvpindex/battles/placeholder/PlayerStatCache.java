@@ -31,7 +31,10 @@ public final class PlayerStatCache {
         this.apiClient = apiClient;
     }
 
-    /** Test-only constructor that does not require a Bukkit plugin or API client. */
+    /**
+     * Test-only constructor. Creates a cache with no plugin or API client;
+     * {@link #refreshRanksIfStale(UUID, String)} is a no-op in this state.
+     */
     PlayerStatCache() {
         this.plugin = null;
         this.apiClient = null;

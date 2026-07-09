@@ -1,14 +1,11 @@
 package com.pvpindex.battles.placeholder;
 
-import com.pvpindex.battles.api.PvPIndexApiClient;
 import com.pvpindex.battles.battle.BattleService;
 import com.pvpindex.battles.battle.BattleSession;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import com.pvpindex.battles.identifier.WorldIdentifier;
 import com.pvpindex.battles.identifier.WorldNormalizer;
-import com.pvpindex.battles.queue.BattleQueueService;
-import com.pvpindex.battles.reward.VaultRewardService;
 import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
@@ -23,9 +20,9 @@ class PvPIndexExpansionTest {
     private UUID playerUuid;
     private OfflinePlayer offlinePlayer;
     private PlayerStatCache statCache;
-    private BattleService battleService;
-    private BattleQueueService queueService;
-    private VaultRewardService vaultRewardService;
+    private BattleServiceStub battleService;
+    private BattleQueueServiceStub queueService;
+    private VaultRewardServiceStub rewardStub;
     private PvPIndexExpansion expansion;
     private WorldNormalizer worldNormalizer;
 
@@ -36,13 +33,12 @@ class PvPIndexExpansionTest {
         Mockito.when(offlinePlayer.getUniqueId()).thenReturn(playerUuid);
 
         statCache = new PlayerStatCache();
-
-        battleService = Mockito.mock(BattleService.class);
-        queueService = Mockito.mock(BattleQueueService.class);
-        vaultRewardService = Mockito.mock(VaultRewardService.class);
+        battleService = new BattleServiceStub();
+        queueService = new BattleQueueServiceStub();
+        rewardStub = new VaultRewardServiceStub();
 
         expansion = new PvPIndexExpansion(statCache, battleService, queueService);
-        expansion.setVaultRewardService(vaultRewardService);
+        expansion.setVaultRewardService(rewardStub);
 
         worldNormalizer = new WorldNormalizer();
         worldNormalizer.register(new WorldIdentifier("mace", "Mace PvP"));
@@ -61,41 +57,41 @@ class PvPIndexExpansionTest {
 
     @Test
     void inBattleReturnsTrueWhenActive() {
-        Mockito.when(battleService.hasActiveBattle(playerUuid)).thenReturn(true);
+        battleService.active = true;
         assertEquals("true", expansion.onRequest(offlinePlayer, "in_battle"));
     }
 
     @Test
     void inBattleReturnsFalseWhenInactive() {
-        Mockito.when(battleService.hasActiveBattle(playerUuid)).thenReturn(false);
+        battleService.active = false;
         assertEquals("false", expansion.onRequest(offlinePlayer, "in_battle"));
     }
 
     @Test
     void queuedReturnsTrueWhenQueued() {
-        Mockito.when(queueService.isQueued(playerUuid)).thenReturn(true);
+        queueService.queued = true;
         assertEquals("true", expansion.onRequest(offlinePlayer, "queued"));
     }
 
     @Test
     void queuedReturnsFalseWhenNotQueued() {
-        Mockito.when(queueService.isQueued(playerUuid)).thenReturn(false);
+        queueService.queued = false;
         assertEquals("false", expansion.onRequest(offlinePlayer, "queued"));
     }
 
     @Test
     void queuedModeReturnsModeOrNone() {
-        Mockito.when(queueService.getQueuedMode(playerUuid)).thenReturn(Optional.of("mace"));
+        queueService.queuedMode = Optional.of("mace");
         assertEquals("mace", expansion.onRequest(offlinePlayer, "queued_mode"));
 
-        Mockito.when(queueService.getQueuedMode(playerUuid)).thenReturn(Optional.empty());
+        queueService.queuedMode = Optional.empty();
         assertEquals("none", expansion.onRequest(offlinePlayer, "queued_mode"));
     }
 
     @Test
     void battleTypeReturnsNormalizedNameWhenAvailable() {
         BattleSession session = new BattleSession(UUID.randomUUID(), BattleType.DUEL, GameModeType.MACE, "srv", null);
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.of(session));
+        battleService.activeSession = Optional.of(session);
 
         assertEquals("Mace PvP", expansion.onRequest(offlinePlayer, "battle_type"));
         assertEquals("Mace PvP", expansion.onRequest(offlinePlayer, "battle_type_normalized"));
@@ -104,7 +100,7 @@ class PvPIndexExpansionTest {
     @Test
     void battleTypeFallsBackToRawIdWhenNotRegistered() {
         BattleSession session = new BattleSession(UUID.randomUUID(), BattleType.DUEL, GameModeType.SWORD, "srv", null);
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.of(session));
+        battleService.activeSession = Optional.of(session);
 
         assertEquals("sword", expansion.onRequest(offlinePlayer, "battle_type"));
     }
@@ -112,14 +108,14 @@ class PvPIndexExpansionTest {
     @Test
     void battleTypeRawReturnsRawModeId() {
         BattleSession session = new BattleSession(UUID.randomUUID(), BattleType.DUEL, GameModeType.MACE, "srv", null);
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.of(session));
+        battleService.activeSession = Optional.of(session);
 
         assertEquals("mace", expansion.onRequest(offlinePlayer, "battle_type_raw"));
     }
 
     @Test
     void battleTypeReturnsNoneWhenNotInBattle() {
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.empty());
+        battleService.activeSession = Optional.empty();
         assertEquals("none", expansion.onRequest(offlinePlayer, "battle_type"));
         assertEquals("none", expansion.onRequest(offlinePlayer, "battle_type_raw"));
     }
@@ -128,7 +124,7 @@ class PvPIndexExpansionTest {
     void battleIdReturnsModeAndFullUuid() {
         UUID battleUuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         BattleSession session = new BattleSession(battleUuid, BattleType.DUEL, GameModeType.MACE, "srv", null);
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.of(session));
+        battleService.activeSession = Optional.of(session);
 
         assertEquals("mace-550e8400-e29b-41d4-a716-446655440000",
                 expansion.onRequest(offlinePlayer, "battle_id"));
@@ -138,14 +134,14 @@ class PvPIndexExpansionTest {
     void shortBattleIdReturnsModeAndFirstSegment() {
         UUID battleUuid = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
         BattleSession session = new BattleSession(battleUuid, BattleType.DUEL, GameModeType.MACE, "srv", null);
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.of(session));
+        battleService.activeSession = Optional.of(session);
 
         assertEquals("mace-550e8400", expansion.onRequest(offlinePlayer, "short_battle_id"));
     }
 
     @Test
     void battleIdReturnsNoneWhenNotInBattle() {
-        Mockito.when(battleService.findActiveBattleFor(playerUuid)).thenReturn(Optional.empty());
+        battleService.activeSession = Optional.empty();
         assertEquals("none", expansion.onRequest(offlinePlayer, "battle_id"));
         assertEquals("none", expansion.onRequest(offlinePlayer, "short_battle_id"));
     }
@@ -207,7 +203,7 @@ class PvPIndexExpansionTest {
 
     @Test
     void vaultRewardLastReturnsFormattedValue() {
-        Mockito.when(vaultRewardService.getLastReward(playerUuid)).thenReturn(123.456);
+        rewardStub.lastReward = 123.456;
         assertEquals("123.46", expansion.onRequest(offlinePlayer, "reward_last").replace(',', '.'));
     }
 
@@ -219,7 +215,7 @@ class PvPIndexExpansionTest {
 
     @Test
     void streakReturnsValueFromService() {
-        Mockito.when(vaultRewardService.getStreak(playerUuid)).thenReturn(4);
+        rewardStub.streak = 4;
         assertEquals("4", expansion.onRequest(offlinePlayer, "streak"));
     }
 
@@ -227,5 +223,66 @@ class PvPIndexExpansionTest {
     void streakReturnsZeroWhenServiceNull() {
         expansion.setVaultRewardService(null);
         assertEquals("0", expansion.onRequest(offlinePlayer, "streak"));
+    }
+
+    // -------------------------------------------------------------------------
+    // Lightweight stubs (avoid Mockito inline mock issues on Java 25)
+    // -------------------------------------------------------------------------
+
+    private static final class BattleServiceStub extends BattleService {
+        boolean active;
+        Optional<BattleSession> activeSession = Optional.empty();
+
+        BattleServiceStub() {
+            super(null, null, null, null, null, null);
+        }
+
+        @Override
+        public boolean hasActiveBattle(UUID playerUuid) {
+            return active;
+        }
+
+        @Override
+        public Optional<BattleSession> findActiveBattleFor(UUID playerUuid) {
+            return activeSession;
+        }
+    }
+
+    private static final class BattleQueueServiceStub extends com.pvpindex.battles.queue.BattleQueueService {
+        boolean queued;
+        Optional<String> queuedMode = Optional.empty();
+
+        BattleQueueServiceStub() {
+            super(null, null, null);
+        }
+
+        @Override
+        public boolean isQueued(UUID playerUuid) {
+            return queued;
+        }
+
+        @Override
+        public Optional<String> getQueuedMode(UUID playerUuid) {
+            return queuedMode;
+        }
+    }
+
+    private static final class VaultRewardServiceStub extends com.pvpindex.battles.reward.VaultRewardService {
+        double lastReward;
+        int streak;
+
+        VaultRewardServiceStub() {
+            super();
+        }
+
+        @Override
+        public double getLastReward(UUID playerUuid) {
+            return lastReward;
+        }
+
+        @Override
+        public int getStreak(UUID playerUuid) {
+            return streak;
+        }
     }
 }

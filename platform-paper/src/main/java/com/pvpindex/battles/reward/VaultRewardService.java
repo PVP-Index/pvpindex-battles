@@ -29,7 +29,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * from {@code vault-rewards.yml} and optionally scales payouts by
  * the player's current win streak.
  */
-public final class VaultRewardService implements Listener {
+public class VaultRewardService implements Listener {
 
 	private final JavaPlugin plugin;
 	private final Logger logger;
@@ -42,8 +42,18 @@ public final class VaultRewardService implements Listener {
 
 	public VaultRewardService(JavaPlugin plugin, MessageService messageService) {
 		this.plugin = plugin;
-		this.logger = plugin.getLogger();
+		this.logger = plugin != null ? plugin.getLogger() : Logger.getLogger("VaultRewardService");
 		this.messageService = messageService;
+	}
+
+	/**
+	 * Test-only constructor. Creates a service with no plugin or messaging;
+	 * only {@link #getLastReward(UUID)} and {@link #getStreak(UUID)} are usable.
+	 */
+	public VaultRewardService() {
+		this.plugin = null;
+		this.logger = Logger.getLogger("VaultRewardService");
+		this.messageService = null;
 	}
 
 	/**
