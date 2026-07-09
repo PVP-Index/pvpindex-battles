@@ -1,6 +1,6 @@
 package com.pvpindex.battles.battle;
 
-import com.pvpindex.battles.battle.type.BattleStatus;
+import com.pvpindex.battles.battle.BattleStatus;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import java.time.Instant;

@@ -24,7 +24,9 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 - Kit item support for per-item `potion_effects` in `gamemodes.yml`. Potion items can now define explicit effects using `TYPE:durationTicks:amplifier` (for example, `INSTANT_HEALTH:1:1`).
 
 ### Fixed
-- Ender pearls and chorus fruit can no longer be used during the pre-battle countdown, preventing players from moving before the battle has officially started.
+- Ender pearls, chorus fruit, bows, crossbows, fire charges, and wind charges can no longer be used during the pre-battle countdown, preventing players from moving or attacking before the battle has officially started.
+- Added `BattleSessionCache` for O(1) player-to-active-battle lookups, replacing linear scans in event handlers.
+- Split `BattleEventListener` into focused listener classes under `com.pvpindex.battles.listener.battle` (one `@EventHandler` per class) and a thin backward-compatible facade.
 - Pot PvP and NoDebuff starter kits no longer give empty splash potions. The default `SPLASH_POTION` entries in `gamemodes.yml` now include explicit potion effects (Healing II, Strength II, Speed II, and Regeneration II where applicable).
 - Kit item display names and lore now translate legacy `&` colour codes when applied, so potion names like `&aHealing II` render with colours in-game instead of raw ampersand codes.
 - Tipped arrows in kits now apply their configured potion effect on hit. `KitApplier` derives a base `PotionType` from the first item effect so the game recognises the arrow payload.
