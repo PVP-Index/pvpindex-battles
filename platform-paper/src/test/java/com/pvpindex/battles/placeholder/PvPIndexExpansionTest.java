@@ -13,9 +13,13 @@ import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+
+import be.seeseemelk.mockbukkit.MockBukkit;
+import be.seeseemelk.mockbukkit.ServerMock;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,14 +33,18 @@ class PvPIndexExpansionTest {
     private VaultRewardService vaultRewardService;
     private PvPIndexExpansion expansion;
     private WorldNormalizer worldNormalizer;
+    private ServerMock server;
+    private JavaPlugin plugin;
 
     @BeforeEach
     void setUp() {
+        server = MockBukkit.mock();
+        plugin = MockBukkit.createMockPlugin();
+
         playerUuid = UUID.randomUUID();
         offlinePlayer = Mockito.mock(OfflinePlayer.class);
         Mockito.when(offlinePlayer.getUniqueId()).thenReturn(playerUuid);
 
-        JavaPlugin plugin = Mockito.mock(JavaPlugin.class);
         PvPIndexApiClient apiClient = Mockito.mock(PvPIndexApiClient.class);
         statCache = new PlayerStatCache(plugin, apiClient);
 
@@ -50,6 +58,11 @@ class PvPIndexExpansionTest {
         worldNormalizer = new WorldNormalizer();
         worldNormalizer.register(new WorldIdentifier("mace", "Mace PvP"));
         expansion.setWorldNormalizer(worldNormalizer);
+    }
+
+    @AfterEach
+    void tearDown() {
+        MockBukkit.unmock();
     }
 
     @Test
