@@ -14,9 +14,10 @@ public record KitItem(
         int amount,
         Map<String, Integer> enchantments,
         List<String> lore,
-        String displayName
+        String displayName,
+        List<String> potionEffects
 ) {
     public static KitItem of(String slot, String material) {
-        return new KitItem(slot, material, 1, Map.of(), List.of(), null);
+        return new KitItem(slot, material, 1, Map.of(), List.of(), null, List.of());
     }
 }

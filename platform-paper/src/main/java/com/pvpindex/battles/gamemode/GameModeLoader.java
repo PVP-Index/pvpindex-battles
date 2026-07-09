@@ -44,7 +44,8 @@ public final class GameModeLoader {
                             asInt(raw.get("amount"), 1),
                             asEnchantMap(raw.get("enchantments")),
                             asStringList(raw.get("lore")),
-                            raw.get("display_name") == null ? null : String.valueOf(raw.get("display_name"))
+                            raw.get("display_name") == null ? null : String.valueOf(raw.get("display_name")),
+                            asStringList(raw.get("potion_effects"))
                     ));
                 }
                 kits.add(new KitDefinition(kitId, k.getString("display_name", kitId), items, k.getStringList("potion_effects")));

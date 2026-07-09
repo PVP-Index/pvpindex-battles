@@ -46,7 +46,8 @@ public class NetworkNode {
     }
 
     public boolean isTimedOut(int timeoutSeconds) {
-        return Instant.now().minusSeconds(timeoutSeconds).isAfter(lastHeartbeat);
+        Instant threshold = Instant.now().minusSeconds(timeoutSeconds);
+        return !threshold.isBefore(lastHeartbeat);
     }
 
     @Override

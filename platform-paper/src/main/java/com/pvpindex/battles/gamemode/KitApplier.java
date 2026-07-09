@@ -1,6 +1,8 @@
 package com.pvpindex.battles.gamemode;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Registry;
@@ -8,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -47,11 +50,19 @@ public final class KitApplier {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
 			if (item.displayName() != null) {
-				meta.setDisplayName(item.displayName());
+                meta.setDisplayName(colorize(item.displayName()));
 			}
 			if (!item.lore().isEmpty()) {
-				meta.setLore(item.lore());
+                meta.setLore(item.lore().stream().map(KitApplier::colorize).collect(Collectors.toList()));
 			}
+            if (meta instanceof PotionMeta potionMeta) {
+                for (String effectSpec : item.potionEffects()) {
+                    PotionEffect effect = parsePotionEffect(effectSpec);
+                    if (effect != null) {
+                        potionMeta.addCustomEffect(effect, true);
+                    }
+                }
+            }
             stack.setItemMeta(meta);
         }
         item.enchantments().forEach((name, level) -> {
@@ -84,19 +95,30 @@ public final class KitApplier {
     }
 
     private void applyEffect(Player player, String spec) {
+        PotionEffect effect = parsePotionEffect(spec);
+        if (effect != null) {
+            player.addPotionEffect(effect);
+        }
+    }
+
+    private PotionEffect parsePotionEffect(String spec) {
         // Format: TYPE:durationTicks:amplifier   (e.g. SPEED:600:1)
         String[] parts = spec.split(":");
-        if (parts.length < 1) return;
+        if (parts.length < 1 || parts[0].isBlank()) return null;
         PotionEffectType type = versionAdapter != null
                 ? versionAdapter.getEffect(parts[0].toLowerCase())
                 : org.bukkit.Registry.EFFECT.get(NamespacedKey.minecraft(parts[0].toLowerCase()));
-        if (type == null) return;
+        if (type == null) return null;
         int duration = parts.length > 1 ? safeInt(parts[1], 600) : 600;
         int amplifier = parts.length > 2 ? safeInt(parts[2], 0) : 0;
-        player.addPotionEffect(new PotionEffect(type, duration, amplifier));
+        return new PotionEffect(type, duration, amplifier);
     }
 
     private static int safeInt(String s, int fallback) {
         try { return Integer.parseInt(s); } catch (NumberFormatException ex) { return fallback; }
+    }
+
+    private static String colorize(String input) {
+        return ChatColor.translateAlternateColorCodes('&', input);
     }
 }
