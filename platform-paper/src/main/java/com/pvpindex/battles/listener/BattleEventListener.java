@@ -133,13 +133,20 @@ public class BattleEventListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onInteract(PlayerInteractEvent event) {
-        if (event.getItem() == null || !event.getItem().getType().isEdible()) return;
         Player player = event.getPlayer();
         for (BattleSession session : battleService.activeBattles()) {
-            if (contains(session, player.getUniqueId())) {
-                event.setCancelled(false);
+            if (!contains(session, player.getUniqueId())) continue;
+
+            // Ender pearls (and other teleport items) can bypass the countdown
+            // freeze, so block them until the battle is actually active.
+            if (session.getStatus() != BattleStatus.ACTIVE && isTeleportItem(event.getItem())) {
+                event.setCancelled(true);
                 return;
             }
+
+            if (event.getItem() == null || !event.getItem().getType().isEdible()) return;
+            event.setCancelled(false);
+            return;
         }
     }
 
@@ -578,5 +585,11 @@ public class BattleEventListener implements Listener {
         if (name.contains("POTION")) return "potion";
         if (material.isEdible()) return "food";
         return "other";
+    }
+
+    private static boolean isTeleportItem(org.bukkit.inventory.ItemStack item) {
+        if (item == null) return false;
+        Material type = item.getType();
+        return type == Material.ENDER_PEARL || type == Material.CHORUS_FRUIT;
     }
 }
