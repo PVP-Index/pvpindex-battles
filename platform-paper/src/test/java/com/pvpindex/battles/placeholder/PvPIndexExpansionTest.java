@@ -11,7 +11,6 @@ import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.reward.VaultRewardService;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.logging.Logger;
 import org.bukkit.OfflinePlayer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,8 +35,7 @@ class PvPIndexExpansionTest {
         offlinePlayer = Mockito.mock(OfflinePlayer.class);
         Mockito.when(offlinePlayer.getUniqueId()).thenReturn(playerUuid);
 
-        PvPIndexApiClient apiClient = Mockito.mock(PvPIndexApiClient.class);
-        statCache = new PlayerStatCache(apiClient, Logger.getLogger("test"));
+        statCache = new PlayerStatCache();
 
         battleService = Mockito.mock(BattleService.class);
         queueService = Mockito.mock(BattleQueueService.class);

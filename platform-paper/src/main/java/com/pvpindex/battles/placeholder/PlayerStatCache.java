@@ -31,10 +31,10 @@ public final class PlayerStatCache {
         this.apiClient = apiClient;
     }
 
-    /** Test-only constructor that does not require a Bukkit plugin instance. */
-    PlayerStatCache(PvPIndexApiClient apiClient, Logger logger) {
+    /** Test-only constructor that does not require a Bukkit plugin or API client. */
+    PlayerStatCache() {
         this.plugin = null;
-        this.apiClient = apiClient;
+        this.apiClient = null;
     }
 
     // -------------------------------------------------------------------------
@@ -66,7 +66,8 @@ public final class PlayerStatCache {
      */
     public void refreshRanksIfStale(UUID uuid, String playerName) {
         Entry entry = getOrCreate(uuid);
-        if (entry.rankFetchPending
+        if (apiClient == null
+                || entry.rankFetchPending
                 || Instant.now().isBefore(entry.ranksLastFetched.plus(RANK_TTL))) {
             return;
         }
