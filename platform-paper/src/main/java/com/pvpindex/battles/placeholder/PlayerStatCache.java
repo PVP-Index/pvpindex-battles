@@ -7,7 +7,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.bukkit.plugin.java.JavaPlugin;
+import java.util.logging.Logger;
+import org.bukkit.plugin.Plugin;
 
 /**
  * In-memory cache of per-player PvP statistics used by {@link PvPIndexExpansion}.
@@ -21,12 +22,18 @@ public final class PlayerStatCache {
 
     static final Duration RANK_TTL = Duration.ofMinutes(5);
 
-    private final JavaPlugin plugin;
+    private final Plugin plugin;
     private final PvPIndexApiClient apiClient;
     private final Map<UUID, Entry> cache = new ConcurrentHashMap<>();
 
-    public PlayerStatCache(JavaPlugin plugin, PvPIndexApiClient apiClient) {
+    public PlayerStatCache(Plugin plugin, PvPIndexApiClient apiClient) {
         this.plugin = plugin;
+        this.apiClient = apiClient;
+    }
+
+    /** Test-only constructor that does not require a Bukkit plugin instance. */
+    PlayerStatCache(PvPIndexApiClient apiClient, Logger logger) {
+        this.plugin = null;
         this.apiClient = apiClient;
     }
 
@@ -74,8 +81,10 @@ public final class PlayerStatCache {
                     entry.rankFetchPending = false;
                 })
                 .exceptionally(ex -> {
-                    plugin.getLogger().fine("[PAPI] Rank fetch failed for " + playerName
-                            + ": " + ex.getMessage());
+                    if (plugin != null) {
+                        plugin.getLogger().fine("[PAPI] Rank fetch failed for " + playerName
+                                + ": " + ex.getMessage());
+                    }
                     entry.ranksLastFetched = Instant.now(); // back-off; don't flood on errors
                     entry.rankFetchPending = false;
                     return null;

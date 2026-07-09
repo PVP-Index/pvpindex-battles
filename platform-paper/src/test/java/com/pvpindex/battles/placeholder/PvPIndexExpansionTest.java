@@ -11,15 +11,11 @@ import com.pvpindex.battles.queue.BattleQueueService;
 import com.pvpindex.battles.reward.VaultRewardService;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.logging.Logger;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-
-import be.seeseemelk.mockbukkit.MockBukkit;
-import be.seeseemelk.mockbukkit.ServerMock;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,20 +29,15 @@ class PvPIndexExpansionTest {
     private VaultRewardService vaultRewardService;
     private PvPIndexExpansion expansion;
     private WorldNormalizer worldNormalizer;
-    private ServerMock server;
-    private JavaPlugin plugin;
 
     @BeforeEach
     void setUp() {
-        server = MockBukkit.mock();
-        plugin = MockBukkit.createMockPlugin("PvPIndexBattles");
-
         playerUuid = UUID.randomUUID();
         offlinePlayer = Mockito.mock(OfflinePlayer.class);
         Mockito.when(offlinePlayer.getUniqueId()).thenReturn(playerUuid);
 
         PvPIndexApiClient apiClient = Mockito.mock(PvPIndexApiClient.class);
-        statCache = new PlayerStatCache(plugin, apiClient);
+        statCache = new PlayerStatCache(apiClient, Logger.getLogger("test"));
 
         battleService = Mockito.mock(BattleService.class);
         queueService = Mockito.mock(BattleQueueService.class);
@@ -58,11 +49,6 @@ class PvPIndexExpansionTest {
         worldNormalizer = new WorldNormalizer();
         worldNormalizer.register(new WorldIdentifier("mace", "Mace PvP"));
         expansion.setWorldNormalizer(worldNormalizer);
-    }
-
-    @AfterEach
-    void tearDown() {
-        MockBukkit.unmock();
     }
 
     @Test
