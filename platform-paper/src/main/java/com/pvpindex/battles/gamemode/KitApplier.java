@@ -1,5 +1,6 @@
 package com.pvpindex.battles.gamemode;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.bukkit.ChatColor;
@@ -13,6 +14,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 /**
  * Applies a {@link KitDefinition} to a {@link Player}'s inventory + effects.
@@ -56,10 +58,23 @@ public final class KitApplier {
                 meta.setLore(item.lore().stream().map(KitApplier::colorize).collect(Collectors.toList()));
 			}
             if (meta instanceof PotionMeta potionMeta) {
+                List<PotionEffect> effects = new ArrayList<>();
                 for (String effectSpec : item.potionEffects()) {
                     PotionEffect effect = parsePotionEffect(effectSpec);
                     if (effect != null) {
+                        effects.add(effect);
                         potionMeta.addCustomEffect(effect, true);
+                    }
+                }
+                // Tipped arrows only apply their base potion type on hit; custom effects
+                // alone are ignored by the game. Derive a base type from the first effect.
+                if (material == Material.TIPPED_ARROW && !effects.isEmpty()) {
+                    PotionEffectType targetType = effects.get(0).getType();
+                    for (PotionType type : PotionType.values()) {
+                        if (type.getPotionEffects().stream().anyMatch(e -> e.getType() == targetType)) {
+                            potionMeta.setBasePotionType(type);
+                            break;
+                        }
                     }
                 }
             }
