@@ -18,14 +18,16 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-## [1.1.1] - 2026-07-05
+## [1.1.1] - 2026-07-09
 
 ### Added
 - Kit item support for per-item `potion_effects` in `gamemodes.yml`. Potion items can now define explicit effects using `TYPE:durationTicks:amplifier` (for example, `INSTANT_HEALTH:1:1`).
 
 ### Fixed
+- Ender pearls and chorus fruit can no longer be used during the pre-battle countdown, preventing players from moving before the battle has officially started.
 - Pot PvP and NoDebuff starter kits no longer give empty splash potions. The default `SPLASH_POTION` entries in `gamemodes.yml` now include explicit potion effects (Healing II, Strength II, Speed II, and Regeneration II where applicable).
 - Kit item display names and lore now translate legacy `&` colour codes when applied, so potion names like `&aHealing II` render with colours in-game instead of raw ampersand codes.
+- Tipped arrows in kits now apply their configured potion effect on hit. `KitApplier` derives a base `PotionType` from the first item effect so the game recognises the arrow payload.
 - Network node timeout boundary handling is now inclusive, fixing `proxyNodeTimeoutDetection` for `isTimedOut(0)` and preventing zero-second timeout edge-case mismatches.
 - README build output examples now reference `1.1.1` JAR filenames to match the current Maven project version.
 
