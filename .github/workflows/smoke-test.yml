@@ -87,7 +87,7 @@ jobs:
         run: |
           URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
             "https://fill.papermc.io/v3/projects/paper/versions/${MC_VERSION}/builds" \
-            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+            | jq -r 'first(.[] | select(.channel == "STABLE") | .downloads["server:default"].url) // first(.[].downloads["server:default"].url)')
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
             echo "No Paper build found for ${MC_VERSION}"
             exit 1
@@ -103,7 +103,7 @@ jobs:
         run: |
           URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
             "https://fill.papermc.io/v3/projects/folia/versions/${FOLIA_VERSION}/builds" \
-            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+            | jq -r 'first(.[] | select(.channel == "STABLE") | .downloads["server:default"].url) // first(.[].downloads["server:default"].url)')
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
             echo "No Folia build found for ${FOLIA_VERSION}"
             exit 1
@@ -117,7 +117,7 @@ jobs:
         run: |
           URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
             "https://fill.papermc.io/v3/projects/paper/versions/${PAPER_261_VERSION}/builds" \
-            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+            | jq -r 'first(.[] | select(.channel == "STABLE") | .downloads["server:default"].url) // first(.[].downloads["server:default"].url)')
           if [ -z "$URL" ] || [ "$URL" = "null" ]; then
             echo "No Paper build found for ${PAPER_261_VERSION}"
             exit 1
