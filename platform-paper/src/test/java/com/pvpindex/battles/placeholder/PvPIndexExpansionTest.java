@@ -39,7 +39,7 @@ class PvPIndexExpansionTest {
     @BeforeEach
     void setUp() {
         server = MockBukkit.mock();
-        plugin = MockBukkit.createMockPlugin();
+        plugin = MockBukkit.createMockPlugin("PvPIndexBattles");
 
         playerUuid = UUID.randomUUID();
         offlinePlayer = Mockito.mock(OfflinePlayer.class);
