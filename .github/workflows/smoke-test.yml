@@ -12,8 +12,10 @@ on:
 env:
   MC_VERSION: "1.21.1"
   FOLIA_VERSION: "1.21.4"    # Folia skipped 1.21.1-1.21.3; earliest 1.21.x Folia release
-  PAPER_261_VERSION: "26.1.2" # New MC versioning scheme; uses fill.papermc.io API
+  PAPER_261_VERSION: "26.1.2" # New MC versioning scheme
   SPIGOT_VERSION: "1.21.11"   # 1.21.11 is the minimum Spigot version that supports Java 25
+  # PaperMC requires a non-generic User-Agent with contact info on all requests.
+  USER_AGENT: "PvPIndexBattles-SmokeTest/1.0.0 (https://github.com/PVP-Index/pvpindex-battles)"
 
 jobs:
 
@@ -83,32 +85,44 @@ jobs:
       - name: Download Paper ${{ env.MC_VERSION }}
         if: matrix.server == 'paper'
         run: |
-          BUILD=$(curl -sf \
-            "https://api.papermc.io/v2/projects/paper/versions/${MC_VERSION}/builds" \
-            | jq -r '.builds[-1].build')
-          curl -sfLo server.jar \
-            "https://api.papermc.io/v2/projects/paper/versions/${MC_VERSION}/builds/${BUILD}/downloads/paper-${MC_VERSION}-${BUILD}.jar"
-          echo "Paper build: $BUILD"
+          URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
+            "https://fill.papermc.io/v3/projects/paper/versions/${MC_VERSION}/builds" \
+            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "No Paper build found for ${MC_VERSION}"
+            exit 1
+          fi
+          curl -sfLo server.jar -H "User-Agent: $USER_AGENT" "$URL"
+          echo "Paper URL: $URL"
 
       # ── Folia ─────────────────────────────────────────────────────────────
+      # Folia only publishes ALPHA builds, so fall back to the latest build if no
+      # STABLE build exists.
       - name: Download Folia ${{ env.FOLIA_VERSION }}
         if: matrix.server == 'folia'
         run: |
-          BUILD=$(curl -sf \
-            "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds" \
-            | jq -r '.builds[-1].build')
-          curl -sfLo server.jar \
-            "https://api.papermc.io/v2/projects/folia/versions/${FOLIA_VERSION}/builds/${BUILD}/downloads/folia-${FOLIA_VERSION}-${BUILD}.jar"
-          echo "Folia build: $BUILD"
+          URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
+            "https://fill.papermc.io/v3/projects/folia/versions/${FOLIA_VERSION}/builds" \
+            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "No Folia build found for ${FOLIA_VERSION}"
+            exit 1
+          fi
+          curl -sfLo server.jar -H "User-Agent: $USER_AGENT" "$URL"
+          echo "Folia URL: $URL"
 
-      # ── Paper 26.1.2 (new MC versioning; uses fill.papermc.io, not api.papermc.io) ─
+      # ── Paper 26.1.2 (new MC versioning scheme) ────────────────────────────
       - name: Download Paper ${{ env.PAPER_261_VERSION }}
         if: matrix.server == 'paper-261'
         run: |
-          URL=$(curl -sf \
+          URL=$(curl -sf -H "User-Agent: $USER_AGENT" \
             "https://fill.papermc.io/v3/projects/paper/versions/${PAPER_261_VERSION}/builds" \
-            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url')
-          curl -sfLo server.jar "$URL"
+            | jq -r 'map(select(.channel == "STABLE")) | first | .downloads["server:default"].url // (map(.downloads["server:default"].url) | first)')
+          if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+            echo "No Paper build found for ${PAPER_261_VERSION}"
+            exit 1
+          fi
+          curl -sfLo server.jar -H "User-Agent: $USER_AGENT" "$URL"
           echo "Paper 26.1.2 URL: $URL"
 
       # ── Spigot (built via BuildTools; result cached by Spigot version) ───────
