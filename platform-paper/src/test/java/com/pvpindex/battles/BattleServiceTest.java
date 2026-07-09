@@ -6,6 +6,7 @@ import com.pvpindex.battles.api.PvPIndexApiClient;
 import com.pvpindex.battles.battle.BattleParticipant;
 import com.pvpindex.battles.battle.BattleService;
 import com.pvpindex.battles.battle.BattleSession;
+import com.pvpindex.battles.battle.BattleStatus;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import com.pvpindex.battles.config.PluginSettings;
@@ -61,7 +62,7 @@ class BattleServiceTest {
 
         service.submitBattle(session.getUuid());
         Thread.sleep(100);
-        assertEquals(com.pvpindex.battles.battle.type.BattleStatus.SUBMITTED, session.getStatus());
+        assertEquals(BattleStatus.SUBMITTED, session.getStatus());
     }
 
     private BattleService createService(boolean apiSuccess) throws Exception {

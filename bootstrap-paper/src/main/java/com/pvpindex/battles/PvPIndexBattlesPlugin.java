@@ -242,7 +242,9 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 
 		// Listeners
 		battleEventListener = new BattleEventListener(battleService, recorder, gameModeRegistry);
-		getServer().getPluginManager().registerEvents(battleEventListener, this);
+		for (org.bukkit.event.Listener listener : battleEventListener.getDelegates()) {
+			getServer().getPluginManager().registerEvents(listener, this);
+		}
 		getServer().getPluginManager().registerEvents(new ModerationListener(moderationService, messageService), this);
 		getServer().getPluginManager().registerEvents(new SetupListener(this, configManager, messageService), this);
 		if (configManager.settings().blockCommandsInBattle()) {

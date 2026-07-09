@@ -1,4 +1,4 @@
-package com.pvpindex.battles.battle.type;
+package com.pvpindex.battles.battle;
 
 public enum BattleStatus {
     CREATED,

@@ -3,7 +3,7 @@ package com.pvpindex.battles.battle;
 import com.pvpindex.battles.api.BattlePayloadFactory;
 import com.pvpindex.battles.api.PvPIndexApiClient;
 import com.pvpindex.battles.api.PvPIndexApiClient.PostResult;
-import com.pvpindex.battles.battle.type.BattleStatus;
+import com.pvpindex.battles.battle.BattleStatus;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import com.pvpindex.battles.battle.type.ParticipantResult;
@@ -51,6 +51,7 @@ public class BattleService {
     private final BattlePayloadFactory payloadFactory;
     private final FileStorageService storageService;
     private final Map<UUID, BattleSession> sessions = new ConcurrentHashMap<>();
+    private final BattleSessionCache battleSessionCache = new BattleSessionCache();
     /** battle uuid → arena instance reserved for it (so we can release on cleanup). */
     private final Map<UUID, ArenaInstance> arenas = new ConcurrentHashMap<>();
     /** battle uuid → time-limit timeout task. */
@@ -153,6 +154,7 @@ public class BattleService {
             session.getMetadata().putAll(metadata);
         }
         sessions.put(session.getUuid(), session);
+        battleSessionCache.register(session);
         if (Bukkit.getServer() != null) {
             PvPIndexBattleCreateEvent createEvent = new PvPIndexBattleCreateEvent(session);
             Bukkit.getPluginManager().callEvent(createEvent);
@@ -286,6 +288,7 @@ public class BattleService {
         BattleSession session = sessions.get(battleUuid);
         if (session == null) return;
         session.setStatus(BattleStatus.CANCELLED);
+        battleSessionCache.unregister(session);
 
         BukkitTask t = timeoutTasks.remove(battleUuid);
         if (t != null) t.cancel();
@@ -418,6 +421,8 @@ public class BattleService {
             }
         }
 
+        battleSessionCache.unregister(session);
+
         // Release the arena back to the pool / destroy it
         ArenaInstance arena = arenas.remove(battleUuid);
         if (arena != null && arenaPoolService != null) {
@@ -471,16 +476,12 @@ public class BattleService {
     }
 
     public boolean hasActiveBattle(UUID playerUuid) {
-        return activeBattles().stream()
-                .flatMap(s -> s.getParticipants().stream())
-                .anyMatch(p -> p.getUuid().equals(playerUuid));
+        return battleSessionCache.hasBattle(playerUuid);
     }
 
     /** Find the (single) active battle a player is currently participating in, if any. */
     public Optional<BattleSession> findActiveBattleFor(UUID playerUuid) {
-        return activeBattles().stream()
-                .filter(s -> s.getParticipants().stream().anyMatch(p -> p.getUuid().equals(playerUuid)))
-                .findFirst();
+        return battleSessionCache.findForPlayer(playerUuid);
     }
 
     /**

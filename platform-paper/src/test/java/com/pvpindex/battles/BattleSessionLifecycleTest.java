@@ -2,7 +2,7 @@ package com.pvpindex.battles;
 
 import com.pvpindex.battles.battle.BattleParticipant;
 import com.pvpindex.battles.battle.BattleSession;
-import com.pvpindex.battles.battle.type.BattleStatus;
+import com.pvpindex.battles.battle.BattleStatus;
 import com.pvpindex.battles.battle.type.BattleType;
 import com.pvpindex.battles.battle.type.GameModeType;
 import com.pvpindex.battles.battle.type.ParticipantResult;
