@@ -106,6 +106,8 @@ Drop `PvPIndexBattles-velocity-<version>.jar` into your proxy `plugins/` folder 
 | `%pvpindex_queued%` | `true` / `false` |
 | `%pvpindex_queued_mode%` | Current queue mode or `none` |
 | `%pvpindex_battle_type%` | Display name of the active mode |
+| `%pvpindex_battle_id%` | Mode + full battle UUID (e.g. `mace-550e8400-e29b-41d4-a716-446655440000`) |
+| `%pvpindex_short_battle_id%` | Mode + first segment of battle UUID (e.g. `mace-550e8400`) |
 
 ---
 

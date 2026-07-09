@@ -302,3 +302,5 @@ Example with defaults: 1 win = 1.0x, 2 wins = 1.5x, 3 wins = 2.0x (capped).
 |-------------|-------------|
 | `%pvpindex_reward_last%` | The last reward amount received (e.g. `500.00`) |
 | `%pvpindex_streak%` | Current win streak count |
+| `%pvpindex_battle_id%` | Mode + full battle UUID (e.g. `mace-550e8400-e29b-41d4-a716-446655440000`) |
+| `%pvpindex_short_battle_id%` | Mode + first segment of battle UUID (e.g. `mace-550e8400`) |

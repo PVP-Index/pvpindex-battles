@@ -22,6 +22,8 @@ import org.jetbrains.annotations.NotNull;
  *  %pvpindex_in_battle%          true/false. player is in an active battle
  *  %pvpindex_queued%             true/false. player is in matchmaking queue
  *  %pvpindex_queued_mode%        mode id they are queued for, or "none"
+ *  %pvpindex_battle_id%          mode + full battle UUID (e.g. "mace-550e8400-e29b-41d4-a716-446655440000")
+ *  %pvpindex_short_battle_id%    mode + first segment of battle UUID (e.g. "mace-550e8400")
  *
  *  Elo (populated from battle results; refreshed from API every 5 min)
  *  ───────────────────────────────────────────────────────────────────
@@ -107,6 +109,12 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
         if (p.equals("battle_type_raw")) {
             return resolveBattleType(offlinePlayer.getUniqueId(), false);
         }
+        if (p.equals("battle_id")) {
+            return resolveBattleId(offlinePlayer.getUniqueId(), false);
+        }
+        if (p.equals("short_battle_id")) {
+            return resolveBattleId(offlinePlayer.getUniqueId(), true);
+        }
 
         // ── Counters ──────────────────────────────────────────────────────────
 
@@ -187,5 +195,19 @@ public final class PvPIndexExpansion extends PlaceholderExpansion {
             return id.map(WorldIdentifier::normalizedId).orElse(gameModeId);
         }
         return gameModeId;
+    }
+
+    private String resolveBattleId(java.util.UUID playerUuid, boolean shortId) {
+        Optional<BattleSession> session = battleService.findActiveBattleFor(playerUuid);
+        if (session.isEmpty()) return "none";
+
+        String gameModeId = session.get().getGameModeId();
+        if (gameModeId == null || gameModeId.isBlank()) gameModeId = "unknown";
+
+        String id = session.get().getUuid().toString();
+        if (shortId) {
+            id = id.split("-")[0];
+        }
+        return gameModeId + "-" + id;
     }
 }

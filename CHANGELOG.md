@@ -22,6 +22,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ### Added
 - Kit item support for per-item `potion_effects` in `gamemodes.yml`. Potion items can now define explicit effects using `TYPE:durationTicks:amplifier` (for example, `INSTANT_HEALTH:1:1`).
+- New PlaceholderAPI placeholder `%pvpindex_battle_short_id%` returning the current game mode plus the first segment of the active battle UUID (e.g. `mace-550e8400`).
+- New PlaceholderAPI placeholders `%pvpindex_battle_id%` (full battle UUID) and `%pvpindex_short_battle_id%` (first segment only).
 
 ### Fixed
 - Ender pearls, chorus fruit, bows, crossbows, fire charges, and wind charges can no longer be used during the pre-battle countdown, preventing players from moving or attacking before the battle has officially started.
