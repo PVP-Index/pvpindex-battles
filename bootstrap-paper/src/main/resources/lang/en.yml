@@ -20,6 +20,7 @@ battle:
   not_found: "&cBattle not found."
   started_good_luck: "&eBattle started! Good luck."
   command_blocked: "&cCommands are disabled during battle."
+  back_prevented: "&7Your /back destination has been secured."
 
 queue:
   joined: "&aJoined the &e%mode% &aqueue. Position: &f%pos%"

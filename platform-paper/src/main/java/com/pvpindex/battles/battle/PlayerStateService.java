@@ -35,13 +35,15 @@ public final class PlayerStateService {
     private final Path stateDir;
     private final boolean includeEnderChest;
     private final com.pvpindex.battles.version.VersionAdapter versionAdapter;
+    private final boolean preventBackCommand;
     private final Map<UUID, PlayerStateSnapshot> snapshots = new ConcurrentHashMap<>();
     private volatile Location afterBattleLocation;
 
-    public PlayerStateService(Plugin plugin, boolean includeEnderChest, com.pvpindex.battles.version.VersionAdapter versionAdapter) {
+    public PlayerStateService(Plugin plugin, boolean includeEnderChest, com.pvpindex.battles.version.VersionAdapter versionAdapter, boolean preventBackCommand) {
         this.plugin = plugin;
         this.includeEnderChest = includeEnderChest;
         this.versionAdapter = versionAdapter;
+        this.preventBackCommand = preventBackCommand;
         this.stateDir = plugin.getDataFolder().toPath().resolve("state");
         try {
             Files.createDirectories(stateDir);
@@ -75,11 +77,11 @@ public final class PlayerStateService {
         }
     }
 
-    /**
-     * Restore the player's state. Tries the in-memory snapshot first, then
-     * falls back to the on-disk copy (used after a crash). Removes the
-     * snapshot once successfully applied.
-     */
+/**
+      * Restore the player's state. Tries the in-memory snapshot first, then
+      * falls back to the on-disk copy (used after a crash). Removes the
+      * snapshot once successfully applied.
+      */
     public boolean restore(Player player) {
         UUID id = player.getUniqueId();
         PlayerStateSnapshot snap = snapshots.remove(id);
@@ -91,17 +93,29 @@ public final class PlayerStateService {
             }
         }
         if (snap == null) return false;
-        snap.restore(player, versionAdapter.getMaxHealthAttribute(), afterBattleLocation);
+        Location targetLocation = afterBattleLocation != null ? afterBattleLocation : snap.location();
+        snap.restore(player, versionAdapter.getMaxHealthAttribute(), targetLocation);
+        if (preventBackCommand && targetLocation != null && targetLocation.getWorld() != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Player onlinePlayer = Bukkit.getPlayer(id);
+                if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                    World targetWorld = targetLocation.getWorld();
+                    if (targetWorld != null) {
+                        onlinePlayer.teleport(targetLocation);
+                    }
+                }
+            }, 1L);
+        }
         discard(id);
         return true;
     }
 
-    /**
-     * Restore everything <em>except</em> inventory (armor, offhand, ender chest).
-     * The player keeps whatever items they currently have. Used by SMP battles
-     * so the winner retains looted items. Consumes the snapshot like
-     * {@link #restore}.
-     */
+/**
+      * Restore everything <em>except</em> inventory (armor, offhand, ender chest).
+      * The player keeps whatever items they currently have. Used by SMP battles
+      * so the winner retains looted items. Consumes the snapshot like
+      * {@link #restore}.
+      */
     public boolean restoreWithoutInventory(Player player) {
         UUID id = player.getUniqueId();
         PlayerStateSnapshot snap = snapshots.remove(id);
@@ -113,7 +127,19 @@ public final class PlayerStateService {
             }
         }
         if (snap == null) return false;
-        snap.restoreWithoutInventory(player, versionAdapter.getMaxHealthAttribute(), afterBattleLocation);
+        Location targetLocation = afterBattleLocation != null ? afterBattleLocation : snap.location();
+        snap.restoreWithoutInventory(player, versionAdapter.getMaxHealthAttribute(), targetLocation);
+        if (preventBackCommand && targetLocation != null && targetLocation.getWorld() != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Player onlinePlayer = Bukkit.getPlayer(id);
+                if (onlinePlayer != null && onlinePlayer.isOnline()) {
+                    World targetWorld = targetLocation.getWorld();
+                    if (targetWorld != null) {
+                        onlinePlayer.teleport(targetLocation);
+                    }
+                }
+            }, 1L);
+        }
         discard(id);
         return true;
     }

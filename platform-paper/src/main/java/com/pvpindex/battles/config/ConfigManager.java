@@ -79,7 +79,9 @@ public class ConfigManager {
 				cfg.getBoolean("battle_commands.block_commands", true),
 				cfg.getStringList("battle_commands.allowed_commands").stream()
 						.map(s -> s.toLowerCase().startsWith("/") ? s.substring(1).toLowerCase() : s.toLowerCase())
-						.toList()
+						.toList(),
+				// Double-teleport to prevent /back to arena
+				cfg.getBoolean("battle_commands.prevent_back_command", true)
 		);
 
         replaySettings = new ReplaySettings(

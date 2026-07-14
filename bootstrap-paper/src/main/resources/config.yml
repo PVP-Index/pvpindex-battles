@@ -236,6 +236,10 @@ battle_commands:
     - "r"
     - "reply"
     - "tell"
+  # Teleport players to their restored location twice to prevent /back to arena.
+  # This ensures /back commands (from EssentialsX, etc.) point to the post-battle
+  # location instead of the arena.
+  prevent_back_command: true
 
 # ─── TeamsAPI guard ───────────────────────────────────────────────────────────
 # Optional integration with TeamsAPI (https://modrinth.com/plugin/teams-api).

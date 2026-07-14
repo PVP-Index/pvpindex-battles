@@ -18,12 +18,13 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-## [1.1.1] - 2026-07-09
+## [1.1.1] - 2026-07-15
 
 ### Added
 - Kit item support for per-item `potion_effects` in `gamemodes.yml`. Potion items can now define explicit effects using `TYPE:durationTicks:amplifier` (for example, `INSTANT_HEALTH:1:1`).
 - New PlaceholderAPI placeholder `%pvpindex_battle_short_id%` returning the current game mode plus the first segment of the active battle UUID (e.g. `mace-550e8400`).
 - New PlaceholderAPI placeholders `%pvpindex_battle_id%` (full battle UUID) and `%pvpindex_short_battle_id%` (first segment only).
+- Configurable double-teleport to prevent `/back` commands from teleporting to the arena after battle end. When `battle_commands.prevent_back_command` is enabled (default), players are teleported twice to their restored location so `/back` points to a safe post-battle location instead of the arena.
 
 ### Fixed
 - Ender pearls, chorus fruit, bows, crossbows, fire charges, and wind charges can no longer be used during the pre-battle countdown, preventing players from moving or attacking before the battle has officially started.
@@ -244,7 +245,8 @@ Release tags use the `v` prefix (e.g. `v1.0.2`).
 
 ---
 
-[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.8...v1.1.0
 [1.0.8]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/PVP-Index/pvpindex-battles/compare/v1.0.6...v1.0.7
