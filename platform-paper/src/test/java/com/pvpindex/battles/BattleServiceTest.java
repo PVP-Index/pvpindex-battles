@@ -83,7 +83,9 @@ class BattleServiceTest {
                 // teams guard
                 false,
                 // command blocking
-                true, java.util.List.of("battle")
+                true, java.util.List.of("battle"),
+                // prevent back command
+                true
         );
         BattleReplayRecorder recorder = new BattleReplayRecorder(plugin, new ObjectMapper(), ReplayDetailLevel.HIGH);
         PvPIndexApiClient apiClient = new PvPIndexApiClient(settings, new ObjectMapper()) {

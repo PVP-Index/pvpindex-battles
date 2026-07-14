@@ -44,5 +44,7 @@ public record PluginSettings(
         boolean teamsGuardEnabled,
         // Command blocking during battles
         boolean blockCommandsInBattle,
-        List<String> allowedBattleCommands
+        List<String> allowedBattleCommands,
+        // Double-teleport to prevent /back to arena after battle
+        boolean preventBackCommand
 ) {}

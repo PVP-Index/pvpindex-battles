@@ -257,7 +257,8 @@ public class PvPIndexBattlesPlugin extends JavaPlugin {
 
 		// Player state save/restore (snapshot before battle, restore on end / on rejoin after crash)
 		boolean includeEnderChest = getConfig().getBoolean("player_state.include_ender_chest", true);
-		playerStateService = new PlayerStateService(this, includeEnderChest, versionAdapter);
+		boolean preventBackCommand = configManager.settings().preventBackCommand();
+		playerStateService = new PlayerStateService(this, includeEnderChest, versionAdapter, preventBackCommand);
 		var afterBattleSettings = configManager.afterBattleLocationSettings();
 		var afterBattleLoc = afterBattleSettings.resolveLocation();
 		if (afterBattleLoc != null) {
