@@ -156,7 +156,7 @@ jobs:
               'version_type':  'release',
               'loaders':       ['paper','folia','purpur','spigot','bukkit'],
               'featured':      True,
-              'project_id':    'wOZtwr2V',
+              'project_id':    'oRvmxM8N',
               'primary_file':  'paper_jar',
               'file_parts':    ['paper_jar']
           }))" > /tmp/modrinth_paper_payload.json
