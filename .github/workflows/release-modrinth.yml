@@ -219,7 +219,7 @@ jobs:
               'version_type':  'release',
               'loaders':       ['velocity'],
               'featured':      False,
-              'project_id':    'wOZtwr2V',
+              'project_id':    'oRvmxM8N',
               'primary_file':  'velocity_jar',
               'file_parts':    ['velocity_jar']
           }))" > /tmp/modrinth_velocity_payload.json
@@ -281,7 +281,7 @@ jobs:
               'version_type':  'release',
               'loaders':       ['bungeecord','waterfall'],
               'featured':      False,
-              'project_id':    'wOZtwr2V',
+              'project_id':    'oRvmxM8N',
               'primary_file':  'bungee_jar',
               'file_parts':    ['bungee_jar']
           }))" > /tmp/modrinth_bungee_payload.json
